@@ -12,11 +12,6 @@ const ATTACK_DURATION = 0.3
 const HITBOX_OFFSET_X = 14
 const HITBOX_OFFSET_Y = 22
 
-# Constantes de ataque
-const ATTACK_DURATION = 0.3
-const HITBOX_OFFSET_X = 14
-const HITBOX_OFFSET_Y = 22
-
 # Constantes de vida
 const MAX_HEALTH = 3
 const INVINCIBILITY_DURATION = 1.0
