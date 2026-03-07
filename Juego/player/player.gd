@@ -1,8 +1,8 @@
 extends CharacterBody2D
 
 
-const SPEED = 300.0
-const JUMP_VELOCITY = -400.0
+const SPEED = -150.0
+const JUMP_VELOCITY = -300.0
 const DOUBLE_JUMP_VELOCITY = -350.0
 
 var can_double_jump = false
@@ -34,7 +34,6 @@ func _physics_process(delta: float) -> void:
 
 func _update_animation():
 	if not is_on_floor():
-		# Aquí pondremos jump/fall cuando tengas esos sprites
 		pass
 	elif velocity.x != 0:
 		$AnimatedSprite2D.play("walk")
