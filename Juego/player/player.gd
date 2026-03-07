@@ -12,6 +12,10 @@ const ATTACK_DURATION = 0.3
 const HITBOX_OFFSET_X = 14
 const HITBOX_OFFSET_Y = 22
 
+# Constantes de vida
+const MAX_HEALTH = 3
+const INVINCIBILITY_DURATION = 1.0
+
 # Variables de movimiento
 var can_double_jump = false
 var was_on_floor = false
@@ -27,6 +31,18 @@ var is_attacking = false
 var attack_timer = 0.0
 var last_direction = 1
 @onready var hitbox = $AttackHitbox
+
+# Variables de vida
+var current_health = 3
+var is_invincible = false
+var invincibility_timer = 0.0
+var spawn_position = Vector2.ZERO
+@onready var hurtbox = $Hurtbox
+
+func _ready():
+	hitbox.monitoring = false
+	hitbox.visible = false
+	spawn_position = global_position
 
 func _physics_process(delta: float) -> void:
 	
@@ -44,6 +60,8 @@ func _physics_process(delta: float) -> void:
 			is_dashing = false
 			velocity.y = 0
 			velocity.x = dash_direction * SPEED * 0.2
+			if not is_invincible:
+				hurtbox.monitorable = true  
 		else:
 			velocity.x = dash_direction * DASH_SPEED
 			move_and_slide()
@@ -69,6 +87,7 @@ func _physics_process(delta: float) -> void:
 	# Dash
 	if Input.is_action_just_pressed("dash") and can_dash:
 		is_dashing = true
+		hurtbox.monitorable = false
 		dash_timer = DASH_DURATION
 		dash_cooldown_timer = DASH_COOLDOWN
 		if not is_on_floor():
@@ -93,6 +112,7 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_handle_attack(delta)
+	_handle_invincibility(delta)
 	_update_animation()
 
 func _update_animation():
@@ -130,8 +150,45 @@ func _handle_attack(delta):
 			hitbox.position = Vector2(0, HITBOX_OFFSET_Y)
 		elif Input.is_action_pressed("aim_left"):
 			hitbox.position = Vector2(-HITBOX_OFFSET_X, 0)
-			print("hitbox position: ", hitbox.position)
 		elif Input.is_action_pressed("aim_right"):
 			hitbox.position = Vector2(HITBOX_OFFSET_X, 0)
 		else:
 			hitbox.position = Vector2(HITBOX_OFFSET_X * last_direction, 0)
+
+func take_damage(amount: int):
+	if is_invincible:
+		return
+	current_health -= amount
+	is_invincible = true
+	invincibility_timer = INVINCIBILITY_DURATION
+	if current_health <= 0:
+		die()
+
+func die():
+	current_health = MAX_HEALTH
+	is_invincible = false
+	hurtbox.monitorable = true
+	$AnimatedSprite2D.visible = true
+	# Reaparecer al inicio del nivel
+	global_position = spawn_position
+
+func _handle_invincibility(delta):
+	if is_invincible:
+		invincibility_timer -= delta
+		hurtbox.monitorable = false  # desactivado mientras es invencible
+		# Parpadeo visual
+		$AnimatedSprite2D.visible = not $AnimatedSprite2D.visible if fmod(invincibility_timer, 0.2) < 0.1 else true
+		if invincibility_timer <= 0:
+			is_invincible = false
+			hurtbox.monitorable = true  # reactivar al terminar
+			$AnimatedSprite2D.visible = true
+
+
+func _on_hurtbox_area_entered(area: Area2D) -> void:
+	if area.is_in_group("enemy_hitbox"):
+		take_damage(1)
+
+
+func _on_attack_hitbox_area_entered(area: Area2D) -> void:
+	if area.is_in_group("enemy_hitbox"):
+		area.get_parent().take_damage(1)

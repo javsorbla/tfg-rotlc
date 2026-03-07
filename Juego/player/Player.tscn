@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://msgn8vkyft75"]
+[gd_scene load_steps=8 format=3 uid="uid://msgn8vkyft75"]
 
 [ext_resource type="Script" path="res://player/player.gd" id="1_por4q"]
 [ext_resource type="Texture2D" uid="uid://cbf6sgnl38p7n" path="res://assets/player/idle/iris_0001.png" id="2_gwi4x"]
@@ -35,7 +35,11 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qxcp4"]
 size = Vector2(14, 20)
 
-[node name="Player" type="CharacterBody2D"]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8uifa"]
+radius = 6.0
+height = 24.0
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
 script = ExtResource("1_por4q")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -47,8 +51,19 @@ sprite_frames = SubResource("SpriteFrames_1o3aa")
 animation = &"jump"
 
 [node name="AttackHitbox" type="Area2D" parent="."]
+monitoring = false
 monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
 position = Vector2(0, 1)
 shape = SubResource("RectangleShape2D_qxcp4")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, 1)
+shape = SubResource("CapsuleShape2D_8uifa")
+debug_color = Color(0.8778, 0.31399, 0.357215, 0.42)
+
+[connection signal="area_entered" from="AttackHitbox" to="." method="_on_attack_hitbox_area_entered"]
+[connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]
