@@ -43,6 +43,8 @@ func _ready():
 	hitbox.monitoring = false
 	hitbox.visible = false
 	spawn_position = global_position
+	hurtbox.body_entered.connect(_on_hurtbox_body_entered)  # para pinchos
+	hurtbox.area_entered.connect(_on_hurtbox_area_entered)  # para enemigos
 
 func _physics_process(delta: float) -> void:
 	
@@ -192,3 +194,8 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 func _on_attack_hitbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy_hitbox"):
 		area.get_parent().take_damage(1)
+
+
+func _on_hurtbox_body_entered(body: Node2D) -> void:
+	if body.is_in_group("spikes"):
+		take_damage(1)

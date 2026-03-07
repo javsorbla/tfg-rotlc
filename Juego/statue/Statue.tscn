@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://bst5d51vb15gp"]
+
+[ext_resource type="Texture2D" uid="uid://dav3m828yshi" path="res://assets/statue/estatua1.png" id="1_s77dg"]
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_wad5h"]
+a = Vector2(46, 10)
+
+[node name="Statue" type="Node2D"]
+
+[node name="RigidBody2D" type="RigidBody2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="RigidBody2D"]
+position = Vector2(46, -35.375)
+scale = Vector2(0.189, 0.1625)
+texture = ExtResource("1_s77dg")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RigidBody2D"]
+position = Vector2(22, -22)
+shape = SubResource("SegmentShape2D_wad5h")
