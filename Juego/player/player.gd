@@ -1,8 +1,16 @@
 extends CharacterBody2D
 
-
+# Constantes de movimiento
 const SPEED = 150.0
 const JUMP_VELOCITY = -300.0
+const DASH_SPEED = 300.0
+const DASH_DURATION = 0.20
+const DASH_COOLDOWN = 0.5
+
+# Constantes de ataque
+const ATTACK_DURATION = 0.3
+const HITBOX_OFFSET_X = 14
+const HITBOX_OFFSET_Y = 22
 
 # Constantes de ataque
 const ATTACK_DURATION = 0.3
@@ -16,7 +24,18 @@ const INVINCIBILITY_DURATION = 1.0
 # Variables de movimiento
 var can_double_jump = false
 var was_on_floor = false
-var jumped = false
+var is_dashing = false
+var dash_timer = 0.0
+var can_dash = true
+var dash_direction = 1.0
+var dash_cooldown_timer = 0.0
+var air_dash_used = false
+
+# Variables de ataque
+var is_attacking = false
+var attack_timer = 0.0
+var last_direction = 1
+@onready var hitbox = $AttackHitbox
 
 # Variables de vida
 var current_health = 3
@@ -57,21 +76,11 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 
-	# Al caerse de plataforma sin saltar, conceder salto
-	if was_on_floor and not is_on_floor() and not jumped:
-		can_double_jump = true
-
-	# Al aterrizar, resetear todo
-	if is_on_floor():
-		can_double_jump = false
-		jumped = false
-
 	# Salto
-	if Input.is_action_just_pressed("ui_accept"):
+	if Input.is_action_just_pressed("jump"):
 		if is_on_floor():
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = true
-			jumped = true
 		elif can_double_jump:
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = false
@@ -99,27 +108,28 @@ func _physics_process(delta: float) -> void:
 	# Guardar estado del suelo ANTES de move_and_slide
 	was_on_floor = is_on_floor()
 
-	var direction := Input.get_axis("ui_left", "ui_right")
+	var direction := Input.get_axis("move_left", "move_right")
 	if direction:
+		last_direction = direction
 		velocity.x = direction * SPEED
 	else:
-		velocity.x = move_toward(velocity.x, 0, SPEED)
+		velocity.x = move_toward(velocity.x, 0, SPEED * 0.2)
 
 	move_and_slide()
 	_handle_attack(delta)
 	_handle_invincibility(delta)
 	_update_animation()
 
-
 func _update_animation():
+	if is_dashing:
+		return
 	if not is_on_floor():
 		pass
 	elif velocity.x != 0:
 		$AnimatedSprite2D.play("walk")
 	else:
 		$AnimatedSprite2D.play("idle")
-	
-	# Voltear el sprite según dirección
+
 	if velocity.x > 0:
 		$AnimatedSprite2D.flip_h = false
 	elif velocity.x < 0:
