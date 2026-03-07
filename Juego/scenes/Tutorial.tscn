@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=4 uid="uid://bmmg7n8gcdsue"]
+[gd_scene load_steps=6 format=4 uid="uid://bmmg7n8gcdsue"]
 
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_74p10"]
 [ext_resource type="Texture2D" uid="uid://dfevusenu4qc8" path="res://assets/tilesets/Gray_Tile_Terrain (16 x 16).png" id="1_whyj1"]
+[ext_resource type="PackedScene" uid="uid://cliq12pggr3gh" path="res://enemies/common/EnemigoPrueba.tscn" id="3_imns1"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i6t85"]
 texture = ExtResource("1_whyj1")
@@ -204,3 +205,6 @@ position = Vector2(-166, 61)
 [node name="Camera2D" type="Camera2D" parent="Player"]
 position = Vector2(138, -60)
 position_smoothing_enabled = true
+
+[node name="EnemigoPrueba" parent="." instance=ExtResource("3_imns1")]
+position = Vector2(0, 37)
