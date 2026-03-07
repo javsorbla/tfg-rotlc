@@ -3,26 +3,36 @@ extends CharacterBody2D
 
 const SPEED = 150.0
 const JUMP_VELOCITY = -300.0
-const DOUBLE_JUMP_VELOCITY = -350.0
 
 var can_double_jump = false
+var was_on_floor = false
+var jumped = false
 
 func _physics_process(delta: float) -> void:
-	# Add the gravity.
 	if not is_on_floor():
 		velocity += get_gravity() * delta
+
+	# Al caerse de plataforma sin saltar, conceder salto
+	if was_on_floor and not is_on_floor() and not jumped:
+		can_double_jump = true
+
+	# Al aterrizar, resetear todo
+	if is_on_floor():
+		can_double_jump = false
+		jumped = false
 
 	# Salto
 	if Input.is_action_just_pressed("ui_accept"):
 		if is_on_floor():
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = true
+			jumped = true
 		elif can_double_jump:
-			velocity.y = DOUBLE_JUMP_VELOCITY
+			velocity.y = JUMP_VELOCITY
 			can_double_jump = false
 
-	# Get the input direction and handle the movement/deceleration.
-	# As good practice, you should replace UI actions with custom gameplay actions.
+	was_on_floor = is_on_floor()
+
 	var direction := Input.get_axis("ui_left", "ui_right")
 	if direction:
 		velocity.x = direction * SPEED
@@ -31,6 +41,7 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_update_animation()
+
 
 func _update_animation():
 	if not is_on_floor():
