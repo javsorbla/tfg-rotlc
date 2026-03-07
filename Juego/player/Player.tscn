@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://msgn8vkyft75"]
+[gd_scene load_steps=7 format=3 uid="uid://msgn8vkyft75"]
 
 [ext_resource type="Script" path="res://player/player.gd" id="1_por4q"]
 [ext_resource type="Texture2D" uid="uid://cbf6sgnl38p7n" path="res://assets/player/idle/iris_0001.png" id="2_gwi4x"]
@@ -32,6 +32,9 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qxcp4"]
+size = Vector2(14, 20)
+
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_por4q")
 
@@ -41,4 +44,11 @@ shape = SubResource("CapsuleShape2D_sgw7u")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_1o3aa")
-animation = &"idle"
+animation = &"jump"
+
+[node name="AttackHitbox" type="Area2D" parent="."]
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
+position = Vector2(0, 1)
+shape = SubResource("RectangleShape2D_qxcp4")
