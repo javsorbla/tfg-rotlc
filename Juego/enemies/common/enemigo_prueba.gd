@@ -1,8 +1,6 @@
 extends CharacterBody2D
-
 const SPEED = 60.0
-const MAX_HEALTH = 1
-
+const MAX_HEALTH = 3
 var current_health = MAX_HEALTH
 var player = null
 
@@ -13,14 +11,14 @@ func _ready():
 func _physics_process(delta):
 	if not is_on_floor():
 		velocity += get_gravity() * delta
-
-	if player:
-		# Moverse hacia el jugador en línea recta
-		var direction = sign(player.global_position.x - global_position.x)
-		velocity.x = direction * SPEED
-		# Voltear sprite según dirección
-		$AnimatedSprite2D.flip_h = direction < 0
-
+	
+	# Descomentar para que se mueva
+	#if player:
+		#var direction = sign(player.global_position.x - global_position.x)
+		#velocity.x = direction * SPEED
+		#$AnimatedSprite2D.flip_h = direction < 0
+	
+	velocity.x = 0
 	move_and_slide()
 
 func take_damage(amount: int):
@@ -29,4 +27,4 @@ func take_damage(amount: int):
 		die()
 
 func die():
-	queue_free()  # elimina el enemigo de la escena
+	queue_free() # elimina el enemigo de la escena

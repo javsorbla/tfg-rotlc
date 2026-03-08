@@ -43,8 +43,8 @@ func _ready():
 	hitbox.monitoring = false
 	hitbox.visible = false
 	spawn_position = global_position
-	hurtbox.body_entered.connect(_on_hurtbox_body_entered)  # para pinchos
-	hurtbox.area_entered.connect(_on_hurtbox_area_entered)  # para enemigos
+	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
+	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 
 func _physics_process(delta: float) -> void:
 	
