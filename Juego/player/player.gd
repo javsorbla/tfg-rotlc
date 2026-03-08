@@ -38,15 +38,17 @@ var last_direction = 1
 var current_health = 3
 var is_invincible = false
 var invincibility_timer = 0.0
-var spawn_position = Vector2.ZERO
 @onready var hurtbox = $Hurtbox
 
 func _ready():
 	hitbox.monitoring = false
 	hitbox.visible = false
-	spawn_position = global_position
 	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	if GameState.checkpoint_activated:
+		global_position = GameState.spawn_position
+	else:
+		GameState.spawn_position = global_position
 
 func _physics_process(delta: float) -> void:
 	
@@ -115,6 +117,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
 
 	move_and_slide()
+	_check_checkpoints()
 	_handle_attack(delta)
 	_handle_invincibility(delta)
 	_update_animation()
@@ -166,12 +169,7 @@ func take_damage(amount: int):
 		die()
 
 func die():
-	current_health = MAX_HEALTH
-	is_invincible = false
-	hurtbox.monitorable = true
-	$AnimatedSprite2D.visible = true
-	# Reaparecer al inicio del nivel
-	global_position = spawn_position
+	get_tree().reload_current_scene()
 
 func _handle_invincibility(delta):
 	if is_invincible:
@@ -184,6 +182,12 @@ func _handle_invincibility(delta):
 			hurtbox.monitorable = true  # reactivar al terminar
 			$AnimatedSprite2D.visible = true
 
+func _check_checkpoints():
+	for checkpoint in get_tree().get_nodes_in_group("checkpoint"):
+		if global_position.distance_to(checkpoint.global_position) < 32:
+			if checkpoint.global_position != GameState.spawn_position:
+				GameState.spawn_position = checkpoint.global_position
+				GameState.checkpoint_activated = true
 
 func _on_hurtbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy_hitbox"):
