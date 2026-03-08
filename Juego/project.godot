@@ -115,6 +115,14 @@ aim_left={
 ]
 }
 
+[layer_names]
+
+2d_physics/layer_1="Sólido"
+2d_physics/layer_2="Daño"
+2d_physics/layer_3="Jugador"
+2d_physics/layer_4="Recolectables"
+2d_physics/layer_5="Enemigos"
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

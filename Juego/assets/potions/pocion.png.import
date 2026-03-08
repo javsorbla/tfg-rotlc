@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://6mdl1dfolinv"
-path="res://.godot/imported/iris_0004.png-f86020f19292611b5bfd2cd5b053c99c.ctex"
+uid="uid://c78b1eerhl6js"
+path="res://.godot/imported/pocion.png-645b3731b01d0052c9d85ff9db00ec15.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/player/walk/iris_0004.png"
-dest_files=["res://.godot/imported/iris_0004.png-f86020f19292611b5bfd2cd5b053c99c.ctex"]
+source_file="res://assets/potions/pocion.png"
+dest_files=["res://.godot/imported/pocion.png-645b3731b01d0052c9d85ff9db00ec15.ctex"]
 
 [params]
 

@@ -21,6 +21,8 @@ animations = [{
 radius = 17.2627
 
 [node name="EnemigoPrueba" type="CharacterBody2D"]
+collision_layer = 16
+collision_mask = 5
 script = ExtResource("1_uq43k")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -33,6 +35,8 @@ position = Vector2(1, -1)
 sprite_frames = SubResource("SpriteFrames_dnwrc")
 
 [node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
+collision_layer = 16
+collision_mask = 4
 monitoring = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHitbox"]

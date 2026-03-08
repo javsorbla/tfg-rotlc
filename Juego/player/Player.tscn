@@ -1,18 +1,19 @@
-[gd_scene load_steps=8 format=3 uid="uid://msgn8vkyft75"]
+[gd_scene load_steps=9 format=3 uid="uid://msgn8vkyft75"]
 
 [ext_resource type="Script" path="res://player/player.gd" id="1_por4q"]
-[ext_resource type="Texture2D" uid="uid://cbf6sgnl38p7n" path="res://assets/player/idle/iris_0001.png" id="2_gwi4x"]
-[ext_resource type="Texture2D" uid="uid://cs2oogr1e72ii" path="res://assets/player/walk/iris_0002.png" id="3_mbl5g"]
+[ext_resource type="Texture2D" uid="uid://guqaspw215xr" path="res://assets/player/idle/iris_idle_001.png" id="2_214ps"]
+[ext_resource type="Texture2D" uid="uid://b18080jtfg1ny" path="res://assets/player/walk/right/iris_right_001.png" id="3_ghaqu"]
+[ext_resource type="Texture2D" uid="uid://crt1tjn65vrnm" path="res://assets/player/walk/left/iris_left_001.png" id="3_qh0vb"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sgw7u"]
-radius = 6.0
-height = 24.0
+radius = 7.0
+height = 26.0
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_1o3aa"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("2_gwi4x")
+"texture": ExtResource("2_214ps")
 }],
 "loop": true,
 "name": &"idle",
@@ -25,21 +26,30 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("3_mbl5g")
+"texture": ExtResource("3_qh0vb")
 }],
 "loop": true,
-"name": &"walk",
+"name": &"walk_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_ghaqu")
+}],
+"loop": true,
+"name": &"walk_right",
 "speed": 5.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qxcp4"]
-size = Vector2(14, 20)
+size = Vector2(14, 26)
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8uifa"]
-radius = 6.0
-height = 24.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_dffot"]
+radius = 7.0
+height = 26.0
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
+collision_layer = 4
 script = ExtResource("1_por4q")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -47,10 +57,14 @@ position = Vector2(0, 1)
 shape = SubResource("CapsuleShape2D_sgw7u")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(1.90735e-06, 2)
+scale = Vector2(0.609375, 0.5625)
 sprite_frames = SubResource("SpriteFrames_1o3aa")
-animation = &"jump"
+animation = &"walk_left"
 
 [node name="AttackHitbox" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 16
 monitoring = false
 monitorable = false
 
@@ -59,11 +73,14 @@ position = Vector2(0, 1)
 shape = SubResource("RectangleShape2D_qxcp4")
 
 [node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 18
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
 position = Vector2(0, 1)
-shape = SubResource("CapsuleShape2D_8uifa")
+shape = SubResource("CapsuleShape2D_dffot")
 debug_color = Color(0.8778, 0.31399, 0.357215, 0.42)
 
 [connection signal="area_entered" from="AttackHitbox" to="." method="_on_attack_hitbox_area_entered"]
 [connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]
+[connection signal="body_entered" from="Hurtbox" to="." method="_on_hurtbox_body_entered"]

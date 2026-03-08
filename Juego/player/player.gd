@@ -43,6 +43,8 @@ func _ready():
 	hitbox.monitoring = false
 	hitbox.visible = false
 	spawn_position = global_position
+	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
+	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 
 func _physics_process(delta: float) -> void:
 	
@@ -117,18 +119,15 @@ func _physics_process(delta: float) -> void:
 
 func _update_animation():
 	if is_dashing:
-		return
+		pass
 	if not is_on_floor():
 		pass
-	elif velocity.x != 0:
-		$AnimatedSprite2D.play("walk")
+	elif velocity.x > 0:
+		$AnimatedSprite2D.play("walk_right")
+	elif velocity.x < 0:
+		$AnimatedSprite2D.play("walk_left")
 	else:
 		$AnimatedSprite2D.play("idle")
-
-	if velocity.x > 0:
-		$AnimatedSprite2D.flip_h = false
-	elif velocity.x < 0:
-		$AnimatedSprite2D.flip_h = true
 
 func _handle_attack(delta):
 	if is_attacking:
@@ -192,3 +191,8 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 func _on_attack_hitbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy_hitbox"):
 		area.get_parent().take_damage(1)
+
+
+func _on_hurtbox_body_entered(body: Node2D) -> void:
+	if body.is_in_group("spikes"):
+		take_damage(1)

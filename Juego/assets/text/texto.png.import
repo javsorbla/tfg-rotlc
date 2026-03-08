@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cbf6sgnl38p7n"
-path="res://.godot/imported/iris_0001.png-f5fdb01d863fb55b19753f097e21acba.ctex"
+uid="uid://c1hu1ntvn4t7k"
+path="res://.godot/imported/texto.png-a25a36886a7a9cede9bdad7e61b7fe2b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/player/idle/iris_0001.png"
-dest_files=["res://.godot/imported/iris_0001.png-f5fdb01d863fb55b19753f097e21acba.ctex"]
+source_file="res://assets/text/texto.png"
+dest_files=["res://.godot/imported/texto.png-a25a36886a7a9cede9bdad7e61b7fe2b.ctex"]
 
 [params]
 

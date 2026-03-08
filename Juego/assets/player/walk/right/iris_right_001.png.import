@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cs2oogr1e72ii"
-path="res://.godot/imported/iris_0002.png-3818a1fd1d1e84c636d11eabbbe2dac8.ctex"
+uid="uid://b18080jtfg1ny"
+path="res://.godot/imported/iris_right_001.png-1d7e85bae7e4589a52e535b4583249fd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/player/walk/iris_0002.png"
-dest_files=["res://.godot/imported/iris_0002.png-3818a1fd1d1e84c636d11eabbbe2dac8.ctex"]
+source_file="res://assets/player/walk/right/iris_right_001.png"
+dest_files=["res://.godot/imported/iris_right_001.png-1d7e85bae7e4589a52e535b4583249fd.ctex"]
 
 [params]
 
