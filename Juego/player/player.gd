@@ -29,6 +29,7 @@ var can_dash = true
 var dash_direction = 1.0
 var dash_cooldown_timer = 0.0
 var air_dash_used = false
+@onready var camera = get_tree().get_first_node_in_group("camera")
 
 # Variables de ataque
 var is_attacking = false
@@ -51,6 +52,9 @@ func _ready():
 	hitbox.visible = false
 	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	var camera = get_tree().get_first_node_in_group("camera")
+	if camera:
+		$CameraFollow.remote_path = camera.get_path()
 	if GameState.checkpoint_activated:
 		global_position = GameState.spawn_position
 	else:
@@ -174,6 +178,8 @@ func take_damage(amount: int):
 	is_invincible = true
 	invincibility_timer = INVINCIBILITY_DURATION
 	flash_timer = FLASH_DURATION
+	if camera:
+		camera.shake()
 	if current_health <= 0:
 		die()
 
