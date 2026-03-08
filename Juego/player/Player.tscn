@@ -1,6 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://msgn8vkyft75"]
+[gd_scene load_steps=11 format=3 uid="uid://msgn8vkyft75"]
 
 [ext_resource type="Script" path="res://player/player.gd" id="1_por4q"]
+[ext_resource type="Shader" path="res://player/Player.gdshader" id="2_4gpna"]
 [ext_resource type="Texture2D" uid="uid://guqaspw215xr" path="res://assets/player/idle/iris_idle_001.png" id="2_214ps"]
 [ext_resource type="Texture2D" uid="uid://b18080jtfg1ny" path="res://assets/player/walk/right/iris_right_001.png" id="3_ghaqu"]
 [ext_resource type="Texture2D" uid="uid://crt1tjn65vrnm" path="res://assets/player/walk/left/iris_left_001.png" id="3_qh0vb"]
@@ -8,6 +9,11 @@
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sgw7u"]
 radius = 7.0
 height = 26.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_eqlrx"]
+shader = ExtResource("2_4gpna")
+shader_parameter/flash_amount = 0.0
+shader_parameter/flash_color = Color(1, 1, 1, 1)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_1o3aa"]
 animations = [{
@@ -57,6 +63,7 @@ position = Vector2(0, 1)
 shape = SubResource("CapsuleShape2D_sgw7u")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+material = SubResource("ShaderMaterial_eqlrx")
 position = Vector2(1.90735e-06, 2)
 scale = Vector2(0.609375, 0.5625)
 sprite_frames = SubResource("SpriteFrames_1o3aa")
