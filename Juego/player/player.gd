@@ -33,6 +33,7 @@ var is_attacking = false
 var attack_timer = 0.0
 var last_direction = 1
 @onready var hitbox = $AttackHitbox
+@onready var hit_particles_scene = preload("res://scenes/effects/HitParticles.tscn")
 
 # Variables de vida
 var current_health = 3
@@ -171,6 +172,12 @@ func take_damage(amount: int):
 func die():
 	get_tree().reload_current_scene()
 
+func spawn_hit_particles(pos: Vector2):
+	var particles = hit_particles_scene.instantiate()
+	get_parent().add_child(particles)
+	particles.global_position = pos
+	particles.play()
+
 func _handle_invincibility(delta):
 	if is_invincible:
 		invincibility_timer -= delta
@@ -197,6 +204,7 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 func _on_attack_hitbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy_hitbox"):
 		area.get_parent().take_damage(1)
+		spawn_hit_particles(area.global_position)
 
 
 func _on_hurtbox_body_entered(body: Node2D) -> void:
