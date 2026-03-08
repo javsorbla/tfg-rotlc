@@ -119,18 +119,15 @@ func _physics_process(delta: float) -> void:
 
 func _update_animation():
 	if is_dashing:
-		return
+		pass
 	if not is_on_floor():
 		pass
-	elif velocity.x != 0:
-		$AnimatedSprite2D.play("walk")
+	elif velocity.x > 0:
+		$AnimatedSprite2D.play("walk_right")
+	elif velocity.x < 0:
+		$AnimatedSprite2D.play("walk_left")
 	else:
 		$AnimatedSprite2D.play("idle")
-
-	if velocity.x > 0:
-		$AnimatedSprite2D.flip_h = false
-	elif velocity.x < 0:
-		$AnimatedSprite2D.flip_h = true
 
 func _handle_attack(delta):
 	if is_attacking:
