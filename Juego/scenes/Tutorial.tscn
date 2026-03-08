@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=4 uid="uid://bmmg7n8gcdsue"]
+[gd_scene load_steps=16 format=4 uid="uid://bmmg7n8gcdsue"]
 
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_74p10"]
 [ext_resource type="Texture2D" uid="uid://dfevusenu4qc8" path="res://assets/tilesets/Gray_Tile_Terrain (16 x 16).png" id="1_whyj1"]
@@ -8,6 +8,7 @@
 [ext_resource type="FontFile" uid="uid://b5yw8u8qdipr6" path="res://assets/text/Minecraft.ttf" id="3_q2tak"]
 [ext_resource type="PackedScene" uid="uid://cliq12pggr3gh" path="res://enemies/common/EnemigoPrueba.tscn" id="5_ses35"]
 [ext_resource type="Texture2D" uid="uid://c78b1eerhl6js" path="res://assets/potions/pocion.png" id="6_1jylv"]
+[ext_resource type="Script" path="res://scenes/camera_tutorial.gd" id="9_iqxf7"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i6t85"]
 texture = ExtResource("1_whyj1")
@@ -410,12 +411,13 @@ position = Vector2(-19, 87)
 [node name="Player" parent="." instance=ExtResource("1_74p10")]
 position = Vector2(-166, 61)
 
-[node name="Camera2D" type="Camera2D" parent="Player"]
-position = Vector2(138, -60)
-position_smoothing_enabled = true
-
 [node name="Spawn1" type="Marker2D" parent="." groups=["checkpoint"]]
 position = Vector2(-164.569, 54.9008)
 
 [node name="Spawn2" type="Marker2D" parent="." groups=["checkpoint"]]
 position = Vector2(4580.49, 54.5826)
+
+[node name="Camera2D" type="Camera2D" parent="." groups=["camera"]]
+position = Vector2(42, -19)
+position_smoothing_enabled = true
+script = ExtResource("9_iqxf7")

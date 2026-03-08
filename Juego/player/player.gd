@@ -13,10 +13,12 @@ const FRICTION = 700.0
 const ATTACK_DURATION = 0.3
 const HITBOX_OFFSET_X = 14
 const HITBOX_OFFSET_Y = 22
+const HITSTOP_DURATION = 0.05
 
 # Constantes de vida
 const MAX_HEALTH = 3
 const INVINCIBILITY_DURATION = 1.0
+const FLASH_DURATION = 0.1
 
 # Variables de movimiento
 var can_double_jump = false
@@ -27,24 +29,32 @@ var can_dash = true
 var dash_direction = 1.0
 var dash_cooldown_timer = 0.0
 var air_dash_used = false
+@onready var camera = get_tree().get_first_node_in_group("camera")
 
 # Variables de ataque
 var is_attacking = false
 var attack_timer = 0.0
 var last_direction = 1
+var hitstop_timer = 0.0
 @onready var hitbox = $AttackHitbox
+@onready var hit_particles_scene = preload("res://scenes/effects/HitParticles.tscn")
 
 # Variables de vida
 var current_health = 3
 var is_invincible = false
 var invincibility_timer = 0.0
+var flash_timer = 0.0
 @onready var hurtbox = $Hurtbox
+@onready var sprite = $AnimatedSprite2D
 
 func _ready():
 	hitbox.monitoring = false
 	hitbox.visible = false
 	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	var camera = get_tree().get_first_node_in_group("camera")
+	if camera:
+		$CameraFollow.remote_path = camera.get_path()
 	if GameState.checkpoint_activated:
 		global_position = GameState.spawn_position
 	else:
@@ -120,6 +130,8 @@ func _physics_process(delta: float) -> void:
 	_check_checkpoints()
 	_handle_attack(delta)
 	_handle_invincibility(delta)
+	_handle_flash(delta)
+	_handle_hitstop(delta)
 	_update_animation()
 
 func _update_animation():
@@ -165,11 +177,20 @@ func take_damage(amount: int):
 	current_health -= amount
 	is_invincible = true
 	invincibility_timer = INVINCIBILITY_DURATION
+	flash_timer = FLASH_DURATION
+	if camera:
+		camera.shake()
 	if current_health <= 0:
 		die()
 
 func die():
 	get_tree().reload_current_scene()
+
+func spawn_hit_particles(pos: Vector2):
+	var particles = hit_particles_scene.instantiate()
+	get_parent().add_child(particles)
+	particles.global_position = pos
+	particles.play()
 
 func _handle_invincibility(delta):
 	if is_invincible:
@@ -181,6 +202,22 @@ func _handle_invincibility(delta):
 			is_invincible = false
 			hurtbox.monitorable = true  # reactivar al terminar
 			$AnimatedSprite2D.visible = true
+
+func _handle_flash(delta):
+	if sprite.material == null:
+		return
+	if flash_timer > 0:
+		flash_timer -= delta
+		sprite.material.set_shader_parameter("flash_amount", 1.0)
+	else:
+		sprite.material.set_shader_parameter("flash_amount", 0.0)
+
+func _handle_hitstop(delta):
+	if hitstop_timer > 0:
+		hitstop_timer -= delta
+		Engine.time_scale = 0.5 # casi congelado
+	else:
+		Engine.time_scale = 1.0  # velocidad normal
 
 func _check_checkpoints():
 	for checkpoint in get_tree().get_nodes_in_group("checkpoint"):
@@ -197,6 +234,8 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 func _on_attack_hitbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy_hitbox"):
 		area.get_parent().take_damage(1)
+		spawn_hit_particles(area.global_position)
+		hitstop_timer = HITSTOP_DURATION
 
 
 func _on_hurtbox_body_entered(body: Node2D) -> void:
