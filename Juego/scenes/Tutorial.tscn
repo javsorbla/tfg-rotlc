@@ -413,3 +413,9 @@ position = Vector2(-166, 61)
 [node name="Camera2D" type="Camera2D" parent="Player"]
 position = Vector2(138, -60)
 position_smoothing_enabled = true
+
+[node name="Spawn1" type="Marker2D" parent="." groups=["checkpoint"]]
+position = Vector2(-164.569, 54.9008)
+
+[node name="Spawn2" type="Marker2D" parent="." groups=["checkpoint"]]
+position = Vector2(4580.49, 54.5826)
