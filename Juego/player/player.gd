@@ -6,6 +6,8 @@ const JUMP_VELOCITY = -300.0
 const DASH_SPEED = 300.0
 const DASH_DURATION = 0.20
 const DASH_COOLDOWN = 0.5
+const ACCELERATION = 1000.0
+const FRICTION = 700.0
 
 # Constantes de ataque
 const ATTACK_DURATION = 0.3
@@ -108,9 +110,9 @@ func _physics_process(delta: float) -> void:
 	var direction := Input.get_axis("move_left", "move_right")
 	if direction:
 		last_direction = direction
-		velocity.x = direction * SPEED
+		velocity.x = move_toward(velocity.x, direction * SPEED, ACCELERATION * delta)
 	else:
-		velocity.x = move_toward(velocity.x, 0, SPEED * 0.2)
+		velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
 
 	move_and_slide()
 	_handle_attack(delta)
