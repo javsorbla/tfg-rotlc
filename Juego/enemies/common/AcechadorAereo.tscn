@@ -14,6 +14,14 @@ radius = 8.0
 animations = [{
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("3_ro6pq")
+}],
+"loop": true,
+"name": &"dazed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("2_0i5bu")
 }],
 "loop": true,
@@ -22,18 +30,10 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("3_ro6pq")
-}],
-"loop": true,
-"name": &"dive",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
 "texture": ExtResource("2_gy0fg")
 }],
 "loop": true,
-"name": &"idle",
+"name": &"dive",
 "speed": 5.0
 }, {
 "frames": [{
