@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://d4hh5j51i5s4a"]
+
+[ext_resource type="Script" path="res://scenes/effects/hit_particles.gd" id="1_ardfl"]
+
+[sub_resource type="Gradient" id="Gradient_1gmuh"]
+offsets = PackedFloat32Array(0, 0.95082, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_xkvm5"]
+gradient = SubResource("Gradient_1gmuh")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_lievs"]
+particle_flag_disable_z = true
+spread = 180.0
+initial_velocity_min = 80.0
+initial_velocity_max = 200.0
+gravity = Vector3(0, 98, 0)
+scale_max = 2.0
+color = Color(0.991164, 0.991164, 0.991164, 1)
+color_ramp = SubResource("GradientTexture1D_xkvm5")
+
+[node name="HitParticles" type="GPUParticles2D"]
+emitting = false
+amount = 24
+process_material = SubResource("ParticleProcessMaterial_lievs")
+lifetime = 0.15
+one_shot = true
+explosiveness = 1.0
+script = ExtResource("1_ardfl")
