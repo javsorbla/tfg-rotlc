@@ -409,7 +409,7 @@ texture = ExtResource("6_1jylv")
 position = Vector2(-19, 87)
 
 [node name="Player" parent="." instance=ExtResource("1_74p10")]
-position = Vector2(-166, 61)
+position = Vector2(-167, 61)
 
 [node name="Spawn1" type="Marker2D" parent="." groups=["checkpoint"]]
 position = Vector2(-164.569, 54.9008)

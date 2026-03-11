@@ -8,6 +8,7 @@ const DASH_COOLDOWN = 0.5
 const ACCELERATION = 1000.0
 const FRICTION = 700.0
 
+var can_jump = true
 var can_double_jump = false
 var was_on_floor = false
 var is_dashing = false
@@ -19,6 +20,7 @@ var air_dash_used = false
 var last_direction = 1
 var speed_multiplier = 1.0
 var damage_multiplier = 1.0
+var is_shielding = false
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -63,7 +65,7 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 
-	if Input.is_action_just_pressed("jump"):
+	if Input.is_action_just_pressed("jump") and can_jump:
 		if is_on_floor():
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = true
