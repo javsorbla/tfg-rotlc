@@ -13,6 +13,7 @@ var flash_timer = 0.0
 @onready var hurtbox = get_parent().get_node("Hurtbox")
 @onready var sprite = get_parent().get_node("AnimatedSprite2D")
 @onready var camera = get_tree().get_first_node_in_group("camera")
+@onready var hud = get_tree().get_first_node_in_group("hud")
 
 func _ready():
 	hurtbox.monitorable = true
@@ -32,6 +33,8 @@ func take_damage(amount: int):
 	flash_timer = FLASH_DURATION
 	if camera:
 		camera.shake()
+	if hud:
+		hud.update_hearts(current_health, MAX_HEALTH)
 	if current_health <= 0:
 		die()
 

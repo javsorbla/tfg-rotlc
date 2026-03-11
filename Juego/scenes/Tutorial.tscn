@@ -1,5 +1,6 @@
-[gd_scene load_steps=16 format=4 uid="uid://bmmg7n8gcdsue"]
+[gd_scene load_steps=17 format=4 uid="uid://bmmg7n8gcdsue"]
 
+[ext_resource type="PackedScene" uid="uid://bce6576tqo4wu" path="res://ui/HUD.tscn" id="1_4uyks"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_74p10"]
 [ext_resource type="Texture2D" uid="uid://dfevusenu4qc8" path="res://assets/tilesets/Gray_Tile_Terrain (16 x 16).png" id="1_whyj1"]
 [ext_resource type="PackedScene" uid="uid://bst5d51vb15gp" path="res://statue/Statue.tscn" id="2_1nw4v"]
@@ -223,6 +224,8 @@ default_font = ExtResource("3_q2tak")
 [sub_resource type="LabelSettings" id="LabelSettings_de41u"]
 
 [node name="Tutorial" type="Node2D"]
+
+[node name="Hud" parent="." groups=["hud"] instance=ExtResource("1_4uyks")]
 
 [node name="Nivel" type="TileMapLayer" parent="." groups=["spikes"]]
 position = Vector2(-142, -40)
