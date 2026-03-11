@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c1dj3olr6sscm"
-path="res://.godot/imported/iris_idle_001.png-361f3ee5ec1df5f252ad791b73dbffa3.ctex"
+uid="uid://d22aa6n3k1gd4"
+path="res://.godot/imported/heart_empty.png-b7d477f53aa341405ef7f7ff65b39ec9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/player/idle/iris_idle_001.png"
-dest_files=["res://.godot/imported/iris_idle_001.png-361f3ee5ec1df5f252ad791b73dbffa3.ctex"]
+source_file="res://assets/ui/heart_empty.png"
+dest_files=["res://.godot/imported/heart_empty.png-b7d477f53aa341405ef7f7ff65b39ec9.ctex"]
 
 [params]
 
