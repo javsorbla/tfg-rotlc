@@ -8,12 +8,14 @@ const IDLE_DISTANCE: float = 200.0
 const PATROL_SPEED: float = 60.0
 const PATROL_X_RANGE: float = 80.0
 const PATROL_Y_RANGE: float = 7.0
+const STUN_DURATION: float = 0.4
+const HIT_KNOCKBACK_FORCE: float = 120.0
 
 const RETURN_ARC_HEIGHT: float = 40.0
 const KNOCKBACK_FORCE: float = 10.0
 const DIVE_MAX_DISTANCE: float = 300.0  # distancia máxima antes de volver
 
-enum State { IDLE, DIVING, RETURNING, DEAD }
+enum State { IDLE, DIVING, RETURNING, STUNNED, DEAD }
 
 var current_state: State = State.IDLE
 var current_health: int = MAX_HEALTH
@@ -21,6 +23,7 @@ var player: Node2D = null
 var dive_direction: Vector2 = Vector2.ZERO
 var dive_started_pos: Vector2 = Vector2.ZERO
 var has_hit_player: bool = false
+var stun_timer: float = 0.0
 
 # Returning
 var return_start_pos: Vector2 = Vector2.ZERO
@@ -36,8 +39,8 @@ func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
 
-	$EnemyHitbox.body_entered.connect(_on_hitbox_body_entered)
-	$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
+	$EnemyHitbox.body_entered.connect(_on_enemy_hitbox_area_entered)
+	$EnemyHitbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	patrol_origin = global_position
 	_enter_state(State.IDLE)
@@ -49,50 +52,14 @@ func _physics_process(delta: float) -> void:
 			_state_idle()
 		State.DIVING:
 			_state_diving()
-			_check_hit_player()
 		State.RETURNING:
 			_state_returning()
+		State.STUNNED:
+			_state_stunned(delta)
 		State.DEAD:
 			pass
 
 	move_and_slide()
-
-
-# Comprobar que golpea al jugador
-func _check_hit_player() -> void:
-	if has_hit_player:
-		return
-
-	var space = get_world_2d().direct_space_state
-	var collision_shape = $EnemyHitbox.get_node("CollisionShape2D")
-	var params = PhysicsShapeQueryParameters2D.new()
-	params.shape_rid = collision_shape.shape.get_rid()
-	params.transform = collision_shape.global_transform
-	params.collide_with_bodies = true
-
-	var result = space.intersect_shape(params)
-	for hit in result:
-		var body = hit.collider
-		if body.is_in_group("player"):
-			print("ENEMIGO GOLPEO AL JUGADOR")
-			has_hit_player = true
-			# Aplicar daño
-			if body.has_method("take_damage"):
-				body.take_damage(DAMAGE)
-			# Knockback horizontal desde enemigo
-			var dir = body.global_position - global_position
-			dir.y = 0
-			if dir.x == 0:
-				dir.x = 1
-			dir = dir.normalized()
-
-			if body is CharacterBody2D:
-				body.move_and_collide(dir * KNOCKBACK_FORCE)
-			else:
-				body.global_position += dir * KNOCKBACK_FORCE
-
-			# Cambiar al estado RETURNING
-			_enter_state(State.RETURNING)
 
 
 # Cambio de estados
@@ -111,7 +78,6 @@ func _enter_state(new_state: State) -> void:
 				velocity = dive_direction * DIVE_SPEED
 				has_hit_player = false
 				dive_started_pos = global_position
-				print("DIVE INICIADO")
 
 		State.RETURNING:
 			velocity = Vector2.ZERO
@@ -184,17 +150,33 @@ func _state_returning() -> void:
 		_enter_state(State.IDLE)
 
 
-func _on_hitbox_body_entered(body: Node) -> void:
-	if body.is_in_group("player") and current_state == State.DIVING and not has_hit_player:
-		print("ENEMIGO GOLPEO AL JUGADOR")
+func _state_stunned(delta):
+
+	stun_timer -= delta
+	velocity = Vector2.ZERO
+
+	if stun_timer <= 0:
+		_enter_state(State.RETURNING)
+
+func _on_enemy_hitbox_area_entered(area: Area2D):
+	if current_state != State.DIVING or has_hit_player:
+		return
+	if area.get_parent().is_in_group("player"):
+		var player = area.get_parent()
 		has_hit_player = true
-		if body.has_method("take_damage"):
-			body.take_damage(DAMAGE)
+		if player.has_method("take_damage"):
+			player.take_damage(DAMAGE)
+		# Aplicar retroceso
+		if player is CharacterBody2D:
+			var dir = player.global_position - global_position
+			dir.y = 0
+			dir = dir.normalized()
+			player.velocity = dir * 150   # retroceso del jugador
 		_enter_state(State.RETURNING)
 
 
-func _on_enemy_hitbox_area_entered(area: Area2D) -> void:
-	if area.name == "AttackHitbox":
+func _on_enemy_hurtbox_area_entered(area: Area2D):
+	if area.is_in_group("player"):
 		take_damage(1)
 
 
@@ -205,6 +187,10 @@ func take_damage(amount: int) -> void:
 	if current_health <= 0:
 		die()
 		return
+	stun_timer = STUN_DURATION
+	_enter_state(State.STUNNED)
+
+	$AnimatedSprite2D.play("dazed")
 
 
 func die() -> void:
