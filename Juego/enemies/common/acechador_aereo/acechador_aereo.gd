@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 		State.STUNNED:
 			_state_stunned(delta)
 		State.DEAD:
-			pass
+			velocity.y += 800 * delta 
 
 	move_and_slide()
 
@@ -85,10 +85,15 @@ func _enter_state(new_state: State) -> void:
 			return_progress = 0.0
 
 		State.DEAD:
-			velocity = Vector2.ZERO
 			$AnimatedSprite2D.play("dead")
-			set_collision_layer_value(1, false)
-			$AnimatedSprite2D.animation_finished.connect(queue_free)
+
+			if $EnemyHitbox:
+				$EnemyHitbox.monitoring = false
+				$EnemyHitbox.monitorable = false
+				$EnemyHitbox.set_deferred("collision_layer", 0)
+				$EnemyHitbox.set_deferred("collision_mask", 0)
+
+			velocity = Vector2(0, 0)
 
 
 func _state_idle() -> void:
@@ -151,18 +156,18 @@ func _state_returning() -> void:
 
 
 func _state_stunned(delta):
-
 	stun_timer -= delta
 	velocity = Vector2.ZERO
 
 	if stun_timer <= 0:
 		_enter_state(State.RETURNING)
 
+
 func _on_enemy_hitbox_area_entered(area: Area2D):
 	if current_state != State.DIVING or has_hit_player:
 		return
 	if area.get_parent().is_in_group("player"):
-		var player = area.get_parent()
+		player = area.get_parent()
 		has_hit_player = true
 		if player.has_method("take_damage"):
 			player.take_damage(DAMAGE)
