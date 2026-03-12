@@ -1,0 +1,211 @@
+extends CharacterBody2D
+
+const MAX_HEALTH: int = 2
+const DAMAGE: int = 0
+const DIVE_SPEED: float = 200.0
+const RETURN_SPEED: float = 100.0
+const IDLE_DISTANCE: float = 200.0
+const PATROL_SPEED: float = 60.0
+const PATROL_X_RANGE: float = 80.0
+const PATROL_Y_RANGE: float = 7.0
+
+const RETURN_ARC_HEIGHT: float = 40.0
+const KNOCKBACK_FORCE: float = 10.0
+const DIVE_MAX_DISTANCE: float = 300.0  # distancia máxima antes de volver
+
+enum State { IDLE, DIVING, RETURNING, DEAD }
+
+var current_state: State = State.IDLE
+var current_health: int = MAX_HEALTH
+var player: Node2D = null
+var dive_direction: Vector2 = Vector2.ZERO
+var dive_started_pos: Vector2 = Vector2.ZERO
+var has_hit_player: bool = false
+
+# Returning
+var return_start_pos: Vector2 = Vector2.ZERO
+var return_progress: float = 0.0
+
+# Patrullaje
+var patrol_origin: Vector2 = Vector2.ZERO
+var patrol_dir: float = 1.0
+var patrol_y_phase: float = 0.0
+
+
+func _ready() -> void:
+	current_health = MAX_HEALTH
+	player = get_tree().get_first_node_in_group("player")
+
+	$EnemyHitbox.body_entered.connect(_on_hitbox_body_entered)
+	$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
+
+	patrol_origin = global_position
+	_enter_state(State.IDLE)
+
+
+func _physics_process(delta: float) -> void:
+	match current_state:
+		State.IDLE:
+			_state_idle()
+		State.DIVING:
+			_state_diving()
+			_check_hit_player()
+		State.RETURNING:
+			_state_returning()
+		State.DEAD:
+			pass
+
+	move_and_slide()
+
+
+# Comprobar que golpea al jugador
+func _check_hit_player() -> void:
+	if has_hit_player:
+		return
+
+	var space = get_world_2d().direct_space_state
+	var collision_shape = $EnemyHitbox.get_node("CollisionShape2D")
+	var params = PhysicsShapeQueryParameters2D.new()
+	params.shape_rid = collision_shape.shape.get_rid()
+	params.transform = collision_shape.global_transform
+	params.collide_with_bodies = true
+
+	var result = space.intersect_shape(params)
+	for hit in result:
+		var body = hit.collider
+		if body.is_in_group("player"):
+			print("ENEMIGO GOLPEO AL JUGADOR")
+			has_hit_player = true
+			# Aplicar daño
+			if body.has_method("take_damage"):
+				body.take_damage(DAMAGE)
+			# Knockback horizontal desde enemigo
+			var dir = body.global_position - global_position
+			dir.y = 0
+			if dir.x == 0:
+				dir.x = 1
+			dir = dir.normalized()
+
+			if body is CharacterBody2D:
+				body.move_and_collide(dir * KNOCKBACK_FORCE)
+			else:
+				body.global_position += dir * KNOCKBACK_FORCE
+
+			# Cambiar al estado RETURNING
+			_enter_state(State.RETURNING)
+
+
+# Cambio de estados
+func _enter_state(new_state: State) -> void:
+	current_state = new_state
+
+	match new_state:
+		State.IDLE:
+			velocity = Vector2.ZERO
+			has_hit_player = false
+
+		State.DIVING:
+			if player:
+				var head_pos = player.global_position + Vector2(0, -10)
+				dive_direction = (head_pos - global_position).normalized()
+				velocity = dive_direction * DIVE_SPEED
+				has_hit_player = false
+				dive_started_pos = global_position
+				print("DIVE INICIADO")
+
+		State.RETURNING:
+			velocity = Vector2.ZERO
+			return_start_pos = global_position
+			return_progress = 0.0
+
+		State.DEAD:
+			velocity = Vector2.ZERO
+			$AnimatedSprite2D.play("dead")
+			set_collision_layer_value(1, false)
+			$AnimatedSprite2D.animation_finished.connect(queue_free)
+
+
+func _state_idle() -> void:
+	if player:
+		if global_position.distance_to(player.global_position) <= IDLE_DISTANCE:
+			_enter_state(State.DIVING)
+			return
+
+	velocity.x = patrol_dir * PATROL_SPEED
+	patrol_y_phase += get_physics_process_delta_time() * 2.0
+	global_position.y = patrol_origin.y + sin(patrol_y_phase) * PATROL_Y_RANGE
+
+	if global_position.x >= patrol_origin.x + PATROL_X_RANGE:
+		patrol_dir = -1.0
+	elif global_position.x <= patrol_origin.x - PATROL_X_RANGE:
+		patrol_dir = 1.0
+
+	if patrol_dir > 0:
+		$AnimatedSprite2D.play("walk_right")
+	else:
+		$AnimatedSprite2D.play("walk_left")
+
+
+func _state_diving() -> void:
+	if not player:
+		return
+
+	$AnimatedSprite2D.play("dive")
+	velocity = dive_direction * DIVE_SPEED
+
+	# Se considera “fallido” si recorre demasiada distancia sin golpear
+	if not has_hit_player:
+		if global_position.distance_to(dive_started_pos) >= DIVE_MAX_DISTANCE:
+			_enter_state(State.RETURNING)
+
+
+func _state_returning() -> void:
+	var total_dir = patrol_origin - return_start_pos
+	var total_dist = total_dir.length()
+	if total_dist == 0:
+		_enter_state(State.IDLE)
+		return
+
+	return_progress += RETURN_SPEED * get_physics_process_delta_time()
+	var t = clamp(return_progress / total_dist, 0, 1)
+
+	var new_pos = return_start_pos.lerp(patrol_origin, t)
+	new_pos.y -= sin(t * PI) * RETURN_ARC_HEIGHT
+	global_position = new_pos
+
+	if total_dir.x < 0:
+		$AnimatedSprite2D.play("walk_left")
+	else:
+		$AnimatedSprite2D.play("walk_right")
+
+	if t >= 1.0:
+		global_position = patrol_origin
+		patrol_y_phase = 0.0
+		_enter_state(State.IDLE)
+
+
+func _on_hitbox_body_entered(body: Node) -> void:
+	if body.is_in_group("player") and current_state == State.DIVING and not has_hit_player:
+		print("ENEMIGO GOLPEO AL JUGADOR")
+		has_hit_player = true
+		if body.has_method("take_damage"):
+			body.take_damage(DAMAGE)
+		_enter_state(State.RETURNING)
+
+
+func _on_enemy_hitbox_area_entered(area: Area2D) -> void:
+	if area.name == "AttackHitbox":
+		take_damage(1)
+
+
+func take_damage(amount: int) -> void:
+	if current_state == State.DEAD:
+		return
+	current_health -= amount
+	if current_health <= 0:
+		die()
+		return
+
+
+func die() -> void:
+	_enter_state(State.DEAD)
