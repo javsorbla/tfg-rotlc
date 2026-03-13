@@ -177,41 +177,39 @@ func _state_stunned(delta):
 		_enter_state(State.RETURNING)
 
 
-func _on_enemy_hitbox_area_entered(area: Area2D):
-	if current_state != State.DIVING or has_hit_player:
-		return
-	if area.get_parent().is_in_group("player"):
-		var player = area.get_parent()
-		has_hit_player = true
-
-		if player.has_method("take_damage"):
-			player.take_damage(DAMAGE)
-
-		# knockback
-		if player is CharacterBody2D:
-			var dir = player.global_position - global_position
-			dir.y = 0
-			dir = dir.normalized()
-			player.velocity = dir * 150
-
-		_enter_state(State.RETURNING)
+func _on_enemy_hitbox_area_entered(area: Area2D): 
+	if current_state != State.DIVING or has_hit_player: 
+		return 
+		
+	if area.is_in_group("player_hurtbox"): 
+		var player = area.get_parent() 
+		has_hit_player = true 
+		if player.has_method("take_damage"): 
+			player.take_damage(DAMAGE) 
+				
+		# knockback 
+		if player is CharacterBody2D: 
+			var dir = (player.global_position - global_position).normalized() 
+			dir.y = 0 
+			player.velocity = dir * 150 
+		_enter_state(State.RETURNING) 
 
 
-func _on_enemy_hurtbox_area_entered(area: Area2D):
-	if area.is_in_group("player"):
-		take_damage(1)
+func _on_enemy_hurtbox_area_entered(area: Area2D): 					
+	if area.is_in_group("player_hitbox"): 
+		take_damage(1) 
 
+			
+func take_damage(amount: int) -> void: 
+	if current_state == State.DEAD: 
+		return 
+	current_health -= amount 
+	if current_health <= 0: 
+		die() 
+		return 
 
-func take_damage(amount: int) -> void:
-	if current_state == State.DEAD:
-		return
-	current_health -= amount
-	if current_health <= 0:
-		die()
-		return
 	stun_timer = STUN_DURATION
-	_enter_state(State.STUNNED)
-
+	_enter_state(State.STUNNED) 
 	$AnimatedSprite2D.play("dazed")
 
 
