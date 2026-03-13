@@ -98,13 +98,22 @@ func _enter_state(new_state: State) -> void:
 
 func _state_idle() -> void:
 	if player:
-		if global_position.distance_to(player.global_position) <= IDLE_DISTANCE:
+		var dist = global_position.distance_to(player.global_position)
+
+		$Vision.target_position = player.global_position - global_position
+
+		if dist <= IDLE_DISTANCE and not $Vision.is_colliding():
 			_enter_state(State.DIVING)
 			return
 
 	velocity.x = patrol_dir * PATROL_SPEED
 	patrol_y_phase += get_physics_process_delta_time() * 2.0
 	global_position.y = patrol_origin.y + sin(patrol_y_phase) * PATROL_Y_RANGE
+
+	# Detectar muros
+	var collision = move_and_slide()
+	if is_on_wall():
+		patrol_dir *= -1   # cambiar dirección si choca con un muro
 
 	if global_position.x >= patrol_origin.x + PATROL_X_RANGE:
 		patrol_dir = -1.0
@@ -123,6 +132,11 @@ func _state_diving() -> void:
 
 	$AnimatedSprite2D.play("dive")
 	velocity = dive_direction * DIVE_SPEED
+
+	# Si choca con un muro, cancela el ataque
+	if is_on_wall():
+		_enter_state(State.RETURNING)
+		return
 
 	# Se considera “fallido” si recorre demasiada distancia sin golpear
 	if not has_hit_player:
@@ -167,16 +181,19 @@ func _on_enemy_hitbox_area_entered(area: Area2D):
 	if current_state != State.DIVING or has_hit_player:
 		return
 	if area.get_parent().is_in_group("player"):
-		player = area.get_parent()
+		var player = area.get_parent()
 		has_hit_player = true
+
 		if player.has_method("take_damage"):
 			player.take_damage(DAMAGE)
-		# Aplicar retroceso
+
+		# knockback
 		if player is CharacterBody2D:
 			var dir = player.global_position - global_position
 			dir.y = 0
 			dir = dir.normalized()
-			player.velocity = dir * 150   # retroceso del jugador
+			player.velocity = dir * 150
+
 		_enter_state(State.RETURNING)
 
 

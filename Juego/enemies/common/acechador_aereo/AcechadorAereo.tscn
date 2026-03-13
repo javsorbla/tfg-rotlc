@@ -91,4 +91,6 @@ position = Vector2(0, -2)
 rotation = 1.5708
 shape = SubResource("CapsuleShape2D_cot1b")
 
+[node name="Vision" type="RayCast2D" parent="."]
+
 [connection signal="area_entered" from="EnemyHitbox" to="." method="_on_enemy_hitbox_area_entered"]
