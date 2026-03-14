@@ -14,7 +14,8 @@ var target: Node2D = null
 @export_range(-1.0, 1.0, 0.01) var player_progression_override := -1.0
 
 @export_group("Knockback")
-@export var player_knockback_force := 250.0
+@export var knockback_speed := 420.0
+@export var knockback_distance := 72.0
 
 var max_health = 3
 var current_health = 3
@@ -23,6 +24,7 @@ var speed = 50.0
 var detection_range = 180.0
 var attack_interval = 0.9
 
+var knockback_timer = 0.0
 var hit_cooldown_timer = 0.0
 var hit_cooldown = 0.9
 
@@ -137,7 +139,7 @@ func _physics_process(delta):
 
 	if not is_on_floor():
 		velocity += get_gravity() * delta
-	else:
+	elif knockback_timer <= 0:
 		velocity.y = 0.0
 
 	if not target:
@@ -147,14 +149,17 @@ func _physics_process(delta):
 		move_and_slide()
 		return
 
-	var dx = target.global_position.x - global_position.x
-	var distance_to_target = global_position.distance_to(target.global_position)
-
-	if distance_to_target > detection_range:
-		velocity.x = move_toward(velocity.x, 0.0, speed)
+	if knockback_timer > 0:
+		knockback_timer -= delta
 	else:
-		last_move_dir = sign(dx)
-		velocity.x = last_move_dir * speed
+		var dx = target.global_position.x - global_position.x
+		var distance_to_target = global_position.distance_to(target.global_position)
+
+		if distance_to_target > detection_range:
+			velocity.x = move_toward(velocity.x, 0.0, speed)
+		else:
+			last_move_dir = sign(dx)
+			velocity.x = last_move_dir * speed
 
 	_check_player_overlap()
 	_update_animation_state()
@@ -183,7 +188,7 @@ func _check_player_overlap():
 	if is_dead:
 		return
 
-	if hit_cooldown_timer > 0:
+	if knockback_timer > 0 or hit_cooldown_timer > 0:
 		return
 
 	for body in $Hurtbox.get_overlapping_bodies():
@@ -195,7 +200,7 @@ func _on_hurtbox_body_entered(body):
 	if is_dead:
 		return
 
-	if hit_cooldown_timer > 0:
+	if knockback_timer > 0 or hit_cooldown_timer > 0:
 		return
 
 	if body is Node2D and (body.name == "Player" or body.is_in_group("player")):
@@ -203,19 +208,18 @@ func _on_hurtbox_body_entered(body):
 
 func _apply_knockback_from_body(body: Node2D):
 
-	# Dirección desde el enemigo hacia el jugador (el jugador sale empujado hacia ese lado)
-	var push_x = sign(body.global_position.x - global_position.x)
+	var away_x = sign(global_position.x - body.global_position.x)
 
-	if push_x == 0:
-		push_x = -last_move_dir
+	if away_x == 0:
+		away_x = last_move_dir
 
-	if push_x == 0:
-		push_x = 1.0
+	if away_x == 0:
+		away_x = -1.0
 
-	# Aplicar impulso directamente sobre la velocidad del jugador
-	var knock_direction = Vector2(push_x, -0.3).normalized()
-	body.velocity = knock_direction * player_knockback_force
+	var knock_direction = Vector2(away_x, -0.15).normalized()
 
+	velocity = knock_direction * knockback_speed
+	knockback_timer = knockback_distance / knockback_speed
 	hit_cooldown_timer = hit_cooldown
 
 	if body.has_method("take_damage"):
@@ -234,6 +238,8 @@ func take_damage(amount: int):
 		die()
 		return
 
+	# cancelar knockback actual
+	knockback_timer = 0
 	velocity = Vector2.ZERO
 
 	# activar stun + invulnerabilidad
@@ -254,6 +260,7 @@ func die():
 	is_dead = true
 	is_invulnerable = true
 	velocity = Vector2.ZERO
+	knockback_timer = 0.0
 	hit_cooldown_timer = 0.0
 
 	if has_node("Hurtbox"):
