@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3xgkjamlfpud"
-path="res://.godot/imported/north.png-e32e0861cf527127e3524debc45b010c.ctex"
+uid="uid://81wi4vpspp8b"
+path="res://.godot/imported/west.png-6663503d1681f7eea000acf1735aab71.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/acechador_aereo/north.png"
-dest_files=["res://.godot/imported/north.png-e32e0861cf527127e3524debc45b010c.ctex"]
+source_file="res://assets/enemies/common/nucleo_inestable/west.png"
+dest_files=["res://.godot/imported/west.png-6663503d1681f7eea000acf1735aab71.ctex"]
 
 [params]
 
