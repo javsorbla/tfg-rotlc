@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://bav0n7c513nk1"]
+[gd_scene load_steps=12 format=3 uid="uid://bav0n7c513nk1"]
 
 [ext_resource type="Script" path="res://enemies/common/acechador_aereo/acechador_aereo.gd" id="1_eekm7"]
 [ext_resource type="Texture2D" uid="uid://dbdh8pjpqrd0i" path="res://assets/enemies/common/acechador_aereo/dead.png" id="2_0i5bu"]
@@ -53,6 +53,20 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="GDScript" id="GDScript_t58hk"]
+script/source = "extends Area2D
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	pass
+"
+
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ixy52"]
 radius = 8.0
 
@@ -76,6 +90,7 @@ animation = &"dive"
 [node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16
 collision_mask = 4
+script = SubResource("GDScript_t58hk")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHitbox"]
 position = Vector2(0, -2)

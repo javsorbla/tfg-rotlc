@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 const MAX_HEALTH: int = 2
-const DAMAGE: int = 0
+const DAMAGE: int = 1
 const DIVE_SPEED: float = 200.0
 const RETURN_SPEED: float = 100.0
 const IDLE_DISTANCE: float = 200.0

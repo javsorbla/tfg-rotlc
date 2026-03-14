@@ -1,0 +1,94 @@
+[gd_scene load_steps=11 format=3 uid="uid://t1ew0cy7jw7m"]
+
+[ext_resource type="Script" path="res://enemies/common/nucleo_inestable/nucleo_inestable.gd" id="1_8h5qr"]
+[ext_resource type="Texture2D" uid="uid://ca0ean37i67fk" path="res://assets/enemies/common/nucleo_inestable/attack.png" id="1_wcgr5"]
+[ext_resource type="Texture2D" uid="uid://f6uwhka0cv3b" path="res://assets/enemies/common/nucleo_inestable/idle.png" id="2_tpima"]
+[ext_resource type="Texture2D" uid="uid://rfcc48670okt" path="res://assets/enemies/common/nucleo_inestable/stunned.png" id="4_fbcnf"]
+[ext_resource type="Texture2D" uid="uid://81wi4vpspp8b" path="res://assets/enemies/common/nucleo_inestable/west.png" id="5_yxywm"]
+[ext_resource type="Texture2D" uid="uid://b5ekq2qbjghy8" path="res://assets/enemies/common/nucleo_inestable/east.png" id="6_0dwm4"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_8rffw"]
+radius = 19.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_s14pk"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_tpima")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_wcgr5")
+}],
+"loop": true,
+"name": &"rolling",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_fbcnf")
+}],
+"loop": true,
+"name": &"stunned",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_yxywm")
+}],
+"loop": true,
+"name": &"walk_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_0dwm4")
+}],
+"loop": true,
+"name": &"walk_right",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_f2m4e"]
+radius = 19.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ej7uj"]
+radius = 19.0
+
+[node name="NucleoInestable" type="CharacterBody2D"]
+collision_layer = 16
+script = ExtResource("1_8h5qr")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -2)
+shape = SubResource("CircleShape2D_8rffw")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." groups=["enemy_hitbox"]]
+scale = Vector2(0.74707, 0.71875)
+sprite_frames = SubResource("SpriteFrames_s14pk")
+animation = &"idle"
+
+[node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHitbox"]
+position = Vector2(0, -2)
+shape = SubResource("CircleShape2D_f2m4e")
+
+[node name="EnemyHurtbox" type="Area2D" parent="." groups=["enemy_hurtbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHurtbox"]
+position = Vector2(0, -2)
+shape = SubResource("CircleShape2D_ej7uj")
+
+[node name="Vision" type="RayCast2D" parent="."]
+
+[connection signal="area_entered" from="EnemyHitbox" to="." method="_on_enemy_hitbox_area_entered"]
+[connection signal="area_entered" from="EnemyHurtbox" to="." method="_on_enemy_hurtbox_area_entered"]
