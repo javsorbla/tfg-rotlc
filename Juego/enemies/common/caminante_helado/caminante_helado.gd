@@ -1,12 +1,15 @@
 extends CharacterBody2D
 
+const PLAYER_KNOCKBACK_TIMER_META := "caminante_helado_knockback_timer"
+const PLAYER_KNOCKBACK_SPEED_META := "caminante_helado_knockback_speed"
+
 var target: Node2D = null
 
 @export_group("Balance base")
 @export var base_health := 3
 @export var base_contact_damage := 1
 @export var base_move_speed := 50.0
-@export var base_detection_range := 180.0
+@export var base_detection_range := 260.0
 @export var base_attack_interval := 0.9
 
 @export_group("Escalado")
@@ -15,6 +18,17 @@ var target: Node2D = null
 
 @export_group("Knockback")
 @export var player_knockback_force := 350.0
+@export var player_knockback_duration := 0.35
+
+@export_group("Patrulla")
+@export var patrol_distance := 48.0
+@export var patrol_speed_multiplier := 0.45
+
+@export_group("Vision")
+@export var vision_memory_time := 0.2
+@export var vision_eye_height := 10.0
+@export var vision_overhead_x_tolerance := 28.0
+@export var vision_overhead_y_tolerance := 42.0
 
 var max_health = 3
 var current_health = 3
@@ -25,9 +39,16 @@ var attack_interval = 0.9
 
 var hit_cooldown_timer = 0.0
 var hit_cooldown = 0.9
+var hit_pause_timer = 0.0
+
+@export var hit_pause_duration := 1.0
 
 var stop_distance = 0.0
 var last_move_dir = -1.0
+var patrol_origin_x = 0.0
+var patrol_direction = -1.0
+var target_visible_timer = 0.0
+var has_spotted_target = false
 
 # --- NUEVO: stun + invulnerabilidad + parpadeo seguro ---
 var is_invulnerable = false
@@ -36,6 +57,7 @@ var stun_duration = 0.5
 var blink_timer = 0.0
 var blink_interval = 0.1
 var is_dead = false
+var hit_from_right := false
 
 @export var death_time := 1.5
 
@@ -43,6 +65,8 @@ var is_dead = false
 
 func _ready():
 	target = _find_player_target()
+	patrol_origin_x = global_position.x
+	patrol_direction = last_move_dir
 	_apply_balanced_stats()
 
 	if not $Hurtbox.body_entered.is_connected(_on_hurtbox_body_entered):
@@ -106,17 +130,130 @@ func _find_player_target() -> Node2D:
 			return node as Node2D
 	return null
 
+func _process_player_knockback(delta: float) -> void:
+	if not target or not is_instance_valid(target):
+		return
+
+	if not target.has_meta(PLAYER_KNOCKBACK_TIMER_META):
+		return
+
+	var time_left := float(target.get_meta(PLAYER_KNOCKBACK_TIMER_META)) - delta
+	if time_left <= 0.0:
+		target.remove_meta(PLAYER_KNOCKBACK_TIMER_META)
+		target.remove_meta(PLAYER_KNOCKBACK_SPEED_META)
+		return
+
+	var horizontal_speed := float(target.get_meta(PLAYER_KNOCKBACK_SPEED_META))
+	var progress: float = clamp(time_left / max(player_knockback_duration, 0.001), 0.0, 1.0)
+	if target is CharacterBody2D:
+		var player_body := target as CharacterBody2D
+		var sustained_speed: float = horizontal_speed * max(0.18, progress)
+		if abs(player_body.velocity.x) < abs(sustained_speed):
+			player_body.velocity.x = sustained_speed
+	target.set_meta(PLAYER_KNOCKBACK_TIMER_META, time_left)
+
+func _get_facing_direction() -> float:
+	if abs(velocity.x) > 5.0:
+		return sign(velocity.x)
+	if last_move_dir != 0:
+		return last_move_dir
+	if patrol_direction != 0:
+		return patrol_direction
+	return -1.0
+
+func _can_see_target() -> bool:
+	if not target or not is_instance_valid(target):
+		has_spotted_target = false
+		return false
+
+	var dx = target.global_position.x - global_position.x
+	var distance_to_target = global_position.distance_to(target.global_position)
+	if distance_to_target > detection_range:
+		has_spotted_target = false
+		return false
+
+	if not _has_line_of_sight():
+		return false
+
+	var facing_dir = _get_facing_direction()
+	var is_facing_target = dx == 0 or sign(dx) == facing_dir
+	var is_target_overhead = _is_target_overhead(dx)
+
+	if has_spotted_target:
+		if is_facing_target or is_target_overhead:
+			return true
+
+		has_spotted_target = false
+		return false
+
+	if dx == 0:
+		has_spotted_target = true
+		return true
+
+	if is_facing_target:
+		has_spotted_target = true
+		return true
+
+	return false
+
+func _is_target_overhead(dx: float) -> bool:
+	if not target or not is_instance_valid(target):
+		return false
+
+	var dy = target.global_position.y - global_position.y
+	var near_x = abs(dx) <= vision_overhead_x_tolerance
+	var above_enemy = dy < 0 and abs(dy) <= vision_overhead_y_tolerance
+	return near_x and above_enemy
+
+func _has_line_of_sight() -> bool:
+	if not target or not is_instance_valid(target):
+		return false
+
+	var space_state := get_world_2d().direct_space_state
+	var eye_from := global_position + Vector2(0.0, -vision_eye_height)
+	var eye_to := target.global_position + Vector2(0.0, -vision_eye_height)
+	var query := PhysicsRayQueryParameters2D.create(eye_from, eye_to)
+	query.exclude = [self]
+	query.collide_with_areas = false
+	var result := space_state.intersect_ray(query)
+
+	if result.is_empty():
+		return true
+
+	return result.get("collider") == target
+
+func _update_patrol_movement() -> void:
+	var left_limit = patrol_origin_x - patrol_distance
+	var right_limit = patrol_origin_x + patrol_distance
+
+	if patrol_direction < 0 and global_position.x <= left_limit:
+		patrol_direction = 1.0
+	elif patrol_direction > 0 and global_position.x >= right_limit:
+		patrol_direction = -1.0
+
+	last_move_dir = patrol_direction
+	velocity.x = patrol_direction * speed * patrol_speed_multiplier
+
 func _physics_process(delta):
+	if not target:
+		target = _find_player_target()
+
+	_process_player_knockback(delta)
+
 	if is_dead:
 		return
 
 	if hit_cooldown_timer > 0:
 		hit_cooldown_timer -= delta
 
+	if hit_pause_timer > 0:
+		hit_pause_timer -= delta
+
 	# --- STUN ---
 	if stun_timer > 0:
 		stun_timer -= delta
 		if animated_sprite.animation != "dazed":
+			animated_sprite.flip_h = hit_from_right
 			animated_sprite.play("dazed")
 
 		blink_timer -= delta
@@ -141,20 +278,28 @@ func _physics_process(delta):
 		velocity.y = 0.0
 
 	if not target:
-		target = _find_player_target()
 		_check_player_overlap()
 		_update_animation_state()
 		move_and_slide()
 		return
 
 	var dx = target.global_position.x - global_position.x
-	var distance_to_target = global_position.distance_to(target.global_position)
-
-	if distance_to_target > detection_range:
-		velocity.x = move_toward(velocity.x, 0.0, speed)
+	var sees_target_now = _can_see_target()
+	if sees_target_now:
+		target_visible_timer = vision_memory_time
 	else:
-		last_move_dir = sign(dx)
+		target_visible_timer = max(0.0, target_visible_timer - delta)
+
+	var sees_target = sees_target_now or target_visible_timer > 0.0
+
+	if hit_pause_timer > 0:
+		velocity.x = move_toward(velocity.x, 0.0, speed * 4)
+	elif sees_target:
+		if sees_target_now and dx != 0:
+			last_move_dir = sign(dx)
 		velocity.x = last_move_dir * speed
+	else:
+		_update_patrol_movement()
 
 	_check_player_overlap()
 	_update_animation_state()
@@ -163,18 +308,19 @@ func _physics_process(delta):
 
 func _update_animation_state():
 
-	if not target:
+	animated_sprite.flip_h = false
+
+	if hit_pause_timer > 0 and abs(velocity.x) < 5.0:
 		animated_sprite.play("idle")
 		return
 
-	var distance_to_target = global_position.distance_to(target.global_position)
-	var dx = target.global_position.x - global_position.x
-
-	if distance_to_target > detection_range:
+	if abs(velocity.x) < 5.0:
 		animated_sprite.play("idle")
-	elif dx < 0:
+		return
+
+	if velocity.x < 0:
 		animated_sprite.play("walk_left")
-	elif dx > 0:
+	elif velocity.x > 0:
 		animated_sprite.play("walk_right")
 	else:
 		animated_sprite.play("idle")
@@ -212,9 +358,14 @@ func _apply_knockback_from_body(body: Node2D):
 	if push_x == 0:
 		push_x = 1.0
 
-	var knock_direction = Vector2(push_x, -0.3).normalized()
-	body.velocity = knock_direction * player_knockback_force
+	var knock_direction = Vector2(push_x * 0.45, -1.0).normalized()
+	if body is CharacterBody2D:
+		var player_body := body as CharacterBody2D
+		player_body.velocity = knock_direction * player_knockback_force
+		player_body.set_meta(PLAYER_KNOCKBACK_TIMER_META, player_knockback_duration)
+		player_body.set_meta(PLAYER_KNOCKBACK_SPEED_META, knock_direction.x * player_knockback_force)
 
+	hit_pause_timer = hit_pause_duration
 	hit_cooldown_timer = hit_cooldown
 
 	if body.has_method("take_damage"):
@@ -226,6 +377,16 @@ func take_damage(amount: int):
 
 	if is_invulnerable:
 		return
+
+	if not target:
+		target = _find_player_target()
+
+	has_spotted_target = true
+	target_visible_timer = vision_memory_time
+
+	# guardar de qué lado vino el golpe (donde está el jugador)
+	if target:
+		hit_from_right = target.global_position.x > global_position.x
 
 	current_health -= amount
 
@@ -265,6 +426,7 @@ func die():
 
 	if animated_sprite:
 		animated_sprite.modulate.a = 1.0
+		animated_sprite.flip_h = hit_from_right
 		animated_sprite.play("dead")
 
 	await get_tree().create_timer(death_time).timeout
