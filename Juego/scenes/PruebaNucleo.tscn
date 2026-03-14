@@ -44,11 +44,11 @@ tile_map_data = PackedByteArray("AAD6/wIAAQACAAEAAAD7/wIAAQACAAEAAAD8/wIAAQACAAE
 tile_set = SubResource("TileSet_34jmr")
 
 [node name="NucleoInestable" parent="." instance=ExtResource("3_glu4o")]
-position = Vector2(315, 16)
+position = Vector2(306, 18)
 
 [node name="Player" parent="." instance=ExtResource("2_hv4vr")]
-position = Vector2(8, 18)
+position = Vector2(-5, 19)
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
-position = Vector2(137, -60)
+position = Vector2(139, -55)
 position_smoothing_enabled = true

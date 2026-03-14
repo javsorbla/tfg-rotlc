@@ -62,8 +62,8 @@ func _handle_flash(delta):
 
 func _on_hurtbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy_hitbox"):
-		var enemy = area.get_parent()  # padre del hitbox
-		take_damage(enemy.DAMAGE)      # accede directamente a la constante DAMAGE
+		var enemy = area.get_parent()
+		take_damage(enemy.DAMAGE)
 
 func _on_hurtbox_body_entered(body: Node2D) -> void:
 	if body.is_in_group("spikes"):

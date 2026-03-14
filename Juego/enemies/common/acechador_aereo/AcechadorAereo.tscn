@@ -96,6 +96,7 @@ script = SubResource("GDScript_t58hk")
 position = Vector2(0, -2)
 rotation = 1.5708
 shape = SubResource("CapsuleShape2D_ixy52")
+debug_color = Color(1, 0, 0, 0.419608)
 
 [node name="EnemyHurtbox" type="Area2D" parent="." groups=["enemy_hurtbox"]]
 collision_layer = 16
@@ -105,6 +106,7 @@ collision_mask = 4
 position = Vector2(0, -2)
 rotation = 1.5708
 shape = SubResource("CapsuleShape2D_cot1b")
+debug_color = Color(0, 1, 0, 0.419608)
 
 [node name="Vision" type="RayCast2D" parent="."]
 
