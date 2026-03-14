@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 const MAX_HEALTH: int = 2
-const DAMAGE: int = 0
+const DAMAGE: int = 1
 const DIVE_SPEED: float = 200.0
 const RETURN_SPEED: float = 100.0
 const IDLE_DISTANCE: float = 200.0
@@ -40,7 +40,7 @@ func _ready() -> void:
 	player = get_tree().get_first_node_in_group("player")
 
 	$EnemyHitbox.body_entered.connect(_on_enemy_hitbox_area_entered)
-	$EnemyHitbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	patrol_origin = global_position
 	_enter_state(State.IDLE)
@@ -177,41 +177,39 @@ func _state_stunned(delta):
 		_enter_state(State.RETURNING)
 
 
-func _on_enemy_hitbox_area_entered(area: Area2D):
-	if current_state != State.DIVING or has_hit_player:
-		return
-	if area.get_parent().is_in_group("player"):
-		var player = area.get_parent()
-		has_hit_player = true
-
-		if player.has_method("take_damage"):
-			player.take_damage(DAMAGE)
-
-		# knockback
-		if player is CharacterBody2D:
-			var dir = player.global_position - global_position
-			dir.y = 0
-			dir = dir.normalized()
-			player.velocity = dir * 150
-
-		_enter_state(State.RETURNING)
+func _on_enemy_hitbox_area_entered(area: Area2D): 
+	if current_state != State.DIVING or has_hit_player: 
+		return 
+		
+	if area.is_in_group("player_hurtbox"): 
+		var player = area.get_parent() 
+		has_hit_player = true 
+		if player.has_method("take_damage"): 
+			player.take_damage(DAMAGE) 
+				
+		# knockback 
+		if player is CharacterBody2D: 
+			var dir = (player.global_position - global_position).normalized() 
+			dir.y = 0 
+			player.velocity = dir * 150 
+		_enter_state(State.RETURNING) 
 
 
-func _on_enemy_hurtbox_area_entered(area: Area2D):
-	if area.is_in_group("player"):
-		take_damage(1)
+func _on_enemy_hurtbox_area_entered(area: Area2D): 					
+	if area.is_in_group("player_hitbox"): 
+		take_damage(1) 
 
+			
+func take_damage(amount: int) -> void: 
+	if current_state == State.DEAD: 
+		return 
+	current_health -= amount 
+	if current_health <= 0: 
+		die() 
+		return 
 
-func take_damage(amount: int) -> void:
-	if current_state == State.DEAD:
-		return
-	current_health -= amount
-	if current_health <= 0:
-		die()
-		return
 	stun_timer = STUN_DURATION
-	_enter_state(State.STUNNED)
-
+	_enter_state(State.STUNNED) 
 	$AnimatedSprite2D.play("dazed")
 
 
