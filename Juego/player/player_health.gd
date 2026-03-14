@@ -24,8 +24,8 @@ func process(delta):
 	_handle_invincibility(delta)
 	_handle_flash(delta)
 
-func take_damage(amount: int):
-	if is_invincible:
+func take_damage(amount: int, bypass_shield: bool = false):
+	if (player.is_shielding and not bypass_shield) or is_invincible:
 		return
 	current_health -= amount
 	is_invincible = true
