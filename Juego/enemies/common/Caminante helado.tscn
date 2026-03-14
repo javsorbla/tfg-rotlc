@@ -1,9 +1,11 @@
-[gd_scene load_steps=8 format=3 uid="uid://b7kj5rrupn1ou"]
+[gd_scene load_steps=10 format=3 uid="uid://b7kj5rrupn1ou"]
 
 [ext_resource type="Script" path="res://enemies/common/caminante_helado.gd" id="1_auixj"]
-[ext_resource type="Texture2D" uid="uid://clib3a5xut760" path="res://assets/enemies/common/caminante_helado/south.png" id="3_p0bkk"]
-[ext_resource type="Texture2D" uid="uid://d1do7kgjd35d4" path="res://assets/enemies/common/caminante_helado/west.png" id="4_o2t4e"]
+[ext_resource type="Texture2D" uid="uid://c4ub0jckhb8xu" path="res://assets/enemies/common/caminante_helado/stun2-gemini.PNG" id="2_fobuv"]
+[ext_resource type="Texture2D" uid="uid://dokursj1w1p42" path="res://assets/enemies/common/caminante_helado/dead.png" id="2_y51lt"]
+[ext_resource type="Texture2D" uid="uid://dxbfdmj5acc7c" path="res://assets/enemies/common/caminante_helado/iddle-gemini-front.PNG" id="3_nq0ul"]
 [ext_resource type="Texture2D" uid="uid://0dlxt56kblas" path="res://assets/enemies/common/caminante_helado/east.png" id="5_8t5p3"]
+[ext_resource type="Texture2D" uid="uid://cxotpv6su8kyy" path="res://assets/enemies/common/caminante_helado/walk-gemini-left.PNG" id="5_khur3"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sgw7u"]
 radius = 7.0
@@ -11,19 +13,25 @@ height = 26.0
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_1o3aa"]
 animations = [{
-"frames": [],
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_fobuv")
+}],
 "loop": true,
 "name": &"dazed",
 "speed": 5.0
 }, {
-"frames": [],
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_y51lt")
+}],
 "loop": true,
 "name": &"dead",
 "speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("3_p0bkk")
+"texture": ExtResource("3_nq0ul")
 }],
 "loop": true,
 "name": &"idle",
@@ -36,7 +44,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("4_o2t4e")
+"texture": ExtResource("5_khur3")
 }],
 "loop": true,
 "name": &"walk_left",
@@ -67,7 +75,7 @@ shape = SubResource("CapsuleShape2D_sgw7u")
 position = Vector2(1.90735e-06, 2)
 scale = Vector2(0.609375, 0.5625)
 sprite_frames = SubResource("SpriteFrames_1o3aa")
-animation = &"idle"
+animation = &"dazed"
 
 [node name="Hurtbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16

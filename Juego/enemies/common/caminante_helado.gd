@@ -37,6 +37,9 @@ var stun_timer = 0.0
 var stun_duration = 0.5
 var blink_timer = 0.0
 var blink_interval = 0.1
+var is_dead = false
+
+@export var death_time := 1.5
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -106,6 +109,8 @@ func _find_player_target() -> Node2D:
 	return null
 
 func _physics_process(delta):
+	if is_dead:
+		return
 
 	if hit_cooldown_timer > 0:
 		hit_cooldown_timer -= delta
@@ -113,6 +118,8 @@ func _physics_process(delta):
 	# --- STUN ---
 	if stun_timer > 0:
 		stun_timer -= delta
+		if animated_sprite.animation != "dazed":
+			animated_sprite.play("dazed")
 
 		blink_timer -= delta
 		if blink_timer <= 0:
@@ -178,6 +185,8 @@ func _update_animation_state():
 		animated_sprite.play("idle")
 
 func _check_player_overlap():
+	if is_dead:
+		return
 
 	if knockback_timer > 0 or hit_cooldown_timer > 0:
 		return
@@ -188,6 +197,8 @@ func _check_player_overlap():
 			break
 
 func _on_hurtbox_body_entered(body):
+	if is_dead:
+		return
 
 	if knockback_timer > 0 or hit_cooldown_timer > 0:
 		return
@@ -215,6 +226,8 @@ func _apply_knockback_from_body(body: Node2D):
 		body.call("take_damage", contact_damage)
 
 func take_damage(amount: int):
+	if is_dead:
+		return
 
 	if is_invulnerable:
 		return
@@ -241,4 +254,26 @@ func take_damage(amount: int):
 	animated_sprite.modulate.a = 1.0
 
 func die():
+	if is_dead:
+		return
+
+	is_dead = true
+	is_invulnerable = true
+	velocity = Vector2.ZERO
+	knockback_timer = 0.0
+	hit_cooldown_timer = 0.0
+
+	if has_node("Hurtbox"):
+		$Hurtbox.monitoring = false
+		$Hurtbox.set_deferred("collision_layer", 0)
+		$Hurtbox.set_deferred("collision_mask", 0)
+
+	set_deferred("collision_layer", 0)
+	set_deferred("collision_mask", 0)
+
+	if animated_sprite:
+		animated_sprite.modulate.a = 1.0
+		animated_sprite.play("dead")
+
+	await get_tree().create_timer(death_time).timeout
 	queue_free()
