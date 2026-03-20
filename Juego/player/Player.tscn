@@ -53,7 +53,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qxcp4"]
-size = Vector2(14, 26)
+size = Vector2(30, 26)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_dffot"]
 radius = 7.0
@@ -74,7 +74,7 @@ scale = Vector2(0.609375, 0.5625)
 sprite_frames = SubResource("SpriteFrames_1o3aa")
 animation = &"idle"
 
-[node name="AttackHitbox" type="Area2D" parent="."]
+[node name="AttackHitbox" type="Area2D" parent="." groups=["player_hitbox"]]
 collision_layer = 4
 collision_mask = 16
 monitoring = false
@@ -84,7 +84,7 @@ monitorable = false
 position = Vector2(0, 1)
 shape = SubResource("RectangleShape2D_qxcp4")
 
-[node name="Hurtbox" type="Area2D" parent="."]
+[node name="Hurtbox" type="Area2D" parent="." groups=["player_hurtbox"]]
 collision_layer = 4
 collision_mask = 18
 

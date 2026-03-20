@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3xgkjamlfpud"
-path="res://.godot/imported/north.png-e32e0861cf527127e3524debc45b010c.ctex"
+uid="uid://f6uwhka0cv3b"
+path="res://.godot/imported/idle.png-3462b5015dcde09499ba6b886c9fdb8f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/acechador_aereo/north.png"
-dest_files=["res://.godot/imported/north.png-e32e0861cf527127e3524debc45b010c.ctex"]
+source_file="res://assets/enemies/common/nucleo_inestable/idle.png"
+dest_files=["res://.godot/imported/idle.png-3462b5015dcde09499ba6b886c9fdb8f.ctex"]
 
 [params]
 
