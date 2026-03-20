@@ -1,0 +1,76 @@
+[gd_scene load_steps=9 format=3 uid="uid://ct22yo10swc1v"]
+
+[ext_resource type="Script" path="res://enemies/common/kamikaze_electrico/kamikaze_electrico.gd" id="1_mmsu7"]
+[ext_resource type="Texture2D" uid="uid://cqn1fvqv2f7g1" path="res://assets/enemies/common/kamikaze_electrico/west.png" id="2_lndts"]
+[ext_resource type="Texture2D" uid="uid://cfoeycc345pmv" path="res://assets/enemies/common/kamikaze_electrico/idle.png" id="2_ol5p8"]
+[ext_resource type="Texture2D" uid="uid://c1ql2k0bg5hjv" path="res://assets/enemies/common/kamikaze_electrico/north.png" id="3_a1a2l"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_l47lg"]
+radius = 19.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_b43we"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_lndts")
+}],
+"loop": true,
+"name": &"charged",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_a1a2l")
+}],
+"loop": true,
+"name": &"dead",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_ol5p8")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_s0mhw"]
+radius = 19.0263
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_k13lx"]
+radius = 19.0263
+
+[node name="KamikazeElectrico" type="CharacterBody2D"]
+collision_layer = 16
+script = ExtResource("1_mmsu7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -3)
+shape = SubResource("CircleShape2D_l47lg")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(7.62939e-06, 0)
+scale = Vector2(0.953125, 0.890625)
+sprite_frames = SubResource("SpriteFrames_b43we")
+animation = &"charged"
+
+[node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHitbox"]
+position = Vector2(0, -3)
+shape = SubResource("CircleShape2D_s0mhw")
+debug_color = Color(1, 0, 0, 0.419608)
+
+[node name="EnemyHurtbox" type="Area2D" parent="." groups=["enemy_hurtbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHurtbox"]
+position = Vector2(0, -3)
+shape = SubResource("CircleShape2D_k13lx")
+debug_color = Color(0, 1, 0, 0.419608)
+
+[node name="Vision" type="RayCast2D" parent="."]
