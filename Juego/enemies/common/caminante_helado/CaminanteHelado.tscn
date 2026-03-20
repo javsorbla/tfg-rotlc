@@ -1,0 +1,89 @@
+[gd_scene load_steps=10 format=3 uid="uid://b7kj5rrupn1ou"]
+
+[ext_resource type="Script" path="res://enemies/common/caminante_helado/caminante_helado.gd" id="1_auixj"]
+[ext_resource type="Texture2D" uid="uid://c4ub0jckhb8xu" path="res://assets/enemies/common/caminante_helado/stun2-gemini.PNG" id="2_fobuv"]
+[ext_resource type="Texture2D" uid="uid://dokursj1w1p42" path="res://assets/enemies/common/caminante_helado/dead.png" id="2_y51lt"]
+[ext_resource type="Texture2D" uid="uid://dxbfdmj5acc7c" path="res://assets/enemies/common/caminante_helado/iddle-gemini-front.PNG" id="3_nq0ul"]
+[ext_resource type="Texture2D" uid="uid://cxotpv6su8kyy" path="res://assets/enemies/common/caminante_helado/walk-gemini-left.PNG" id="5_khur3"]
+[ext_resource type="Texture2D" uid="uid://x35s02sgb74j" path="res://assets/enemies/common/caminante_helado/walk-gemini-right.png" id="6_qumxu"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sgw7u"]
+radius = 7.0
+height = 26.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1o3aa"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_fobuv")
+}],
+"loop": true,
+"name": &"dazed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_y51lt")
+}],
+"loop": true,
+"name": &"dead",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_nq0ul")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [],
+"loop": true,
+"name": &"jump",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_khur3")
+}],
+"loop": true,
+"name": &"walk_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_qumxu")
+}],
+"loop": true,
+"name": &"walk_right",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_dffot"]
+radius = 7.0
+height = 26.0
+
+[node name="CaminanteHelado" type="CharacterBody2D"]
+collision_layer = 4
+script = ExtResource("1_auixj")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 1)
+shape = SubResource("CapsuleShape2D_sgw7u")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(1.90735e-06, 2)
+scale = Vector2(0.609375, 0.5625)
+sprite_frames = SubResource("SpriteFrames_1o3aa")
+animation = &"idle"
+
+[node name="Hurtbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, 1)
+shape = SubResource("CapsuleShape2D_dffot")
+debug_color = Color(0.8778, 0.31399, 0.357215, 0.42)
+
+[connection signal="body_entered" from="Hurtbox" to="." method="_on_hurtbox_body_entered"]
