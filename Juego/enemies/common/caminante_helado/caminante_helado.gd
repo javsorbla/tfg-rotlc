@@ -33,6 +33,7 @@ var target: Node2D = null
 var max_health = 3
 var current_health = 3
 var contact_damage = 1
+var DAMAGE = 1
 var speed = 50.0
 var detection_range = 180.0
 var attack_interval = 0.9
@@ -69,8 +70,11 @@ func _ready():
 	patrol_direction = last_move_dir
 	_apply_balanced_stats()
 
-	if not $Hurtbox.body_entered.is_connected(_on_hurtbox_body_entered):
-		$Hurtbox.body_entered.connect(_on_hurtbox_body_entered)
+	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
+		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
+
+	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
+		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 func _apply_balanced_stats():
 	var player_progress = _read_player_progression_ratio()
@@ -85,6 +89,7 @@ func _apply_balanced_stats():
 	max_health = max(1, int(round(base_health * health_scale)))
 	current_health = max_health
 	contact_damage = max(1, int(round(base_contact_damage * damage_scale)))
+	DAMAGE = contact_damage
 	speed = base_move_speed * speed_scale
 	detection_range = base_detection_range * detection_scale
 	attack_interval = max(0.2, base_attack_interval / attack_rate_scale)
@@ -278,7 +283,6 @@ func _physics_process(delta):
 		velocity.y = 0.0
 
 	if not target:
-		_check_player_overlap()
 		_update_animation_state()
 		move_and_slide()
 		return
@@ -301,7 +305,6 @@ func _physics_process(delta):
 	else:
 		_update_patrol_movement()
 
-	_check_player_overlap()
 	_update_animation_state()
 
 	move_and_slide()
@@ -325,32 +328,31 @@ func _update_animation_state():
 	else:
 		animated_sprite.play("idle")
 
-func _check_player_overlap():
+func _on_enemy_hitbox_area_entered(area: Area2D):
 	if is_dead:
 		return
 
 	if hit_cooldown_timer > 0:
 		return
 
-	for body in $Hurtbox.get_overlapping_bodies():
-		if body is Node2D and (body.name == "Player" or body.is_in_group("player")):
-			_apply_knockback_from_body(body as Node2D)
-			break
+	if not area.is_in_group("player_hurtbox"):
+		return
 
-func _on_hurtbox_body_entered(body):
+	var player_node = area.get_parent()
+	if player_node is Node2D and (player_node.name == "Player" or player_node.is_in_group("player")):
+		_apply_knockback_from_player(player_node as Node2D)
+
+func _on_enemy_hurtbox_area_entered(area: Area2D):
 	if is_dead:
 		return
 
-	if hit_cooldown_timer > 0:
-		return
+	if area.is_in_group("player_hitbox"):
+		take_damage(1)
 
-	if body is Node2D and (body.name == "Player" or body.is_in_group("player")):
-		_apply_knockback_from_body(body as Node2D)
-
-func _apply_knockback_from_body(body: Node2D):
+func _apply_knockback_from_player(player_node: Node2D):
 
 	# El jugador sale empujado en dirección opuesta al enemigo
-	var push_x = sign(body.global_position.x - global_position.x)
+	var push_x = sign(player_node.global_position.x - global_position.x)
 
 	if push_x == 0:
 		push_x = -last_move_dir
@@ -359,8 +361,8 @@ func _apply_knockback_from_body(body: Node2D):
 		push_x = 1.0
 
 	var knock_direction = Vector2(push_x * 0.45, -1.0).normalized()
-	if body is CharacterBody2D:
-		var player_body := body as CharacterBody2D
+	if player_node is CharacterBody2D:
+		var player_body := player_node as CharacterBody2D
 		player_body.velocity = knock_direction * player_knockback_force
 		player_body.set_meta(PLAYER_KNOCKBACK_TIMER_META, player_knockback_duration)
 		player_body.set_meta(PLAYER_KNOCKBACK_SPEED_META, knock_direction.x * player_knockback_force)
@@ -368,8 +370,8 @@ func _apply_knockback_from_body(body: Node2D):
 	hit_pause_timer = hit_pause_duration
 	hit_cooldown_timer = hit_cooldown
 
-	if body.has_method("take_damage"):
-		body.call("take_damage", contact_damage)
+	if player_node.has_method("take_damage"):
+		player_node.call("take_damage", contact_damage)
 
 func take_damage(amount: int):
 	if is_dead:
@@ -416,10 +418,15 @@ func die():
 	velocity = Vector2.ZERO
 	hit_cooldown_timer = 0.0
 
-	if has_node("Hurtbox"):
-		$Hurtbox.monitoring = false
-		$Hurtbox.set_deferred("collision_layer", 0)
-		$Hurtbox.set_deferred("collision_mask", 0)
+	if has_node("EnemyHitbox"):
+		$EnemyHitbox.monitoring = false
+		$EnemyHitbox.set_deferred("collision_layer", 0)
+		$EnemyHitbox.set_deferred("collision_mask", 0)
+
+	if has_node("EnemyHurtbox"):
+		$EnemyHurtbox.monitoring = false
+		$EnemyHurtbox.set_deferred("collision_layer", 0)
+		$EnemyHurtbox.set_deferred("collision_mask", 0)
 
 	set_deferred("collision_layer", 0)
 	set_deferred("collision_mask", 0)
