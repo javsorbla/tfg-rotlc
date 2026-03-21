@@ -188,7 +188,7 @@ func _on_enemy_hitbox_area_entered(area: Area2D):
 			player.take_damage(DAMAGE) 
 				
 		# knockback 
-		if player is CharacterBody2D: 
+		if player is CharacterBody2D and not player.is_shielding: 
 			var dir = (player.global_position - global_position).normalized() 
 			dir.y = 0 
 			player.velocity = dir * 150 
