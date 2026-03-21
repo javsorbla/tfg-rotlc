@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqn1fvqv2f7g1"
-path="res://.godot/imported/west.png-42353cde5acb9d7ae75ad9e7cfd9e226.ctex"
+uid="uid://dnray68mxyxnt"
+path="res://.godot/imported/dead.png-4c7453c2f7fa6eb680d15d2f421e3e00.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/kamikaze_electrico/west.png"
-dest_files=["res://.godot/imported/west.png-42353cde5acb9d7ae75ad9e7cfd9e226.ctex"]
+source_file="res://assets/enemies/common/kamikaze_electrico/dead.png"
+dest_files=["res://.godot/imported/dead.png-4c7453c2f7fa6eb680d15d2f421e3e00.ctex"]
 
 [params]
 
