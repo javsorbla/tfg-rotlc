@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b5ekq2qbjghy8"
-path="res://.godot/imported/east.png-5f09a9cce3db2c5d766a092eda92c8c9.ctex"
+uid="uid://dpc4v1unqmii7"
+path="res://.godot/imported/explode.png-bd6287dc8686c00b22a8ee7e5807a2ff.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/nucleo_inestable/east.png"
-dest_files=["res://.godot/imported/east.png-5f09a9cce3db2c5d766a092eda92c8c9.ctex"]
+source_file="res://assets/enemies/common/kamikaze_electrico/explode.png"
+dest_files=["res://.godot/imported/explode.png-bd6287dc8686c00b22a8ee7e5807a2ff.ctex"]
 
 [params]
 
