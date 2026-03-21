@@ -64,8 +64,12 @@ func _enter_state(new_state: State) -> void:
 				if explode_from_death:
 					player.get_node("Health").is_invincible = false 
 				player.get_node("Health").take_damage(DAMAGE)
-			await get_tree().create_timer(0.75).timeout
-			queue_free()
+			var timer = Timer.new()
+			add_child(timer)
+			timer.wait_time = 0.75
+			timer.one_shot = true
+			timer.timeout.connect(queue_free)
+			timer.start()
 	
 		State.DEAD:
 			explode_from_death = false
