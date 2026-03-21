@@ -1,0 +1,91 @@
+[gd_scene load_steps=10 format=3 uid="uid://brsnap3ngcjrq"]
+
+[ext_resource type="Script" path="res://enemies/common/corredor_magma/corredor_magma.gd" id="1_3qis3"]
+[ext_resource type="Texture2D" uid="uid://g6425rh2okeu" path="res://assets/enemies/common/corredor_magma/dead.png" id="2_obxsy"]
+[ext_resource type="Texture2D" uid="uid://3c114tdyce3j" path="res://assets/enemies/common/corredor_magma/iddle.png" id="3_051yy"]
+[ext_resource type="Texture2D" uid="uid://cjcvnb2woq5xg" path="res://assets/enemies/common/corredor_magma/run.png" id="4_ag7ep"]
+[ext_resource type="Texture2D" uid="uid://b2mtcs34tdr6x" path="res://assets/enemies/common/corredor_magma/stun.png" id="5_5oldx"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ptt1b"]
+radius = 12.0
+height = 50.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_24l2a"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_obxsy")
+}],
+"loop": true,
+"name": &"dead",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_051yy")
+}],
+"loop": true,
+"name": &"iddle",
+"speed": 5.0
+}, {
+"frames": [],
+"loop": true,
+"name": &"jump",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_ag7ep")
+}],
+"loop": true,
+"name": &"run",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_5oldx")
+}],
+"loop": true,
+"name": &"stun",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_7tgbq"]
+radius = 13.0
+height = 50.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_uiic6"]
+radius = 13.0
+height = 48.0
+
+[node name="CorredorMagma" type="CharacterBody2D"]
+collision_layer = 32768
+script = ExtResource("1_3qis3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_ptt1b")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_24l2a")
+animation = &"iddle"
+
+[node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
+collision_layer = 32768
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHitbox"]
+shape = SubResource("CapsuleShape2D_7tgbq")
+debug_color = Color(0, 0.580674, 0.799586, 0.42)
+
+[node name="EnemyHurtbox" type="Area2D" parent="." groups=["enemy_hurtbox"]]
+collision_layer = 32768
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHurtbox"]
+shape = SubResource("CapsuleShape2D_uiic6")
+debug_color = Color(1, 0.00218889, 0.0758363, 0.42)
+
+[node name="Vision" type="RayCast2D" parent="."]
+
+[connection signal="area_entered" from="EnemyHitbox" to="." method="_on_enemy_hitbox_area_entered"]
+[connection signal="area_entered" from="EnemyHurtbox" to="." method="_on_enemy_hurtbox_area_entered"]
