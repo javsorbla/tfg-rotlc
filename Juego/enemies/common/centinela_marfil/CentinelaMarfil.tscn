@@ -1,0 +1,69 @@
+[gd_scene load_steps=8 format=3 uid="uid://ednw5et05gxf"]
+
+[ext_resource type="Script" path="res://enemies/common/centinela_marfil/centinela_marfil.gd" id="1_rteh4"]
+[ext_resource type="Texture2D" uid="uid://dfhh8jwwem6fm" path="res://assets/enemies/common/centinela_marfil/shield.png" id="1_ybcr3"]
+[ext_resource type="Texture2D" uid="uid://bocwrjmwaqk1" path="res://assets/enemies/common/centinela_marfil/damaged.png" id="2_74hhr"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_i23ur"]
+radius = 15.0
+height = 34.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_j06ee"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_74hhr")
+}],
+"loop": true,
+"name": &"damaged",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ybcr3")
+}],
+"loop": true,
+"name": &"shield",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_utjd1"]
+radius = 15.0
+height = 34.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_f8tdn"]
+radius = 15.0
+height = 34.0
+
+[node name="CentinelaMarfil" type="CharacterBody2D"]
+collision_layer = 16
+script = ExtResource("1_rteh4")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_i23ur")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(0.71875, 0.71875)
+sprite_frames = SubResource("SpriteFrames_j06ee")
+animation = &"damaged"
+
+[node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHitbox"]
+shape = SubResource("CapsuleShape2D_utjd1")
+debug_color = Color(1, 0, 0, 0.419608)
+
+[node name="EnemyHurtbox" type="Area2D" parent="." groups=["enemy_hurtbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHurtbox"]
+shape = SubResource("CapsuleShape2D_f8tdn")
+debug_color = Color(0, 1, 0, 0.419608)
+
+[node name="Vision" type="RayCast2D" parent="."]
+
+[connection signal="area_entered" from="EnemyHitbox" to="." method="_on_enemy_hitbox_area_entered"]
+[connection signal="area_entered" from="EnemyHurtbox" to="." method="_on_enemy_hurtbox_area_entered"]
