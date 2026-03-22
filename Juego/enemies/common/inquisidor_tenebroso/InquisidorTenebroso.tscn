@@ -1,7 +1,7 @@
 [gd_scene load_steps=10 format=3 uid="uid://byp1jbg6411yf"]
 
 [ext_resource type="Script" path="res://enemies/common/inquisidor_tenebroso/inquisidor_tenebroso.gd" id="1_d6t2e"]
-[ext_resource type="Texture2D" uid="uid://c6stv537lscne" path="res://assets/enemies/common/inquisidor_tenebroso/attack.png" id="1_qb6s5"]
+[ext_resource type="Texture2D" uid="uid://c6stv537lscne" path="res://assets/enemies/common/inquisidor_tenebroso/orb.png" id="1_qb6s5"]
 [ext_resource type="Texture2D" uid="uid://cqrde48165s46" path="res://assets/enemies/common/inquisidor_tenebroso/dead.png" id="2_iou26"]
 [ext_resource type="Texture2D" uid="uid://b3rp3id6qdhix" path="res://assets/enemies/common/inquisidor_tenebroso/idle.png" id="3_kb8l8"]
 [ext_resource type="Texture2D" uid="uid://cxvx7vxns2u58" path="res://assets/enemies/common/inquisidor_tenebroso/stunned.png" id="4_1b32x"]

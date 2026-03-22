@@ -1,24 +1,28 @@
 extends CharacterBody2D
 
-const DAMAGE: int = 2
+const DAMAGE: int = 1
 
 const STUN_DURATION: float  = 1.0
 const IDLE_DISTANCE: float = 250.0
-const LOSE_DISTANCE: float = 350.0
+const LOSE_DISTANCE: float = 275.0
 const GRAVITY: float = 700.0
 
 const TELEPORT_DISTANCE: float = 70.0      # Distancia mínima con el jugador
 const TELEPORT_MIN_DIST: float = 200.0      # Distancia mínima tras teletransporte
-const TELEPORT_MAX_DIST: float = 250.0      # Distancia máxima tras teletransporte (dentro de IDLE_DISTANCE)
+const TELEPORT_MAX_DIST: float = 250.0      # Distancia máxima tras teletransporte
 const TELEPORT_ATTEMPTS: int = 20           # Intentos para encontrar posición válida
 const TELEPORT_HALF_WIDTH: float = 14.0
 const TELEPORT_SAFETY_MARGIN: float = 40.0
+const SHOOT_COOLDOWN: float = 2.0
 
 enum State { IDLE, ATTACK, STUNNED }
 
 var current_state: State = State.IDLE
 var player: Node2D = null
 var stun_timer: float = 0.0
+var shoot_timer: float = 0.0
+
+@onready var attack_scene = preload("res://enemies/common/inquisidor_tenebroso/AtaqueInquisidor.tscn")
 
 
 func _ready() -> void:
@@ -36,6 +40,9 @@ func _physics_process(delta: float) -> void:
 		velocity.y += GRAVITY * delta
 	else:
 		velocity.y = 0
+
+	if shoot_timer > 0.0:
+		shoot_timer -= delta
 
 	match current_state:
 		State.IDLE:
@@ -84,7 +91,19 @@ func _state_attack() -> void:
 			_teleport_away()
 		return
 
+	# Disparar si el cooldown ha terminado
+	if shoot_timer <= 0.0:
+		_shoot()
+		shoot_timer = SHOOT_COOLDOWN
+		
 	$AnimatedSprite2D.flip_h = player.global_position.x > global_position.x
+
+
+func _shoot() -> void:
+	var attack = attack_scene.instantiate()
+	get_tree().current_scene.add_child(attack)
+	attack.global_position = global_position
+	attack.direction = global_position.direction_to(player.global_position)
 
 
 func _should_teleport() -> bool:
