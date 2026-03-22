@@ -3,6 +3,9 @@ extends Camera2D
 var shake_timer = 0.0
 var shake_intensity = 0.0
 var base_offset = Vector2(60, -30)
+var boss_room_mode = false
+var boss_room_target = Vector2.ZERO
+
 const SHAKE_DURATION = 0.2
 const SHAKE_INTENSITY = 3.0
 
@@ -18,6 +21,10 @@ func shake():
 	shake_intensity = SHAKE_INTENSITY
 
 func _process(delta):
+	if boss_room_mode:
+		global_position = lerp(global_position, boss_room_target, 0.02)
+		return
+	
 	if player:
 		# Seguir horizontalmente siempre
 		var target_x = player.global_position.x + base_offset.x
