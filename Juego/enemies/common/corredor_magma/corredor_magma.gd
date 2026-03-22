@@ -5,8 +5,8 @@ const MAX_HEALTH: int = 3
 const DAMAGE: int = 1
 const PATROL_SPEED: float = 40.0
 const CHASE_SPEED: float = 90.0
-const JUMP_VELOCITY: float = -300.0 # ¡Fuerza del salto!
-const DETECTION_DISTANCE: float = 180.0
+const JUMP_VELOCITY: float = -300.0
+const DETECTION_DISTANCE: float = 250.0 # ¡Aumentado para que vea más lejos y hacia arriba!
 const PATROL_X_RANGE: float = 80.0
 const STUN_DURATION: float = 0.4
 
@@ -23,9 +23,8 @@ var stun_timer: float = 0.0
 var idle_timer: float = 0.0
 var patrol_timer: float = 0.0
 var patrol_origin_x: float = 0.0
-
-# ¡LA SOLUCIÓN A LA VIBRACIÓN! Un temporizador que prohíbe girar muy rápido
 var flip_cooldown: float = 0.0 
+var jump_cooldown: float = 0.0 
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var vision: RayCast2D = $Vision
@@ -33,7 +32,6 @@ var flip_cooldown: float = 0.0
 func _ready() -> void:
     current_health = MAX_HEALTH
     player = get_tree().get_first_node_in_group("player")
-    
     patrol_origin_x = global_position.x
 
     if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
@@ -45,11 +43,9 @@ func _ready() -> void:
     _enter_state(State.IDLE)
 
 func _physics_process(delta: float) -> void:
-    # Reducimos el cooldown de giro
-    if flip_cooldown > 0:
-        flip_cooldown -= delta
+    if flip_cooldown > 0: flip_cooldown -= delta
+    if jump_cooldown > 0: jump_cooldown -= delta
 
-    # Gravedad
     if not is_on_floor():
         velocity += get_gravity() * delta
 
@@ -67,6 +63,17 @@ func _physics_process(delta: float) -> void:
 
     move_and_slide()
 
+    # --- LÓGICA DE ANIMACIÓN GLOBAL ---
+    if not is_on_floor():
+        if current_state not in [State.STUNNED, State.DEAD]:
+            sprite.play("jump")
+    else:
+        if sprite.animation == "jump":
+            if current_state == State.IDLE:
+                sprite.play("iddle")
+            elif current_state in [State.PATROL, State.CHASE]:
+                sprite.play("run")
+
 # --- MANEJO DE ESTADOS ---
 
 func _enter_state(new_state: State) -> void:
@@ -75,58 +82,71 @@ func _enter_state(new_state: State) -> void:
     match new_state:
         State.IDLE:
             velocity.x = 0
-            sprite.play("iddle")
+            if is_on_floor(): sprite.play("iddle")
             idle_timer = randf_range(1.0, 2.5) 
         State.PATROL:
             patrol_timer = randf_range(2.0, 4.0) 
         State.STUNNED:
-            sprite.play("stun")
+            sprite.play("stun") 
+            velocity.x = 0 
         State.DEAD:
-            sprite.play("dead")
+            sprite.play("dead") 
             if $EnemyHitbox:
                 $EnemyHitbox.set_deferred("monitoring", false)
                 $EnemyHitbox.set_deferred("monitorable", false)
                 $EnemyHitbox.set_deferred("collision_layer", 0)
                 $EnemyHitbox.set_deferred("collision_mask", 0)
             velocity.x = 0
+            
+            await get_tree().create_timer(2.0).timeout
+            queue_free()
+
+# --- LÓGICA DE VISIÓN ---
+
+func _has_line_of_sight() -> bool:
+    if not player: return false
+    var space_state = get_world_2d().direct_space_state
+    
+    # ¡NUEVO! Elevamos la posición del rayo para que simule la "cabeza"
+    # y no roce con las esquinas del suelo
+    var eye_pos = global_position + Vector2(0, -15)
+    var target_pos = player.global_position + Vector2(0, -15)
+    
+    var query = PhysicsRayQueryParameters2D.create(eye_pos, target_pos)
+    query.collision_mask = 1 
+    var result = space_state.intersect_ray(query)
+    return result.is_empty() 
 
 func _check_for_player() -> bool:
     if player:
         var dist = global_position.distance_to(player.global_position)
-        # Ampliamos un poco la detección en Y por si el jugador está en una plataforma alta
-        if dist <= DETECTION_DISTANCE and abs(player.global_position.y - global_position.y) < 100:
-            _enter_state(State.CHASE)
-            return true
+        # ¡NUEVO! Eliminada la restricción de altura. ¡Ahora te ve si estás arriba!
+        if dist <= DETECTION_DISTANCE:
+            var dir_to_player = sign(player.global_position.x - global_position.x)
+            if dir_to_player == sign(facing_dir) or dir_to_player == 0:
+                if _has_line_of_sight():
+                    _enter_state(State.CHASE)
+                    return true
     return false
 
-func _state_idle(delta: float) -> void:
-    if _check_for_player():
-        return
+# --- FUNCIONES DE ESTADO ---
 
+func _state_idle(delta: float) -> void:
+    if _check_for_player(): return
     idle_timer -= delta
-    if idle_timer <= 0:
-        _enter_state(State.PATROL)
+    if idle_timer <= 0: _enter_state(State.PATROL)
 
 func _state_patrol(delta: float) -> void:
-    if _check_for_player():
-        return
+    if _check_for_player(): return
 
     velocity.x = facing_dir * PATROL_SPEED
-    
-    # Manejo de animaciones (suelo vs aire)
-    if is_on_floor():
-        if sprite.animation != "run":
-            sprite.play("run")
-    else:
-        # CÁMBIALO A "jump" CUANDO LE PONGAS UN DIBUJO AL SPRITEFRAME
-        sprite.play("run") 
+    if is_on_floor() and sprite.animation != "run": sprite.play("run")
 
     patrol_timer -= delta
     if patrol_timer <= 0 and is_on_floor():
         _enter_state(State.IDLE)
         return
 
-    # Límites de la patrulla
     var reached_limit_right = (global_position.x >= patrol_origin_x + PATROL_X_RANGE) and facing_dir == 1.0
     var reached_limit_left = (global_position.x <= patrol_origin_x - PATROL_X_RANGE) and facing_dir == -1.0
 
@@ -135,21 +155,25 @@ func _state_patrol(delta: float) -> void:
         _enter_state(State.IDLE)
         return
 
-    # Detección de obstáculos
     var hit_ledge = not vision.is_colliding()
     var hit_wall = is_on_wall() and sign(get_wall_normal().x) == -sign(facing_dir)
 
     if is_on_floor():
         if hit_wall or hit_ledge:
-            # ¡Si toca muro o barranco, SALTA!
-            velocity.y = JUMP_VELOCITY
+            if jump_cooldown <= 0:
+                velocity.y = JUMP_VELOCITY
+                jump_cooldown = 1.0 
+            else:
+                _flip()
+                _enter_state(State.IDLE)
     else:
-        # Si está en el aire y choca con un muro, el muro es muy alto. Se da la vuelta.
-        if hit_wall:
+        # ¡SOLUCIÓN SALTO ATRÁS! Solo se rinde si ha empezado a caer (velocity.y >= 0)
+        if hit_wall and velocity.y >= 0: 
             _flip()
 
 func _state_chase() -> void:
-    if not player:
+    if not player or not _has_line_of_sight():
+        patrol_origin_x = global_position.x
         _enter_state(State.IDLE)
         return
 
@@ -160,82 +184,68 @@ func _state_chase() -> void:
         return
 
     var x_diff = player.global_position.x - global_position.x
-    
-    # Solo puede decidir darse la vuelta si está en el suelo (evita giros raros en el aire)
     if abs(x_diff) > 5.0 and is_on_floor():
         var dir_to_player = sign(x_diff)
         if dir_to_player != 0 and dir_to_player != facing_dir:
             _flip()
 
     velocity.x = facing_dir * CHASE_SPEED
-
-    if is_on_floor():
-        if sprite.animation != "run":
-            sprite.play("run")
-    else:
-        sprite.play("run") # CÁMBIALO A "jump" CUANDO TENGAS LA ANIMACIÓN
+    if is_on_floor() and sprite.animation != "run": sprite.play("run")
 
     var hit_ledge = not vision.is_colliding()
     var hit_wall = is_on_wall() and sign(get_wall_normal().x) == -sign(facing_dir)
 
     if is_on_floor():
         if hit_wall or hit_ledge:
-            # ¡Salta para perseguirte!
-            velocity.y = JUMP_VELOCITY
+            if jump_cooldown <= 0:
+                velocity.y = JUMP_VELOCITY
+                jump_cooldown = 1.0 
+            else:
+                velocity.x = 0 
     else:
-        if hit_wall:
-            # Si el muro es inalcanzable, frena para caer recto
+        # ¡SOLUCIÓN SALTO ATRÁS! Solo se frena en el aire si ya está cayendo
+        if hit_wall and velocity.y >= 0: 
             velocity.x = 0
 
 func _state_stunned(delta: float) -> void:
     stun_timer -= delta
-    velocity.x = move_toward(velocity.x, 0, 200 * delta)
-
-    if stun_timer <= 0:
-        _enter_state(State.IDLE)
+    if stun_timer <= 0: _enter_state(State.IDLE)
 
 # --- FUNCIONES AUXILIARES ---
-
 func _flip() -> void:
-    # Si el cooldown está activo, ignoramos la orden de giro (adiós vibración)
-    if flip_cooldown > 0:
-        return
-        
+    if flip_cooldown > 0: return
     facing_dir *= -1.0
     sprite.flip_h = (facing_dir < 0)
     vision.target_position.x = abs(vision.target_position.x) * facing_dir
-    
-    # Activamos el cooldown de 0.3 segundos
     flip_cooldown = 0.3
 
 # --- COMBATE ---
-
 func _on_enemy_hitbox_area_entered(area: Area2D) -> void:
-    if current_state == State.DEAD:
-        return
-
+    if current_state == State.DEAD: return
     if area.is_in_group("player_hurtbox"):
         var hit_player = area.get_parent()
         if hit_player.has_method("take_damage"):
             hit_player.take_damage(DAMAGE)
-            
         if hit_player is CharacterBody2D:
             var dir = (hit_player.global_position - global_position).normalized()
             dir.y = 0
             hit_player.velocity = dir * 150
 
 func _on_enemy_hurtbox_area_entered(area: Area2D) -> void:
-    if area.is_in_group("player_hitbox"):
-        take_damage(1)
+    if area.is_in_group("player_hitbox"): take_damage(1)
 
 func take_damage(amount: int) -> void:
-    if current_state == State.DEAD:
-        return
-
+    if current_state == State.DEAD: return
     current_health -= amount
     if current_health <= 0:
         die()
         return
+        
+    if player:
+        var dir_to_player = sign(player.global_position.x - global_position.x)
+        if dir_to_player != 0 and dir_to_player != sign(facing_dir):
+            flip_cooldown = 0.0
+            _flip()
 
     stun_timer = STUN_DURATION
     _enter_state(State.STUNNED)
