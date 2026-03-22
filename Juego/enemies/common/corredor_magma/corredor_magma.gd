@@ -9,7 +9,6 @@ const JUMP_VELOCITY: float = -300.0
 const DETECTION_DISTANCE: float = 250.0 
 const PATROL_X_RANGE: float = 80.0
 const STUN_DURATION: float = 0.4
-
 const DASH_SPEED: float = 300.0
 const DASH_RANGE: float = 150.0 
 
@@ -21,19 +20,23 @@ var current_state: State = State.IDLE
 var current_health: int = MAX_HEALTH
 var player: Node2D = null
 var facing_dir: float = 1.0 
-var stun_timer: float = 0.0
+var patrol_origin_x: float = 0.0
 
+# Temporizadores y Cooldowns
+var stun_timer: float = 0.0
 var idle_timer: float = 0.0
 var patrol_timer: float = 0.0
-var patrol_origin_x: float = 0.0
 var flip_cooldown: float = 0.0 
 var jump_cooldown: float = 0.0 
-
 var dash_cooldown: float = 0.0
 var dash_timer: float = 0.0
 
+# --- NODOS ---
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var vision: RayCast2D = $Vision
+
+
+# --- CICLO PRINCIPAL ---
 
 func _ready() -> void:
     current_health = MAX_HEALTH
@@ -48,14 +51,18 @@ func _ready() -> void:
     vision.target_position = Vector2(20, 40) 
     _enter_state(State.IDLE)
 
+
 func _physics_process(delta: float) -> void:
+    # Gestión de cooldowns
     if flip_cooldown > 0: flip_cooldown -= delta
     if jump_cooldown > 0: jump_cooldown -= delta
     if dash_cooldown > 0: dash_cooldown -= delta 
 
+    # Gravedad
     if not is_on_floor():
         velocity += get_gravity() * delta
 
+    # Máquina de estados
     match current_state:
         State.IDLE:
             _state_idle(delta)
@@ -74,7 +81,7 @@ func _physics_process(delta: float) -> void:
 
     move_and_slide()
 
-    # --- LÓGICA DE ANIMACIÓN GLOBAL ---
+    # Control global de animación de salto
     if not is_on_floor():
         if current_state not in [State.STUNNED, State.DEAD, State.DASH, State.PREPARE_DASH]:
             sprite.play("jump")
@@ -85,37 +92,43 @@ func _physics_process(delta: float) -> void:
             elif current_state in [State.PATROL, State.CHASE]:
                 sprite.play("run")
 
+
 # --- MANEJO DE ESTADOS ---
 
 func _enter_state(new_state: State) -> void:
     current_state = new_state
     
-    # Reseteamos efectos visuales al cambiar de estado
-    sprite.modulate = Color(1, 1, 1) # Color normal (blanco)
-    sprite.speed_scale = 1.0         # Velocidad normal
+    # Reiniciar efectos visuales
+    sprite.modulate = Color(1, 1, 1) 
+    sprite.speed_scale = 1.0         
 
     match new_state:
         State.IDLE:
             velocity.x = 0
             if is_on_floor(): sprite.play("iddle")
             idle_timer = randf_range(1.0, 2.5) 
+            
         State.PATROL:
             patrol_timer = randf_range(2.0, 4.0) 
+            
         State.CHASE:
             sprite.play("run")
+            
         State.PREPARE_DASH:
             velocity.x = 0
             sprite.play("iddle")
-            # Truco del color rojo
-            sprite.modulate = Color(1.0, 0.4, 0.4) 
+            sprite.modulate = Color(1.0, 0.4, 0.4) # Feedback visual de carga
             dash_timer = 0.5 
+            
         State.DASH:
             sprite.play("run")
-            sprite.speed_scale = 2.0 # Correr al doble de velocidad
+            sprite.speed_scale = 2.0 
             dash_timer = 0.4 
+            
         State.STUNNED:
             sprite.play("stun") 
             velocity.x = 0 
+            
         State.DEAD:
             sprite.play("dead") 
             if $EnemyHitbox:
@@ -124,8 +137,10 @@ func _enter_state(new_state: State) -> void:
                 $EnemyHitbox.set_deferred("collision_layer", 0)
                 $EnemyHitbox.set_deferred("collision_mask", 0)
             velocity.x = 0
+            
             await get_tree().create_timer(2.0).timeout
             queue_free()
+
 
 # --- LÓGICA DE VISIÓN ---
 
@@ -134,10 +149,13 @@ func _has_line_of_sight() -> bool:
     var space_state = get_world_2d().direct_space_state
     var eye_pos = global_position + Vector2(0, -15)
     var target_pos = player.global_position + Vector2(0, -15)
+    
     var query = PhysicsRayQueryParameters2D.create(eye_pos, target_pos)
     query.collision_mask = 1 
     var result = space_state.intersect_ray(query)
+    
     return result.is_empty() 
+
 
 func _check_for_player() -> bool:
     if player:
@@ -150,12 +168,16 @@ func _check_for_player() -> bool:
                     return true
     return false
 
+
 # --- FUNCIONES DE ESTADO ---
 
 func _state_idle(delta: float) -> void:
     if _check_for_player(): return
+    
     idle_timer -= delta
-    if idle_timer <= 0: _enter_state(State.PATROL)
+    if idle_timer <= 0: 
+        _enter_state(State.PATROL)
+
 
 func _state_patrol(delta: float) -> void:
     if _check_for_player(): return
@@ -186,6 +208,7 @@ func _state_patrol(delta: float) -> void:
     else:
         if hit_wall: velocity.x = 0
 
+
 func _state_chase() -> void:
     if not player or not _has_line_of_sight():
         patrol_origin_x = global_position.x
@@ -193,20 +216,20 @@ func _state_chase() -> void:
         return
 
     var dist = global_position.distance_to(player.global_position)
-    
-    # ¡NUEVO! Comprobamos la diferencia de altura.
     var y_diff = abs(player.global_position.y - global_position.y)
     
-    # Solo embiste si está cerca, tiene el cooldown listo, está en el suelo y el jugador NO está en una plataforma alta
+    # Comprobar si puede iniciar la embestida
     if dist <= DASH_RANGE and dash_cooldown <= 0 and is_on_floor() and y_diff < 40:
         _enter_state(State.PREPARE_DASH)
         return
 
+    # Comprobar si pierde el agro
     if dist > DETECTION_DISTANCE * 1.5:
         patrol_origin_x = global_position.x
         _enter_state(State.IDLE)
         return
 
+    # Darse la vuelta si el jugador le sobrepasa
     var x_diff = player.global_position.x - global_position.x
     if abs(x_diff) > 5.0 and is_on_floor():
         var dir_to_player = sign(x_diff)
@@ -219,6 +242,7 @@ func _state_chase() -> void:
     var hit_ledge = not vision.is_colliding()
     var hit_wall = is_on_wall() and sign(get_wall_normal().x) == -sign(facing_dir)
 
+    # Manejo de obstáculos durante la persecución
     if is_on_floor():
         if hit_wall or hit_ledge:
             if jump_cooldown <= 0:
@@ -232,12 +256,14 @@ func _state_chase() -> void:
         if hit_wall and velocity.y >= 0: 
             velocity.x = 0
 
+
 func _state_prepare_dash(delta: float) -> void:
     dash_timer -= delta
     velocity.x = move_toward(velocity.x, 0, 400 * delta)
     
     if dash_timer <= 0:
         _enter_state(State.DASH)
+
 
 func _state_dash(delta: float) -> void:
     dash_timer -= delta
@@ -261,25 +287,36 @@ func _state_dash(delta: float) -> void:
         dash_cooldown = 3.0
         _enter_state(State.IDLE)
 
+
 func _state_stunned(delta: float) -> void:
     stun_timer -= delta
-    if stun_timer <= 0: _enter_state(State.IDLE)
+    if stun_timer <= 0: 
+        _enter_state(State.IDLE)
+
 
 # --- FUNCIONES AUXILIARES ---
+
 func _flip() -> void:
     if flip_cooldown > 0: return
+    
     facing_dir *= -1.0
     sprite.flip_h = (facing_dir < 0)
     vision.target_position.x = abs(vision.target_position.x) * facing_dir
     flip_cooldown = 0.3
 
+
 # --- COMBATE ---
+
 func _on_enemy_hitbox_area_entered(area: Area2D) -> void:
     if current_state == State.DEAD: return
+    
     if area.is_in_group("player_hurtbox"):
         var hit_player = area.get_parent()
+        
         if hit_player.has_method("take_damage"):
             hit_player.take_damage(DAMAGE)
+            
+        # Knockback al jugador
         if hit_player is CharacterBody2D:
             var dir = (hit_player.global_position - global_position).normalized()
             dir.y = 0
@@ -289,16 +326,21 @@ func _on_enemy_hitbox_area_entered(area: Area2D) -> void:
             else:
                 hit_player.velocity = dir * 150
 
+
 func _on_enemy_hurtbox_area_entered(area: Area2D) -> void:
-    if area.is_in_group("player_hitbox"): take_damage(1)
+    if area.is_in_group("player_hitbox"): 
+        take_damage(1)
+
 
 func take_damage(amount: int) -> void:
     if current_state == State.DEAD: return
+    
     current_health -= amount
     if current_health <= 0:
         die()
         return
         
+    # Girarse automáticamente si es atacado por la espalda
     if player:
         var dir_to_player = sign(player.global_position.x - global_position.x)
         if dir_to_player != 0 and dir_to_player != sign(facing_dir):
@@ -307,6 +349,7 @@ func take_damage(amount: int) -> void:
 
     stun_timer = STUN_DURATION
     _enter_state(State.STUNNED)
+
 
 func die() -> void:
     _enter_state(State.DEAD)
