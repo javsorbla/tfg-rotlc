@@ -1,8 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://ednw5et05gxf"]
+[gd_scene load_steps=10 format=3 uid="uid://ednw5et05gxf"]
 
 [ext_resource type="Script" path="res://enemies/common/centinela_marfil/centinela_marfil.gd" id="1_rteh4"]
 [ext_resource type="Texture2D" uid="uid://dfhh8jwwem6fm" path="res://assets/enemies/common/centinela_marfil/shield.png" id="1_ybcr3"]
 [ext_resource type="Texture2D" uid="uid://bocwrjmwaqk1" path="res://assets/enemies/common/centinela_marfil/damaged.png" id="2_74hhr"]
+[ext_resource type="Texture2D" uid="uid://c0tygq8mw7wt" path="res://assets/enemies/common/centinela_marfil/fainted.png" id="3_c3o3g"]
+[ext_resource type="Texture2D" uid="uid://dnqaki6buswut" path="res://assets/enemies/common/centinela_marfil/stunned.png" id="5_eddpa"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_i23ur"]
 radius = 15.0
@@ -20,10 +22,26 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("3_c3o3g")
+}],
+"loop": true,
+"name": &"fainted",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("1_ybcr3")
 }],
 "loop": true,
 "name": &"shield",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_eddpa")
+}],
+"loop": true,
+"name": &"stunned",
 "speed": 5.0
 }]
 
@@ -45,7 +63,7 @@ shape = SubResource("CapsuleShape2D_i23ur")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(0.71875, 0.71875)
 sprite_frames = SubResource("SpriteFrames_j06ee")
-animation = &"damaged"
+animation = &"fainted"
 
 [node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16
