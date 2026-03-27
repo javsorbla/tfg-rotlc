@@ -28,7 +28,7 @@ var shoot_timer: float = 0.0
 func _ready() -> void:
 	player = get_tree().get_first_node_in_group("player")
 
-	$EnemyHitbox.body_entered.connect(_on_enemy_hitbox_area_entered)
+	$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	$EnemyHitbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	_enter_state(State.IDLE)
