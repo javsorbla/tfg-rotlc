@@ -64,25 +64,8 @@ radius = 7.0
 height = 26.0
 
 [node name="CaminanteHelado" type="CharacterBody2D"]
-collision_layer = 4
+collision_layer = 16
 script = ExtResource("1_auixj")
-base_health = null
-base_contact_damage = null
-base_move_speed = null
-base_detection_range = null
-base_attack_interval = null
-appearance_tier = null
-player_progression_override = null
-player_knockback_force = null
-player_knockback_duration = null
-patrol_distance = null
-patrol_speed_multiplier = null
-vision_memory_time = null
-vision_eye_height = null
-vision_overhead_x_tolerance = null
-vision_overhead_y_tolerance = null
-hit_pause_duration = null
-death_time = null
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 1)
@@ -92,7 +75,7 @@ shape = SubResource("CapsuleShape2D_sgw7u")
 position = Vector2(1.90735e-06, 2)
 scale = Vector2(0.609375, 0.5625)
 sprite_frames = SubResource("SpriteFrames_1o3aa")
-animation = &"idle"
+animation = &"dead"
 
 [node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16
@@ -111,6 +94,9 @@ collision_mask = 4
 position = Vector2(0, 1)
 shape = SubResource("CapsuleShape2D_dffot")
 debug_color = Color(0.8778, 0.31399, 0.357215, 0.42)
+
+[node name="Vision" type="RayCast2D" parent="."]
+target_position = Vector2(20, 40)
 
 [connection signal="area_entered" from="EnemyHitbox" to="." method="_on_enemy_hitbox_area_entered"]
 [connection signal="area_entered" from="EnemyHurtbox" to="." method="_on_enemy_hurtbox_area_entered"]
