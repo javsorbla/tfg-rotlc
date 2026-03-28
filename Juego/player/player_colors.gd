@@ -97,6 +97,9 @@ func _update_sprite_color(primary: Color, secondary: Color):
 		mat.set_shader_parameter("color_secondary", secondary)
 
 func change_state(new_state):
+	if active_power != "":
+		_start_cooldown(active_power)
+	
 	if current_state:
 		current_state.exit()
 	current_state = new_state

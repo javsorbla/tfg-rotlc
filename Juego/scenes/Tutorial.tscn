@@ -9,7 +9,7 @@
 [ext_resource type="FontFile" uid="uid://b5yw8u8qdipr6" path="res://assets/text/Minecraft.ttf" id="3_q2tak"]
 [ext_resource type="PackedScene" uid="uid://cliq12pggr3gh" path="res://enemies/common/EnemigoPrueba.tscn" id="5_ses35"]
 [ext_resource type="Texture2D" uid="uid://c78b1eerhl6js" path="res://assets/potions/pocion.png" id="6_1jylv"]
-[ext_resource type="Script" path="res://scenes/camera_tutorial.gd" id="9_iqxf7"]
+[ext_resource type="Script" path="res://scenes/camara.gd" id="10_ajmfl"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i6t85"]
 texture = ExtResource("1_whyj1")
@@ -423,4 +423,4 @@ position = Vector2(4580.49, 54.5826)
 [node name="Camera2D" type="Camera2D" parent="." groups=["camera"]]
 position = Vector2(42, -19)
 position_smoothing_enabled = true
-script = ExtResource("9_iqxf7")
+script = ExtResource("10_ajmfl")

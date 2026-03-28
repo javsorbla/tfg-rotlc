@@ -39,7 +39,7 @@ func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
 
-	$EnemyHitbox.body_entered.connect(_on_enemy_hitbox_area_entered)
+	$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	patrol_origin = global_position
@@ -188,7 +188,7 @@ func _on_enemy_hitbox_area_entered(area: Area2D):
 			player.take_damage(DAMAGE) 
 				
 		# knockback 
-		if player is CharacterBody2D: 
+		if player is CharacterBody2D and not player.is_shielding: 
 			var dir = (player.global_position - global_position).normalized() 
 			dir.y = 0 
 			player.velocity = dir * 150 

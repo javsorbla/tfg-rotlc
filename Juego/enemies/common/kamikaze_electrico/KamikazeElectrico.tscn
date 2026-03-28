@@ -1,0 +1,97 @@
+[gd_scene load_steps=11 format=3 uid="uid://ct22yo10swc1v"]
+
+[ext_resource type="Script" path="res://enemies/common/kamikaze_electrico/kamikaze_electrico.gd" id="1_mmsu7"]
+[ext_resource type="Texture2D" uid="uid://bb2bl3hab3l2s" path="res://assets/enemies/common/kamikaze_electrico/charged.png" id="2_1nd3x"]
+[ext_resource type="Texture2D" uid="uid://cfoeycc345pmv" path="res://assets/enemies/common/kamikaze_electrico/idle.png" id="2_ol5p8"]
+[ext_resource type="Texture2D" uid="uid://dnray68mxyxnt" path="res://assets/enemies/common/kamikaze_electrico/dead.png" id="3_jq1jp"]
+[ext_resource type="Texture2D" uid="uid://dpc4v1unqmii7" path="res://assets/enemies/common/kamikaze_electrico/explode.png" id="4_qn5by"]
+[ext_resource type="Texture2D" uid="uid://cu1l71gw12s7o" path="res://assets/enemies/common/kamikaze_electrico/sleep.png" id="6_db0sr"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_l47lg"]
+radius = 19.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_b43we"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_1nd3x")
+}],
+"loop": true,
+"name": &"charged",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_jq1jp")
+}],
+"loop": true,
+"name": &"dead",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_qn5by")
+}],
+"loop": true,
+"name": &"explode",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_ol5p8")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_db0sr")
+}],
+"loop": true,
+"name": &"sleep",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_s0mhw"]
+radius = 19.0263
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_k13lx"]
+radius = 19.0263
+
+[node name="KamikazeElectrico" type="CharacterBody2D"]
+collision_layer = 16
+script = ExtResource("1_mmsu7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-1, 0)
+shape = SubResource("CircleShape2D_l47lg")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-3.8147e-06, 0)
+scale = Vector2(0.953125, 0.890625)
+sprite_frames = SubResource("SpriteFrames_b43we")
+animation = &"sleep"
+
+[node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHitbox"]
+position = Vector2(-1, 0)
+shape = SubResource("CircleShape2D_s0mhw")
+debug_color = Color(1, 0, 0, 0.419608)
+
+[node name="EnemyHurtbox" type="Area2D" parent="." groups=["enemy_hurtbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHurtbox"]
+position = Vector2(-1, 0)
+shape = SubResource("CircleShape2D_k13lx")
+debug_color = Color(0, 1, 0, 0.419608)
+
+[node name="Vision" type="RayCast2D" parent="."]
+
+[connection signal="area_entered" from="EnemyHitbox" to="." method="_on_enemy_hitbox_area_entered"]
+[connection signal="area_entered" from="EnemyHurtbox" to="." method="_on_enemy_hurtbox_area_entered"]

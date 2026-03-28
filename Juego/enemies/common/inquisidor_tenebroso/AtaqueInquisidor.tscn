@@ -1,0 +1,36 @@
+[gd_scene load_steps=5 format=3 uid="uid://cjrg85m8j5cjb"]
+
+[ext_resource type="Script" path="res://enemies/common/inquisidor_tenebroso/ataque_inquisidor.gd" id="1_xhdh0"]
+[ext_resource type="Texture2D" uid="uid://c6stv537lscne" path="res://assets/enemies/common/inquisidor_tenebroso/orb.png" id="2_velhn"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_j7ysa"]
+radius = 4.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_45qpm"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_velhn")
+}],
+"loop": true,
+"name": &"orb",
+"speed": 5.0
+}]
+
+[node name="Projectile" type="Area2D"]
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_xhdh0")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_j7ysa")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 4.76837e-07)
+scale = Vector2(0.130859, 0.136719)
+sprite_frames = SubResource("SpriteFrames_45qpm")
+animation = &"orb"
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
+position = Vector2(1.49012e-08, 5.96046e-08)
+scale = Vector2(0.375, 0.375)

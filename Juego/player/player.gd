@@ -33,8 +33,6 @@ func _ready():
 	color_manager.unlock_power("red") # Para probar temporalmente
 	color_manager.unlock_power("yellow") # Para probar temporalmente
 	var camera = get_tree().get_first_node_in_group("camera")
-	if camera:
-		$CameraFollow.remote_path = camera.get_path()
 	if GameState.checkpoint_activated:
 		global_position = GameState.spawn_position
 	else:
