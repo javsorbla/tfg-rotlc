@@ -34,6 +34,10 @@ var patrol_origin: Vector2 = Vector2.ZERO
 var patrol_dir: float = 1.0
 var patrol_y_phase: float = 0.0
 
+# Despawn tras morir
+var death_grounded_timer: float = -1.0
+var has_landed: bool = false
+
 
 func _ready() -> void:
 	current_health = MAX_HEALTH
@@ -57,7 +61,15 @@ func _physics_process(delta: float) -> void:
 		State.STUNNED:
 			_state_stunned(delta)
 		State.DEAD:
-			velocity.y += 800 * delta 
+			velocity.y += 800 * delta
+			# Despawn al tocar el suelo
+			if is_on_floor() and not has_landed:
+				has_landed = true
+				death_grounded_timer = 0.7
+			if has_landed:
+				death_grounded_timer -= delta
+				if death_grounded_timer <= 0.0:
+					queue_free()
 
 	move_and_slide()
 
