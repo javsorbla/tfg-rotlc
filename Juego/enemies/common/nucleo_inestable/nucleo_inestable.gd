@@ -21,6 +21,8 @@ var roll_direction: float = 1.0
 var player: Node2D = null
 var space_state: PhysicsDirectSpaceState2D = null
 
+var death_timer: float = -1.0
+
 
 func _ready() -> void:
 	current_health = MAX_HEALTH
@@ -48,7 +50,10 @@ func _physics_process(delta: float) -> void:
 		State.STUNNED:
 			_state_stunned(delta)
 		State.DEAD:
-			pass
+			if death_timer > 0:
+				death_timer -= delta
+				if death_timer <= 0.0:
+					queue_free()
 			
 	move_and_slide()
 
@@ -91,6 +96,7 @@ func _enter_state(new_state: State) -> void:
 			$EnemyHitbox.monitorable = false
 			$EnemyHitbox.set_deferred("collision_layer", 0)
 			$EnemyHitbox.set_deferred("collision_mask", 0)
+			death_timer = 1.0
 
 
 func _state_sleep() -> void:
@@ -133,7 +139,7 @@ func _state_rolling() -> void:
 
 func _state_stunned(delta: float) -> void:
 	stun_timer -= delta
-	velocity.x = move_toward(velocity.x, 0, 100.0 * delta)  # frena progresivamente
+	velocity.x = move_toward(velocity.x, 0, 100.0 * delta)
 	if stun_timer <= 0:
 		_enter_state(State.SLEEP)
 
