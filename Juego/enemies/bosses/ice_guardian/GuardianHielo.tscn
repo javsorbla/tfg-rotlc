@@ -36,6 +36,16 @@ position = Vector2(1, -8.5)
 shape = SubResource("RectangleShape2D_oam23")
 debug_color = Color(0.0913501, 0.627675, 0.471793, 0.42)
 
+[node name="AttackHitbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 4
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
+position = Vector2(1, -8.5)
+shape = SubResource("RectangleShape2D_oam23")
+debug_color = Color(0.914081, 0.254715, 0.369102, 0.42)
+
 [node name="SpawnProyectil" type="Marker2D" parent="."]
 position = Vector2(59, -14)
 

@@ -23,7 +23,12 @@ func _on_trigger_entered(body):
 			
 			var tween = create_tween()
 			tween.tween_property(camera, "zoom", Vector2(0.5, 0.5), 2.5)
-
+		
+		# Activar boss
+		var boss = get_tree().get_first_node_in_group("boss")
+		if boss:
+			boss.activate()
+			
 func on_boss_defeated():
 	$ParedIzquierda/CollisionShape2D.disabled = true
 	$ParedDerecha/CollisionShape2D.disabled = true
