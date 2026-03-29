@@ -1,5 +1,6 @@
-[gd_scene load_steps=30 format=4 uid="uid://dc8npb5o6dmm3"]
+[gd_scene load_steps=31 format=4 uid="uid://dc8npb5o6dmm3"]
 
+[ext_resource type="Script" path="res://scenes/campos_de_zafiro.gd" id="1_1fbct"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_5ebei"]
 [ext_resource type="Texture2D" uid="uid://cgbjd234ny1kh" path="res://assets/tilesets/IceSet.png" id="1_kj2pu"]
 [ext_resource type="PackedScene" uid="uid://bav0n7c513nk1" path="res://enemies/common/acechador_aereo/AcechadorAereo.tscn" id="2_4k3vr"]
@@ -146,6 +147,7 @@ size = Vector2(302, 38)
 size = Vector2(1993.5, 30)
 
 [node name="CamposDeZafiro" type="Node2D"]
+script = ExtResource("1_1fbct")
 
 [node name="Hud" parent="." groups=["hud"] instance=ExtResource("4_xt17c")]
 
@@ -389,7 +391,7 @@ position = Vector2(13635, -1838)
 [node name="CoreHurtbox" parent="GuardianHielo" index="4" groups=["boss_core"]]
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("1_5ebei")]
-position = Vector2(12793, -1720)
+position = Vector2(38, -7)
 
 [editable path="Entorno/ZonaViento"]
 [editable path="Entorno/ZonaViento2"]
