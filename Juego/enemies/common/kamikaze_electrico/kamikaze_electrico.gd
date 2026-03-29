@@ -20,8 +20,10 @@ func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
 
-	$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
-	$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
+		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
+	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
+		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	_enter_state(State.SLEEP)
 
@@ -64,6 +66,7 @@ func _enter_state(new_state: State) -> void:
 				if explode_from_death:
 					player.get_node("Health").is_invincible = false 
 				player.get_node("Health").take_damage(DAMAGE)
+				
 			var timer = Timer.new()
 			add_child(timer)
 			timer.wait_time = 0.75
@@ -75,10 +78,16 @@ func _enter_state(new_state: State) -> void:
 			explode_from_death = false
 			$AnimatedSprite2D.play("dead")
 			if $EnemyHitbox:
-				$EnemyHitbox.monitoring = false
-				$EnemyHitbox.monitorable = false
+				$EnemyHitbox.set_deferred("monitoring", false)
+				$EnemyHitbox.set_deferred("monitorable", false)
 				$EnemyHitbox.set_deferred("collision_layer", 0)
 				$EnemyHitbox.set_deferred("collision_mask", 0)
+			
+			if $EnemyHurtbox:
+				$EnemyHurtbox.set_deferred("monitoring", false)
+				$EnemyHurtbox.set_deferred("monitorable", false)
+				$EnemyHurtbox.set_deferred("collision_layer", 0)
+				$EnemyHurtbox.set_deferred("collision_mask", 0)
 			velocity = Vector2(0, 0)
 
 
