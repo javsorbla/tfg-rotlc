@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-const MAX_HEALTH: int = 2
+const MAX_HEALTH: int = 3 # momentaneamente por error en el daño del jugador, será 2
 const DAMAGE: int = 1
 const DIVE_SPEED: float = 200.0
 const RETURN_SPEED: float = 100.0
