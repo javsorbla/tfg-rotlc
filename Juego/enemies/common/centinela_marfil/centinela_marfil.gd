@@ -36,8 +36,10 @@ var patrol_origin: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	player = get_tree().get_first_node_in_group("player")
 
-	$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
-	$EnemyHitbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
+		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
+	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
+		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	_enter_state(State.PATROL)
 
@@ -50,7 +52,7 @@ func _physics_process(delta: float) -> void:
 
 	match current_state:
 		State.PATROL:
-			_state_patrol(delta)
+			_state_patrol()
 		State.ATTACK:
 			_state_attack(delta)
 		State.STUNNED:
@@ -91,7 +93,7 @@ func _enter_state(new_state: State) -> void:
 			$EnemyHitbox.remove_from_group("enemy_hitbox")
 
 
-func _state_patrol(delta: float) -> void:
+func _state_patrol() -> void:
 	var space_state = get_world_2d().direct_space_state
 	var edge_check_pos = global_position + Vector2(patrol_dir * EDGE_CHECK_DISTANCE, 0)
 	var query = PhysicsRayQueryParameters2D.create(
@@ -226,9 +228,9 @@ func take_damage(amount: int) -> void:
 
 func _on_enemy_hitbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player_hurtbox"):
-		var p = area.get_parent()
-		if p.has_method("take_damage"):
-			p.take_damage(DAMAGE)
+		var target = area.get_parent()
+		if target.has_method("take_damage"):
+			target.take_damage(DAMAGE)
 
 func _on_enemy_hurtbox_area_entered(area: Area2D):
 	if area.is_in_group("player_hitbox"): 

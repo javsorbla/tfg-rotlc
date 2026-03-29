@@ -28,8 +28,10 @@ var shoot_timer: float = 0.0
 func _ready() -> void:
 	player = get_tree().get_first_node_in_group("player")
 
-	$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
-	$EnemyHitbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
+		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
+	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
+		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	_enter_state(State.IDLE)
 
@@ -196,9 +198,9 @@ func _state_stunned(delta):
 
 func _on_enemy_hitbox_area_entered(area: Area2D): 
 	if area.is_in_group("player_hurtbox"): 
-		var player = area.get_parent() 
-		if player.has_method("take_damage"): 
-			player.take_damage(DAMAGE) 
+		var target = area.get_parent() 
+		if target.has_method("take_damage"): 
+			target.take_damage(DAMAGE) 
 
 
 func _on_enemy_hurtbox_area_entered(area: Area2D):
