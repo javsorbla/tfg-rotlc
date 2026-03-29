@@ -75,7 +75,7 @@ shape = SubResource("CapsuleShape2D_sgw7u")
 position = Vector2(1.90735e-06, 2)
 scale = Vector2(0.609375, 0.5625)
 sprite_frames = SubResource("SpriteFrames_1o3aa")
-animation = &"dead"
+animation = &"idle"
 
 [node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16

@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=4 uid="uid://bhuy8ugxgi6my"]
+[gd_scene load_steps=6 format=4 uid="uid://cdxf1fypj76oo"]
 
 [ext_resource type="Texture2D" uid="uid://bqby384r5lm15" path="res://assets/tilesets/DarkCastle.png" id="1_viqdl"]
 [ext_resource type="PackedScene" uid="uid://byp1jbg6411yf" path="res://enemies/common/inquisidor_tenebroso/InquisidorTenebroso.tscn" id="2_b44u7"]
