@@ -16,6 +16,7 @@ var hitstop_timer = 0.0
 
 func _ready():
 	hitbox.monitoring = false
+	hitbox.monitorable = false
 	hitbox.visible = false
 	hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
 
@@ -29,6 +30,7 @@ func _handle_attack(delta):
 		if attack_timer <= 0:
 			is_attacking = false
 			hitbox.monitoring = false
+			hitbox.monitorable = false
 			hitbox.visible = false
 		return
 
@@ -36,6 +38,7 @@ func _handle_attack(delta):
 		is_attacking = true
 		attack_timer = ATTACK_DURATION
 		hitbox.monitoring = true
+		hitbox.monitorable = true
 		hitbox.visible = true
 		if Input.is_action_pressed("aim_up"):
 			hitbox.position = Vector2(0, -HITBOX_OFFSET_Y)

@@ -16,7 +16,7 @@ const CHARGE_COOLDOWN = 3.0
 const PROJECTILE_COOLDOWN = 4.0
 
 # Fase 2
-const FLOAT_SPEED_P2 = 100.0
+const FLOAT_SPEED_P2 = 110.0
 const CHARGE_SPEED_P2 = 250.0
 const CHARGE_COOLDOWN_P2 = 2.0
 const PROJECTILE_COOLDOWN_P2 = 2.5
@@ -25,6 +25,14 @@ const JUMP_SPEED = 230.0
 const JUMP_HORIZONTAL_DEADZONE = 24.0
 const FLOOR_RAY_MARGIN = 64.0
 const FLOOR_NEAR_BOTTOM_THRESHOLD = 24.0
+const POST_JUMP_RECOVER = 1.25
+const DAMAGE_FLASH_TIME = 0.08
+const FURY_SUMMON_PAUSE = 2.4
+const WALKER_SPAWN_OFFSET_X = 96.0
+const WALKER_SPAWN_MARGIN_X = 24.0
+const SUMMON_POP_TIME = 0.2
+const FURY_SUMMON_STAGGER = 0.22
+const FURY_CENTER_MOVE_TIME = 1.0
 
 var current_health = MAX_HEALTH
 var current_state = State.IDLE
@@ -37,11 +45,14 @@ var charge_timer = 0.0
 var projectile_timer = 0.0
 var jump_timer = 0.0
 var action_timer = 0.0
+var post_jump_recover_timer = 0.0
 
 var jump_velocity = Vector2.ZERO
 var charge_direction = Vector2.ZERO
 var original_y = 0.0
 var core_hurtbox_base_x := 0.0
+var damage_flash_tween: Tween = null
+var has_summoned_fury_walkers = false
 
 var room_left_limit = 0.0
 var room_right_limit = 0.0
@@ -55,6 +66,7 @@ var room_bottom_limit = 0.0
 @onready var attack_hitbox = $AttackHitbox
 @onready var projectile_scene = preload("res://enemies/bosses/ice_guardian/ProyectilHielo.tscn")
 @onready var shockwave_scene = preload("res://enemies/bosses/ice_guardian/OndaHielo.tscn")
+@onready var caminante_helado_scene = preload("res://enemies/common/caminante_helado/CaminanteHelado.tscn")
 
 func _ready():
 	player = get_tree().get_first_node_in_group("player")
@@ -62,6 +74,8 @@ func _ready():
 	projectile_timer = PROJECTILE_COOLDOWN
 	original_y = position.y
 	core_hurtbox_base_x = abs(core_hurtbox_shape.position.x)
+	if not core_hurtbox.is_in_group("boss_core"):
+		core_hurtbox.add_to_group("boss_core")
 	if not attack_hitbox.is_in_group("enemy_hitbox"):
 		attack_hitbox.add_to_group("enemy_hitbox")
 	attack_hitbox.monitoring = false
@@ -94,6 +108,29 @@ func _check_phase():
 func _enter_phase_two():
 	charge_timer = 0.0
 	projectile_timer = 0.0
+	if not has_summoned_fury_walkers:
+		has_summoned_fury_walkers = true
+		current_state = State.IDLE
+		attack_hitbox.monitoring = false
+		attack_hitbox.monitorable = false
+		jump_velocity = Vector2.ZERO
+		action_timer = FURY_CENTER_MOVE_TIME + FURY_SUMMON_PAUSE + FURY_SUMMON_STAGGER
+		_start_fury_transition_async()
+
+func _start_fury_transition_async():
+	var target_center_x: float = _get_bossroom_center_x()
+	var target_center_y: float = clamp(global_position.y, room_top_limit, room_bottom_limit)
+	var target_pos: Vector2 = Vector2(target_center_x, target_center_y)
+	var move_tween: Tween = create_tween()
+	move_tween.tween_property(self, "global_position", target_pos, FURY_CENTER_MOVE_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await move_tween.finished
+	_summon_fury_walkers_async()
+
+func _get_bossroom_center_x() -> float:
+	var boss_room = get_tree().get_first_node_in_group("boss_room")
+	if boss_room and boss_room.has_node("Centro"):
+		return float(boss_room.get_node("Centro").global_position.x)
+	return (room_left_limit + room_right_limit) * 0.5
 
 func _update_timers(delta):
 	if charge_timer > 0:
@@ -102,6 +139,8 @@ func _update_timers(delta):
 		projectile_timer -= delta
 	if current_phase == Phase.TWO and jump_timer > 0:
 		jump_timer -= delta
+	if post_jump_recover_timer > 0:
+		post_jump_recover_timer -= delta
 
 func _handle_state(delta):
 	match current_state:
@@ -115,6 +154,9 @@ func _handle_state(delta):
 			_jump_state(delta)
 
 func _idle_state(delta):
+	if post_jump_recover_timer > 0:
+		return
+
 	action_timer -= delta
 
 	# Moverse hacia el jugador pero parar a cierta distancia
@@ -237,6 +279,7 @@ func _jump_state(delta):
 				_land_shockwave(position.y)
 				attack_hitbox.monitoring = false
 				attack_hitbox.monitorable = false
+				post_jump_recover_timer = POST_JUMP_RECOVER
 				current_state = State.IDLE
 				return
 
@@ -248,6 +291,7 @@ func _jump_state(delta):
 		_land_shockwave(landing_y)
 		attack_hitbox.monitoring = false
 		attack_hitbox.monitorable = false
+		post_jump_recover_timer = POST_JUMP_RECOVER
 		current_state = State.IDLE
 
 func _resolve_landing_y() -> float:
@@ -292,8 +336,73 @@ func activate():
 
 func take_damage(amount: int):
 	current_health -= amount
+	_play_damage_flash()
 	if current_health <= 0:
 		die()
+
+func _play_damage_flash():
+	if not sprite:
+		return
+	if damage_flash_tween:
+		damage_flash_tween.kill()
+	damage_flash_tween = create_tween()
+	sprite.modulate = Color(2.2, 2.2, 2.2, 1.0)
+	damage_flash_tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), DAMAGE_FLASH_TIME)
+
+func _summon_fury_walkers_async():
+	if not caminante_helado_scene:
+		return
+	var left_spawn_x: float = clamp(global_position.x - WALKER_SPAWN_OFFSET_X, room_left_limit + WALKER_SPAWN_MARGIN_X, room_right_limit - WALKER_SPAWN_MARGIN_X)
+	var right_spawn_x: float = clamp(global_position.x + WALKER_SPAWN_OFFSET_X, room_left_limit + WALKER_SPAWN_MARGIN_X, room_right_limit - WALKER_SPAWN_MARGIN_X)
+	await get_tree().process_frame
+	_spawn_single_walker(left_spawn_x)
+	await get_tree().process_frame
+	await get_tree().create_timer(FURY_SUMMON_STAGGER).timeout
+	_spawn_single_walker(right_spawn_x)
+
+func _spawn_single_walker(spawn_x: float):
+	var walker = caminante_helado_scene.instantiate()
+	get_parent().add_child(walker)
+	var ground_y: float = _resolve_ground_y_at_x(spawn_x)
+	var feet_offset: float = _get_walker_feet_offset(walker)
+	var spawn_y: float = ground_y - feet_offset - 4.0
+	walker.global_position = Vector2(spawn_x, spawn_y)
+	walker.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	var summon_tween: Tween = create_tween()
+	summon_tween.tween_property(walker, "modulate", Color(1.0, 1.0, 1.0, 1.0), SUMMON_POP_TIME)
+
+func _get_walker_feet_offset(walker: Node) -> float:
+	if not walker:
+		return 0.0
+	var shape_node := walker.get_node_or_null("CollisionShape2D")
+	if not shape_node:
+		return 0.0
+	var local_offset_y: float = float(shape_node.position.y)
+	var shape = shape_node.shape
+	if shape is CapsuleShape2D:
+		var capsule: CapsuleShape2D = shape
+		return local_offset_y + (capsule.height * 0.5)
+	if shape is RectangleShape2D:
+		var rect: RectangleShape2D = shape
+		return local_offset_y + (rect.size.y * 0.5)
+	if shape is CircleShape2D:
+		var circle: CircleShape2D = shape
+		return local_offset_y + circle.radius
+	return local_offset_y
+
+func _resolve_ground_y_at_x(x: float) -> float:
+	var space_state := get_world_2d().direct_space_state
+	var start := Vector2(x, room_top_limit - FLOOR_RAY_MARGIN)
+	var finish := Vector2(x, room_bottom_limit + FLOOR_RAY_MARGIN)
+	var query := PhysicsRayQueryParameters2D.create(start, finish)
+	query.collide_with_areas = false
+	query.exclude = [self]
+	var hit := space_state.intersect_ray(query)
+	if not hit.is_empty():
+		var hit_y: float = float(hit.position.y)
+		if hit_y >= room_bottom_limit - FLOOR_NEAR_BOTTOM_THRESHOLD:
+			return hit_y
+	return room_bottom_limit
 
 func die():
 	current_state = State.DEAD

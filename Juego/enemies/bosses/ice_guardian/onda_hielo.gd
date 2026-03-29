@@ -184,6 +184,7 @@ func _get_floor_hit(x_offset: float) -> Dictionary:
 func _cast_ray(start: Vector2, finish: Vector2) -> Dictionary:
 	var space_state := get_world_2d().direct_space_state
 	var query := PhysicsRayQueryParameters2D.create(start, finish)
+	query.collision_mask = 1
 	query.collide_with_areas = false
 	query.exclude = [self]
 	return space_state.intersect_ray(query)
