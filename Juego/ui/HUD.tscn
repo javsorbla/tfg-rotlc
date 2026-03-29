@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://bce6576tqo4wu"]
+
+[ext_resource type="Script" path="res://ui/hud.gd" id="1_7m301"]
+[ext_resource type="Texture2D" uid="uid://df656uykohch0" path="res://assets/ui/heart.png" id="2_uwfcu"]
+
+[node name="Hud" type="CanvasLayer"]
+scale = Vector2(0.5, 0.5)
+transform = Transform2D(0.5, 0, 0, 0.5, 0, 0)
+script = ExtResource("1_7m301")
+
+[node name="Hearts" type="HBoxContainer" parent="."]
+
+[node name="Heart1" type="TextureRect" parent="Hearts"]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+texture = ExtResource("2_uwfcu")
+
+[node name="Heart2" type="TextureRect" parent="Hearts"]
+layout_mode = 2
+texture = ExtResource("2_uwfcu")
+
+[node name="Heart3" type="TextureRect" parent="Hearts"]
+layout_mode = 2
+texture = ExtResource("2_uwfcu")

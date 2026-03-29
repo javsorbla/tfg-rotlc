@@ -1,0 +1,59 @@
+[gd_scene load_steps=6 format=3 uid="uid://cebumpot7e5vm"]
+
+[ext_resource type="Script" path="res://enemies/bosses/ice_guardian/guardian_hielo.gd" id="1_7r6jr"]
+[ext_resource type="Texture2D" uid="uid://bolxcn3rs4e01" path="res://assets/enemies/bosses/ice_guardian/guardian-hielo_idle.png" id="1_oqbj1"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_7kxj6"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_oqbj1")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oam23"]
+size = Vector2(37, 81.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_twro6"]
+size = Vector2(15, 17)
+
+[node name="GuardianHielo" type="Node2D"]
+script = ExtResource("1_7r6jr")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_7kxj6")
+animation = &"idle"
+
+[node name="NormalHurtbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NormalHurtbox"]
+position = Vector2(1, -9.25)
+shape = SubResource("RectangleShape2D_oam23")
+debug_color = Color(0.0913501, 0.627675, 0.471793, 0.42)
+
+[node name="AttackHitbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 4
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
+position = Vector2(1, -8.5)
+shape = SubResource("RectangleShape2D_oam23")
+debug_color = Color(0.914081, 0.254715, 0.369102, 0.42)
+
+[node name="SpawnProyectil" type="Marker2D" parent="."]
+position = Vector2(59, -14)
+
+[node name="CoreHurtbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CoreHurtbox"]
+position = Vector2(4.5, -16.5)
+shape = SubResource("RectangleShape2D_twro6")
+debug_color = Color(0.838852, 0.00118074, 0.925752, 0.42)

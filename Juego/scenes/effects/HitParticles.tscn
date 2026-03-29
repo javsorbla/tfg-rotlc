@@ -1,0 +1,53 @@
+[gd_scene load_steps=9 format=3 uid="uid://d4hh5j51i5s4a"]
+
+[ext_resource type="Script" path="res://scenes/effects/hit_particles.gd" id="1_ardfl"]
+
+[sub_resource type="Gradient" id="Gradient_1gmuh"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.803922)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_xkvm5"]
+gradient = SubResource("Gradient_1gmuh")
+
+[sub_resource type="Curve" id="Curve_2ebl0"]
+_data = [Vector2(0.0272109, 1), 0.0, 0.0, 0, 0, Vector2(0.445122, 0.736264), 0.786713, 0.0, 0, 0, Vector2(1, 0.56044), 0.786713, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_c5lkm"]
+curve = SubResource("Curve_2ebl0")
+
+[sub_resource type="Curve" id="Curve_cs2a6"]
+max_value = 3.0
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_llk2b"]
+curve = SubResource("Curve_cs2a6")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_lievs"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(100, 50, 0)
+spread = 20.0
+initial_velocity_min = 60.0
+initial_velocity_max = 100.0
+gravity = Vector3(0, 98, 0)
+scale_max = 3.0
+scale_curve = SubResource("CurveTexture_c5lkm")
+scale_over_velocity_curve = SubResource("CurveTexture_llk2b")
+color = Color(0.991164, 0.991164, 0.991164, 1)
+color_ramp = SubResource("GradientTexture1D_xkvm5")
+turbulence_enabled = true
+turbulence_noise_strength = 2.0
+turbulence_noise_scale = 0.5
+
+[node name="HitParticles" type="GPUParticles2D"]
+emitting = false
+amount = 24
+process_material = SubResource("ParticleProcessMaterial_lievs")
+lifetime = 0.15
+one_shot = true
+explosiveness = 1.0
+fixed_fps = 0
+visibility_rect = Rect2(-200, -100, 400, 200)
+local_coords = true
+script = ExtResource("1_ardfl")
