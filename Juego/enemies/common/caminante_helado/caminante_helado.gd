@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-# --- CONSTANTES BASE ---
+# --- CONSTANTES ---
 const MAX_HEALTH: int = 3
 const DAMAGE: int = 1
 const PATROL_SPEED: float = 30.0
@@ -8,7 +8,7 @@ const CHASE_SPEED: float = 60.0
 const DETECTION_DISTANCE: float = 220.0 
 const PATROL_X_RANGE: float = 48.0
 const STUN_DURATION: float = 0.5
-const HIT_PAUSE_DURATION: float = 1.1 # 1.1 segundos de pausa tras pegar al jugador
+const HIT_PAUSE_DURATION: float = 1.1
 
 # --- ESTADOS ---
 enum State { IDLE, PATROL, CHASE, STUNNED, DEAD, ATTACK_PAUSE }
@@ -28,6 +28,9 @@ var flip_cooldown: float = 0.0
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var vision: RayCast2D = $Vision
 
+
+# --- CICLO PRINCIPAL ---
+
 func _ready() -> void:
     current_health = MAX_HEALTH
     player = get_tree().get_first_node_in_group("player")
@@ -38,12 +41,12 @@ func _ready() -> void:
     if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
         $EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
-    # Configuramos el rayo de visión para que mire al suelo diagonalmente
     vision.target_position = Vector2(20 * facing_dir, 40) 
     _enter_state(State.IDLE)
 
 func _physics_process(delta: float) -> void:
-    if flip_cooldown > 0: flip_cooldown -= delta
+    if flip_cooldown > 0: 
+        flip_cooldown -= delta
 
     if not is_on_floor():
         velocity += get_gravity() * delta
@@ -65,20 +68,26 @@ func _physics_process(delta: float) -> void:
     move_and_slide()
     _update_animations()
 
+
 # --- LÓGICA DE ANIMACIÓN ---
+
 func _update_animations() -> void:
     if current_state in [State.STUNNED, State.DEAD, State.ATTACK_PAUSE]:
         return 
         
     if current_state == State.IDLE:
         sprite.play("idle")
+        sprite.flip_h = (facing_dir > 0)
     elif current_state in [State.PATROL, State.CHASE]:
+        sprite.flip_h = false 
         if facing_dir < 0:
             sprite.play("walk_left")
         else:
             sprite.play("walk_right")
 
+
 # --- MANEJO DE ESTADOS ---
+
 func _enter_state(new_state: State) -> void:
     current_state = new_state
     sprite.modulate.a = 1.0
@@ -87,36 +96,49 @@ func _enter_state(new_state: State) -> void:
         State.IDLE:
             velocity.x = 0
             idle_timer = randf_range(1.0, 2.5) 
+            
         State.PATROL:
             patrol_timer = randf_range(2.0, 4.0) 
+            
         State.CHASE:
             pass 
+            
         State.ATTACK_PAUSE:
             sprite.play("idle") 
+            sprite.flip_h = (facing_dir > 0) 
             velocity.x = 0 
+            
         State.STUNNED:
             sprite.play("dazed") 
+            sprite.flip_h = (facing_dir > 0) 
             velocity.x = 0 
+            
         State.DEAD:
             sprite.play("dead") 
+            sprite.flip_h = (facing_dir > 0) 
             if $EnemyHitbox:
                 $EnemyHitbox.set_deferred("monitoring", false)
                 $EnemyHitbox.set_deferred("monitorable", false)
                 $EnemyHitbox.set_deferred("collision_layer", 0)
                 $EnemyHitbox.set_deferred("collision_mask", 0)
             velocity.x = 0
+            
             await get_tree().create_timer(1.5).timeout
             queue_free()
 
+
 # --- LÓGICA DE VISIÓN ---
+
 func _has_line_of_sight() -> bool:
     if not player: return false
     var space_state = get_world_2d().direct_space_state
     var eye_pos = global_position + Vector2(0, -10)
     var target_pos = player.global_position + Vector2(0, -10)
+    
     var query = PhysicsRayQueryParameters2D.create(eye_pos, target_pos)
     query.collision_mask = 1 
     var result = space_state.intersect_ray(query)
+    
     return result.is_empty() 
 
 func _check_for_player() -> bool:
@@ -130,18 +152,22 @@ func _check_for_player() -> bool:
                     return true
     return false
 
+
 # --- FUNCIONES DE ESTADO ---
+
 func _state_idle(delta: float) -> void:
     if _check_for_player(): return
+    
     idle_timer -= delta
-    if idle_timer <= 0: _enter_state(State.PATROL)
+    if idle_timer <= 0: 
+        _enter_state(State.PATROL)
 
 func _state_patrol(delta: float) -> void:
     if _check_for_player(): return
 
     velocity.x = facing_dir * PATROL_SPEED
-
     patrol_timer -= delta
+    
     if patrol_timer <= 0 and is_on_floor():
         _enter_state(State.IDLE)
         return
@@ -192,6 +218,7 @@ func _state_chase() -> void:
 func _state_stunned(delta: float) -> void:
     stun_timer -= delta
     sprite.modulate.a = 1.0 if int(stun_timer * 10) % 2 == 0 else 0.5
+    
     if stun_timer <= 0: 
         _enter_state(State.IDLE)
 
@@ -200,14 +227,19 @@ func _state_attack_pause(delta: float) -> void:
     if stun_timer <= 0:
         _enter_state(State.IDLE)
 
+
 # --- FUNCIONES AUXILIARES ---
+
 func _flip() -> void:
     if flip_cooldown > 0: return
+    
     facing_dir *= -1.0
     vision.target_position.x = abs(vision.target_position.x) * facing_dir
     flip_cooldown = 0.3
 
+
 # --- COMBATE ---
+
 func _on_enemy_hitbox_area_entered(area: Area2D) -> void:
     if current_state == State.DEAD: return
     
@@ -217,10 +249,14 @@ func _on_enemy_hitbox_area_entered(area: Area2D) -> void:
         if hit_player.has_method("take_damage"):
             hit_player.take_damage(DAMAGE)
             
-        # Knockback directo (sin bloquear controles del jugador)
+        # Knockback directo
         if hit_player is CharacterBody2D:
             var push_x = sign(hit_player.global_position.x - global_position.x)
             if push_x == 0: push_x = facing_dir
+            
+            if push_x != facing_dir:
+                flip_cooldown = 0.0 
+                _flip()
             
             var knock_direction = Vector2(push_x * 0.45, -1.0).normalized()
             hit_player.velocity = knock_direction * 350.0 
@@ -240,6 +276,7 @@ func take_damage(amount: int) -> void:
         die()
         return
         
+    # Girarse si es atacado por la espalda
     if player:
         var dir_to_player = sign(player.global_position.x - global_position.x)
         if dir_to_player != 0 and dir_to_player != sign(facing_dir):
