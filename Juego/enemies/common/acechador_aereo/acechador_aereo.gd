@@ -43,8 +43,10 @@ func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
 
-	$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
-	$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
+		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
+	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
+		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	patrol_origin = global_position
 	_enter_state(State.IDLE)
@@ -100,10 +102,16 @@ func _enter_state(new_state: State) -> void:
 			$AnimatedSprite2D.play("dead")
 
 			if $EnemyHitbox:
-				$EnemyHitbox.monitoring = false
-				$EnemyHitbox.monitorable = false
+				$EnemyHitbox.set_deferred("monitoring", false)
+				$EnemyHitbox.set_deferred("monitorable", false)
 				$EnemyHitbox.set_deferred("collision_layer", 0)
 				$EnemyHitbox.set_deferred("collision_mask", 0)
+			
+			if $EnemyHurtbox:
+				$EnemyHurtbox.set_deferred("monitoring", false)
+				$EnemyHurtbox.set_deferred("monitorable", false)
+				$EnemyHurtbox.set_deferred("collision_layer", 0)
+				$EnemyHurtbox.set_deferred("collision_mask", 0)
 
 			velocity = Vector2(0, 0)
 
@@ -123,7 +131,7 @@ func _state_idle() -> void:
 	global_position.y = patrol_origin.y + sin(patrol_y_phase) * PATROL_Y_RANGE
 
 	# Detectar muros
-	var collision = move_and_slide()
+	move_and_slide()
 	if is_on_wall():
 		patrol_dir *= -1   # cambiar dirección si choca con un muro
 
@@ -194,16 +202,16 @@ func _on_enemy_hitbox_area_entered(area: Area2D):
 		return 
 		
 	if area.is_in_group("player_hurtbox"): 
-		var player = area.get_parent() 
+		var target = area.get_parent() 
 		has_hit_player = true 
-		if player.has_method("take_damage"): 
-			player.take_damage(DAMAGE) 
+		if target.has_method("take_damage"): 
+			target.take_damage(DAMAGE) 
 				
 		# knockback 
-		if player is CharacterBody2D and not player.is_shielding: 
-			var dir = (player.global_position - global_position).normalized() 
+		if target is CharacterBody2D and not target.is_shielding: 
+			var dir = (target.global_position - global_position).normalized() 
 			dir.y = 0 
-			player.velocity = dir * 150 
+			target.velocity = dir * 150 
 		_enter_state(State.RETURNING) 
 
 

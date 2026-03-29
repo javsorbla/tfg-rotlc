@@ -28,8 +28,10 @@ func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
 	
-	$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
-	$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
+		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
+	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
+		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 	
 	space_state = get_world_2d().direct_space_state
 	_enter_state(State.SLEEP)
@@ -92,10 +94,19 @@ func _enter_state(new_state: State) -> void:
 			velocity = Vector2.ZERO
 			$AnimatedSprite2D.rotation = 0.0
 			$AnimatedSprite2D.play("dead")
-			$EnemyHitbox.monitoring = false
-			$EnemyHitbox.monitorable = false
-			$EnemyHitbox.set_deferred("collision_layer", 0)
-			$EnemyHitbox.set_deferred("collision_mask", 0)
+			
+			if $EnemyHitbox:
+				$EnemyHitbox.set_deferred("monitoring", false)
+				$EnemyHitbox.set_deferred("monitorable", false)
+				$EnemyHitbox.set_deferred("collision_layer", 0)
+				$EnemyHitbox.set_deferred("collision_mask", 0)
+			
+			if $EnemyHurtbox:
+				$EnemyHurtbox.set_deferred("monitoring", false)
+				$EnemyHurtbox.set_deferred("monitorable", false)
+				$EnemyHurtbox.set_deferred("collision_layer", 0)
+				$EnemyHurtbox.set_deferred("collision_mask", 0)
+				
 			death_timer = 1.0
 
 
