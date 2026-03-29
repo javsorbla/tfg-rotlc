@@ -4,13 +4,13 @@
 [ext_resource type="SpriteFrames" uid="uid://bqbm126y76pv" path="res://assets/enemies/bosses/ice_guardian/f6_flashfreeze.tres" id="3_2kcga"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6qe6s"]
-size = Vector2(63, 19)
+size = Vector2(62.75, 19)
 
 [node name="OndaHielo" type="Node2D"]
 script = ExtResource("1_kxe0i")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(2, -39)
+position = Vector2(0, -26)
 sprite_frames = ExtResource("3_2kcga")
 animation = &"idle"
 
@@ -19,6 +19,6 @@ collision_layer = 16
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHitbox"]
-position = Vector2(2.5, -9.5)
+position = Vector2(1, 4)
 shape = SubResource("RectangleShape2D_6qe6s")
 debug_color = Color(1, 0, 0, 0.42)

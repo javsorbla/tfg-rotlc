@@ -1,9 +1,8 @@
 extends Node2D
 
 const SPEED := 220.0
-const IDLE_DURATION := 0.7
 const FLOOR_SNAP_RANGE := 64.0
-const GROUND_OFFSET := 0.0
+const GROUND_OFFSET := 4.0
 const FLOOR_NORMAL_MIN_Y := -0.7
 const FRONT_X_OFFSET := 34.0
 const WALL_CHECK_DISTANCE := 10.0
@@ -105,11 +104,6 @@ func _run_animation_sequence_async() -> void:
 			return
 
 	sprite.play("idle")
-	await get_tree().create_timer(IDLE_DURATION).timeout
-	if is_ending:
-		return
-
-	_start_disappear()
 
 
 func _start_disappear() -> void:
