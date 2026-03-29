@@ -12,4 +12,5 @@ func _process(delta: float) -> void:
 
 func _on_final_body_entered(body) -> void:
 	if body is CharacterBody2D:
+		GameState.coming_from_transition = true
 		get_tree().call_deferred("change_scene_to_file", "res://scenes/CamposDeZafiro.tscn")
