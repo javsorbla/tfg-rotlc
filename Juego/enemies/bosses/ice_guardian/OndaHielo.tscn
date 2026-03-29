@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://kor03f0x2xob"]
 
 [ext_resource type="Script" path="res://enemies/bosses/ice_guardian/onda_hielo.gd" id="1_kxe0i"]
-[ext_resource type="SpriteFrames" uid="uid://bqbm126y76pv" path="res://assets/enemies/bosses/ice_guardian/f6_flashfreeze.tres" id="3_2kcga"]
+[ext_resource type="SpriteFrames" uid="uid://bqbm126y76pv" path="res://assets/enemies/bosses/ice_guardian/onda_hielo.tres" id="3_2kcga"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6qe6s"]
 size = Vector2(62.75, 19)
