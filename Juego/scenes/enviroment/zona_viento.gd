@@ -42,12 +42,6 @@ func _ready():
 		shape_size.x,
 		shape_size.y
 	)
-	
-	print("shape_size: ", shape_size)
-	print("shape_offset: ", shape_offset)
-	print("amount: ", $ParticulasViento.amount)
-	print("lifetime: ", $ParticulasViento.lifetime)
-	print("emission_box_extents: ", mat.emission_box_extents)
 
 func _on_body_entered(body):
 	if body.is_in_group("player"):

@@ -1,0 +1,45 @@
+[gd_scene load_steps=5 format=3 uid="uid://bsukqcw5xjnu8"]
+
+[ext_resource type="Script" path="res://scenes/enviroment/zona_jefe.gd" id="1_8m08l"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qilvi"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sxj7u"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wc3k3"]
+size = Vector2(20, 19)
+
+[node name="ZonaJefe" type="Node2D"]
+script = ExtResource("1_8m08l")
+
+[node name="Trigger" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Trigger"]
+shape = SubResource("RectangleShape2D_qilvi")
+
+[node name="ParedIzquierda" type="StaticBody2D" parent="."]
+collision_mask = 20
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ParedIzquierda"]
+shape = SubResource("RectangleShape2D_sxj7u")
+disabled = true
+
+[node name="ParedDerecha" type="StaticBody2D" parent="."]
+collision_mask = 20
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ParedDerecha"]
+position = Vector2(300, 0)
+shape = SubResource("RectangleShape2D_wc3k3")
+disabled = true
+
+[node name="Centro" type="Marker2D" parent="."]
+
+[node name="LimiteIzquierda" type="Marker2D" parent="."]
+
+[node name="LimiteDerecha" type="Marker2D" parent="."]
+
+[node name="LimiteArriba" type="Marker2D" parent="."]
+
+[node name="LimiteAbajo" type="Marker2D" parent="."]

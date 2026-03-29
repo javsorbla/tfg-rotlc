@@ -1,0 +1,34 @@
+[gd_scene load_steps=5 format=3 uid="uid://cpr75bu1cybc5"]
+
+[ext_resource type="Texture2D" uid="uid://pqf344f7cycu" path="res://assets/enemies/bosses/ice_guardian/proyectil_hielo.png" id="1_0k2b5"]
+[ext_resource type="Script" path="res://enemies/bosses/ice_guardian/proyectil_hielo.gd" id="1_b3kg0"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_yvnqh"]
+radius = 4.99938
+height = 29.1271
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_87dlv"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_0k2b5")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="ProyectilHielo" type="Area2D"]
+collision_layer = 16
+collision_mask = 5
+script = ExtResource("1_b3kg0")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = 0.911545
+shape = SubResource("CapsuleShape2D_yvnqh")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_87dlv")
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
+rotation = 0.911545
