@@ -10,7 +10,7 @@ size = Vector2(62.75, 19)
 script = ExtResource("1_kxe0i")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -26)
+position = Vector2(0, -29)
 sprite_frames = ExtResource("3_2kcga")
 animation = &"idle"
 
@@ -19,6 +19,6 @@ collision_layer = 16
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHitbox"]
-position = Vector2(1, 4)
+position = Vector2(1, 1)
 shape = SubResource("RectangleShape2D_6qe6s")
 debug_color = Color(1, 0, 0, 0.42)

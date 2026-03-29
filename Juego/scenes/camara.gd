@@ -2,7 +2,7 @@ extends Camera2D
 
 var shake_timer = 0.0
 var shake_intensity = 0.0
-var base_offset = Vector2(60, -30)
+var base_offset = Vector2(30, -10)
 var boss_room_mode = false
 var boss_room_target = Vector2.ZERO
 
@@ -13,8 +13,8 @@ const SHAKE_INTENSITY = 3.0
 
 # Zona muerta vertical
 const DEADZONE_Y = 30.0  # píxeles arriba y abajo antes de que la cámara se mueva
-const FOLLOW_SPEED_X = 0.1
-const FOLLOW_SPEED_Y = 0.08
+const FOLLOW_SPEED_X = 0.15
+const FOLLOW_SPEED_Y = 0.1
 
 func shake():
 	shake_timer = SHAKE_DURATION
