@@ -420,7 +420,7 @@ texture = ExtResource("6_1jylv")
 position = Vector2(-19, 87)
 
 [node name="Player" parent="." instance=ExtResource("1_74p10")]
-position = Vector2(4488, 57)
+position = Vector2(-130, 58)
 
 [node name="Final" type="Area2D" parent="."]
 collision_mask = 4
