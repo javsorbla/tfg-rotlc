@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		air_dash_used = false
 
-	can_dash = dash_cooldown_timer <= 0 and (is_on_floor() or not air_dash_used)
+	can_dash = dash_cooldown_timer <= 0 and (is_on_floor() or not air_dash_used) and not is_shielding
 
 	if is_dashing:
 		dash_timer -= delta
