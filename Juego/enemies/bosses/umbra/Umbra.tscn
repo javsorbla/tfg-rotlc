@@ -6,18 +6,21 @@
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ifwve"]
 radius = 12.0
-height = 50.0
+height = 40.0
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mrakr"]
-radius = 39.0
-height = 78.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3di5o"]
+size = Vector2(49, 50)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1digt"]
 radius = 12.0
-height = 50.0
+height = 40.0
 
 [node name="Umbra" type="CharacterBody2D"]
 script = ExtResource("1_quebn")
+jump_cooldown_seconds = 1.5
+double_jump_cooldown_seconds = 2.0
+dash_cooldown_seconds = 3.0
+debug_darkness_logs = true
 
 [node name="AIController2D" type="Node2D" parent="."]
 script = ExtResource("2_u7ihi")
@@ -26,7 +29,8 @@ script = ExtResource("2_u7ihi")
 shape = SubResource("CapsuleShape2D_ifwve")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(-2, -23)
+position = Vector2(-1, -18)
+scale = Vector2(0.684615, 0.746154)
 sprite_frames = ExtResource("3_8gdcn")
 animation = &"attack"
 
@@ -35,8 +39,8 @@ collision_layer = 16
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
-position = Vector2(-1, -2)
-shape = SubResource("CapsuleShape2D_mrakr")
+position = Vector2(1, 0)
+shape = SubResource("RectangleShape2D_3di5o")
 debug_color = Color(0.905808, 0.272961, 0.350986, 0.42)
 
 [node name="Hurtbox" type="Area2D" parent="." groups=["enemy_hurtbox"]]

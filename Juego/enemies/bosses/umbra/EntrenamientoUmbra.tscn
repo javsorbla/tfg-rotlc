@@ -176,6 +176,8 @@ size = Vector2(1687, 36)
 
 [node name="PruebaUmbra" type="Node"]
 script = ExtResource("1_xhvoh")
+auto_stop_on_target = true
+min_episodes_before_stop = 80
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("1_2ac4d")
@@ -185,7 +187,7 @@ tile_map_data = PackedByteArray("AAAAAAAAAAACAAsAAAABAAAAAAADAAsAAAACAAAAAAADAAs
 tile_set = SubResource("TileSet_xthih")
 
 [node name="Umbra" parent="." groups=["enemies"] instance=ExtResource("2_y4o4n")]
-position = Vector2(467, -26)
+position = Vector2(473, -20)
 collision_layer = 16
 
 [node name="Player" parent="." instance=ExtResource("4_n1die")]

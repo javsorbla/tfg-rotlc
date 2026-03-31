@@ -1,5 +1,7 @@
 extends Node
 
+signal died(owner: Node)
+
 const MAX_HEALTH = 3
 const INVINCIBILITY_DURATION = 1.0
 const FLASH_DURATION = 0.1
@@ -8,6 +10,7 @@ var current_health = MAX_HEALTH
 var is_invincible = false
 var invincibility_timer = 0.0
 var flash_timer = 0.0
+var death_callback: Callable
 
 @onready var player = get_parent()
 @onready var hurtbox = get_parent().get_node("Hurtbox")
@@ -38,7 +41,15 @@ func take_damage(amount: int, bypass_shield: bool = false):
 	if current_health <= 0:
 		die()
 
+
+func set_death_callback(callback: Callable) -> void:
+	death_callback = callback
+
 func die():
+	emit_signal("died", player)
+	if death_callback.is_valid():
+		death_callback.call()
+		return
 	get_tree().reload_current_scene()
 
 func _handle_invincibility(delta):

@@ -5,23 +5,30 @@ var checkpoint_activated = false
 var coming_from_transition: bool = false
 
 const UMBRA_SAVE_PATH := "user://umbra_progress.json"
+const UMBRA_TRAINING_LOG_PATH := "user://umbra_training_episodes.jsonl"
+
+const DEFAULT_UMBRA_PLAYER_METRICS := {
+	"avg_distance": 200.0,
+	"dash_frequency": 0.0,
+	"attack_frequency": 0.0,
+	"jump_frequency": 0.0,
+	"preferred_side": 0.0
+}
 
 var current_level: int = 1
 
-var umbra_progress := {
-	"encounters": 0,
-	"wins": 0,
-	"losses": 0,
-	"difficulty_scale": 1.0,
-	"player_metrics": {
-		"avg_distance": 200.0,
-		"dash_frequency": 0.0,
-		"attack_frequency": 0.0,
-		"jump_frequency": 0.0,
-		"preferred_side": 0.0
-	},
-	"latest_model_path": ""
-}
+var umbra_progress := _make_default_umbra_progress()
+
+
+func _make_default_umbra_progress() -> Dictionary:
+	return {
+		"encounters": 0,
+		"wins": 0,
+		"losses": 0,
+		"difficulty_scale": 1.0,
+		"player_metrics": DEFAULT_UMBRA_PLAYER_METRICS.duplicate(true),
+		"latest_model_path": ""
+	}
 
 
 func _ready() -> void:
@@ -44,6 +51,7 @@ func _load_umbra_progress() -> void:
 	var parsed: Variant = JSON.parse_string(json_text)
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_warning("Progreso de Umbra invalido, usando valores por defecto")
+		umbra_progress = _make_default_umbra_progress()
 		_save_umbra_progress()
 		return
 
@@ -52,13 +60,36 @@ func _load_umbra_progress() -> void:
 			umbra_progress[key] = parsed[key]
 
 	if not umbra_progress.has("player_metrics"):
-		umbra_progress["player_metrics"] = {
-			"avg_distance": 200.0,
-			"dash_frequency": 0.0,
-			"attack_frequency": 0.0,
-			"jump_frequency": 0.0,
-			"preferred_side": 0.0
-		}
+		umbra_progress["player_metrics"] = DEFAULT_UMBRA_PLAYER_METRICS.duplicate(true)
+
+
+func reset_umbra_learning(clear_training_log := true, clear_latest_model := true) -> void:
+	var previous_model := str(umbra_progress.get("latest_model_path", ""))
+	umbra_progress = _make_default_umbra_progress()
+
+	if not clear_latest_model and previous_model != "":
+		umbra_progress["latest_model_path"] = previous_model
+
+	_save_umbra_progress()
+
+	if clear_training_log:
+		var file := FileAccess.open(UMBRA_TRAINING_LOG_PATH, FileAccess.WRITE)
+		if file != null:
+			file.store_string("")
+			file.close()
+
+
+func get_umbra_learning_summary() -> Dictionary:
+	var encounters := int(umbra_progress.get("encounters", 0))
+	var wins := int(umbra_progress.get("wins", 0))
+	return {
+		"encounters": encounters,
+		"wins": wins,
+		"losses": int(umbra_progress.get("losses", 0)),
+		"win_rate": float(wins) / float(max(1, encounters)),
+		"difficulty_scale": float(umbra_progress.get("difficulty_scale", 1.0)),
+		"latest_model_path": str(umbra_progress.get("latest_model_path", ""))
+	}
 
 
 func _save_umbra_progress() -> void:
@@ -85,6 +116,27 @@ func get_umbra_latest_model_path() -> String:
 func set_umbra_latest_model_path(model_path: String) -> void:
 	umbra_progress["latest_model_path"] = model_path
 	_save_umbra_progress()
+
+
+func get_umbra_bootstrap_data() -> Dictionary:
+	return {
+		"encounters": int(umbra_progress.get("encounters", 0)),
+		"wins": int(umbra_progress.get("wins", 0)),
+		"difficulty_scale": float(umbra_progress.get("difficulty_scale", 1.0)),
+		"latest_model_path": str(umbra_progress.get("latest_model_path", "")),
+		"player_metrics": get_umbra_player_metrics()
+	}
+
+
+func record_umbra_training_episode(episode_data: Dictionary) -> void:
+	var file := FileAccess.open(UMBRA_TRAINING_LOG_PATH, FileAccess.WRITE_READ)
+	if file == null:
+		push_warning("No se pudo abrir el log de entrenamiento de Umbra")
+		return
+
+	file.seek_end()
+	file.store_line(JSON.stringify(episode_data))
+	file.close()
 
 
 func register_umbra_encounter(encounter_data: Dictionary) -> void:
