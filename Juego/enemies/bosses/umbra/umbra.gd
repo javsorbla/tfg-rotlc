@@ -688,13 +688,23 @@ func _try_cast_darkness_zone() -> void:
 
 
 func _spawn_darkness_zone(spawn_pos: Vector2) -> void:
-	if _darkness_container == null:
-		_ensure_darkness_container()
+	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
+	var spawn_parent: Node = null
+	if player != null and player.get_parent() != null:
+		spawn_parent = player.get_parent()
+	else:
+		if _darkness_container == null or not is_instance_valid(_darkness_container) or not _darkness_container.is_inside_tree():
+			_ensure_darkness_container()
+		spawn_parent = _darkness_container
 
-	var zone := Area2D.new()
-	zone.script = DARKNESS_ZONE_SCRIPT
-	zone.global_position = spawn_pos
-	zone.top_level = true
+	if spawn_parent == null:
+		return
+
+	var zone := DARKNESS_ZONE_SCRIPT.new() as Area2D
+	if zone == null:
+		zone = Area2D.new()
+		zone.script = DARKNESS_ZONE_SCRIPT
+	zone.top_level = false
 	zone.z_as_relative = false
 	zone.z_index = 5000
 	zone.collision_layer = 16
@@ -714,7 +724,8 @@ func _spawn_darkness_zone(spawn_pos: Vector2) -> void:
 			darkness_zone_arming_delay
 		)
 
-	_darkness_container.add_child(zone)
+	spawn_parent.call_deferred("add_child", zone)
+	zone.set_deferred("global_position", spawn_pos)
 
 
 func _report_encounter(umbra_won: bool) -> void:

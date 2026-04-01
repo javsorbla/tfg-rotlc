@@ -23,7 +23,7 @@ func configure(damage: int, interval: float, lifetime: float, delay := 0.55) -> 
 
 func _ready() -> void:
 	visible = true
-	top_level = true
+	top_level = false
 	z_as_relative = false
 	z_index = 5000
 	monitoring = true
