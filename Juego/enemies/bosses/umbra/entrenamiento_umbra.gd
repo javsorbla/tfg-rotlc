@@ -369,7 +369,7 @@ func _reset():
 	_pending_reset = false
 	_episode_start_msec = Time.get_ticks_msec()
 	umbra.global_position = spawn_umbra.global_position
-	umbra.current_health = umbra.MAX_HEALTH
+	umbra.current_health = umbra.max_health
 	umbra.activate()
 	if umbra.ai_controller and umbra.ai_controller.has_method("reset"):
 		umbra.ai_controller.reset()

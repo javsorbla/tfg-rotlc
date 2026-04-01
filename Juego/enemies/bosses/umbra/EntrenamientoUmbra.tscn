@@ -176,6 +176,7 @@ size = Vector2(1687, 36)
 
 [node name="PruebaUmbra" type="Node"]
 script = ExtResource("1_xhvoh")
+training_preset = 2
 auto_stop_on_target = true
 min_episodes_before_stop = 80
 

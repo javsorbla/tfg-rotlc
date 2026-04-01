@@ -7,7 +7,11 @@ var player_metrics = {
 	"dash_frequency": 0.0,
 	"attack_frequency": 0.0,
 	"jump_frequency": 0.0,
-	"preferred_side": 0.0
+	"preferred_side": 0.0,
+	"air_time_ratio": 0.0,
+	"close_range_ratio": 0.0,
+	"low_health_ratio": 0.0,
+	"power_usage_frequency": 0.0
 }
 
 var _umbra: CharacterBody2D
@@ -21,6 +25,10 @@ var _player_attack_ticks := 0
 var _player_jump_events := 0
 var _left_side_ticks := 0
 var _right_side_ticks := 0
+var _player_air_ticks := 0
+var _close_range_ticks := 0
+var _low_health_ticks := 0
+var _power_active_ticks := 0
 
 var _prev_player_is_dashing := false
 var _prev_player_on_floor := true
@@ -59,6 +67,19 @@ func _collect_player_metrics() -> void:
 		_player_attack_ticks += 1
 
 	var current_on_floor := bool(_player.is_on_floor())
+	if not current_on_floor:
+		_player_air_ticks += 1
+
+	if distance <= 90.0:
+		_close_range_ticks += 1
+
+	if float(_player.health.current_health) <= float(_player.health.MAX_HEALTH) * 0.35:
+		_low_health_ticks += 1
+
+	var color_manager = _player.get_node_or_null("ColorManager")
+	if color_manager and bool(color_manager.get("power_active")):
+		_power_active_ticks += 1
+
 	if _prev_player_on_floor and not current_on_floor and float(_player.velocity.y) < 0.0:
 		_player_jump_events += 1
 
@@ -84,7 +105,7 @@ func get_obs() -> Dictionary:
 	obs.append(float(_umbra.is_on_floor()))
 	obs.append(float(_umbra.is_dashing))
 	obs.append(float(_umbra.is_attacking))
-	obs.append(clamp(float(_umbra.current_health) / float(_umbra.MAX_HEALTH), 0.0, 1.0))
+	obs.append(clamp(float(_umbra.current_health) / float(_umbra.max_health), 0.0, 1.0))
 	
 	# Estado del jugador
 	obs.append(clamp(float(_player.health.current_health) / float(_player.health.MAX_HEALTH), 0.0, 1.0))
@@ -96,6 +117,10 @@ func get_obs() -> Dictionary:
 	obs.append(clamp(player_metrics["attack_frequency"], 0.0, 1.0))
 	obs.append(clamp(player_metrics["jump_frequency"], 0.0, 1.0))
 	obs.append(clamp(player_metrics["preferred_side"], -1.0, 1.0))
+	obs.append(clamp(player_metrics["air_time_ratio"], 0.0, 1.0))
+	obs.append(clamp(player_metrics["close_range_ratio"], 0.0, 1.0))
+	obs.append(clamp(player_metrics["low_health_ratio"], 0.0, 1.0))
+	obs.append(clamp(player_metrics["power_usage_frequency"], 0.0, 1.0))
 	
 	return {"obs": obs}
 
@@ -157,13 +182,21 @@ func build_encounter_snapshot(umbra_won: bool) -> Dictionary:
 	var attack_frequency := float(_player_attack_ticks) / float(_sample_count)
 	var jump_frequency := float(_player_jump_events) / float(max(1, _sample_count))
 	var preferred_side := float(_right_side_ticks - _left_side_ticks) / float(_sample_count)
+	var air_time_ratio := float(_player_air_ticks) / float(_sample_count)
+	var close_range_ratio := float(_close_range_ticks) / float(_sample_count)
+	var low_health_ratio := float(_low_health_ticks) / float(_sample_count)
+	var power_usage_frequency := float(_power_active_ticks) / float(_sample_count)
 
 	player_metrics = {
 		"avg_distance": avg_distance,
 		"dash_frequency": dash_frequency,
 		"attack_frequency": attack_frequency,
 		"jump_frequency": jump_frequency,
-		"preferred_side": preferred_side
+		"preferred_side": preferred_side,
+		"air_time_ratio": air_time_ratio,
+		"close_range_ratio": close_range_ratio,
+		"low_health_ratio": low_health_ratio,
+		"power_usage_frequency": power_usage_frequency
 	}
 
 	return {
@@ -173,7 +206,7 @@ func build_encounter_snapshot(umbra_won: bool) -> Dictionary:
 
 func reset():
 	super.reset()
-	_umbra.current_health = _umbra.MAX_HEALTH
+	_umbra.current_health = _umbra.max_health
 	if _player:
 		_prev_player_health = _player.health.current_health
 	_prev_umbra_health = _umbra.current_health

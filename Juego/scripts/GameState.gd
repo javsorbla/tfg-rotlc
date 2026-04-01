@@ -12,10 +12,15 @@ const DEFAULT_UMBRA_PLAYER_METRICS := {
 	"dash_frequency": 0.0,
 	"attack_frequency": 0.0,
 	"jump_frequency": 0.0,
-	"preferred_side": 0.0
+	"preferred_side": 0.0,
+	"air_time_ratio": 0.0,
+	"close_range_ratio": 0.0,
+	"low_health_ratio": 0.0,
+	"power_usage_frequency": 0.0
 }
 
 var current_level: int = 1
+var cleared_boss_rooms: Dictionary = {}
 
 var umbra_progress := _make_default_umbra_progress()
 
@@ -61,6 +66,10 @@ func _load_umbra_progress() -> void:
 
 	if not umbra_progress.has("player_metrics"):
 		umbra_progress["player_metrics"] = DEFAULT_UMBRA_PLAYER_METRICS.duplicate(true)
+	else:
+		for metric_key in DEFAULT_UMBRA_PLAYER_METRICS.keys():
+			if not umbra_progress["player_metrics"].has(metric_key):
+				umbra_progress["player_metrics"][metric_key] = DEFAULT_UMBRA_PLAYER_METRICS[metric_key]
 
 
 func reset_umbra_learning(clear_training_log := true, clear_latest_model := true) -> void:
@@ -126,6 +135,22 @@ func get_umbra_bootstrap_data() -> Dictionary:
 		"latest_model_path": str(umbra_progress.get("latest_model_path", "")),
 		"player_metrics": get_umbra_player_metrics()
 	}
+
+
+func make_boss_room_key(scene_path: String, room_node_path: String) -> String:
+	return "%s::%s" % [scene_path, room_node_path]
+
+
+func mark_boss_room_cleared(room_key: String) -> void:
+	if room_key == "":
+		return
+	cleared_boss_rooms[room_key] = true
+
+
+func is_boss_room_cleared(room_key: String) -> bool:
+	if room_key == "":
+		return false
+	return bool(cleared_boss_rooms.get(room_key, false))
 
 
 func record_umbra_training_episode(episode_data: Dictionary) -> void:

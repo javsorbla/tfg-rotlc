@@ -5,8 +5,8 @@ signal defeated(umbra_won: bool)
 const UMBRA_SHADER := preload("res://enemies/bosses/umbra/Umbra.gdshader")
 const DARKNESS_ZONE_SCRIPT := preload("res://enemies/bosses/umbra/darkness_zone.gd")
 
-# Constantes de movimiento (similares a Iris)
-const SPEED = 140.0
+# Constantes de movimiento
+const SPEED = 100.0
 const JUMP_VELOCITY = -300.0
 const DASH_SPEED = 280.0
 const DASH_DURATION = 0.20
@@ -14,7 +14,6 @@ const ACCELERATION = 900.0
 const FRICTION = 650.0
 
 # Constantes de combate
-const MAX_HEALTH = 3
 const DAMAGE = 1
 const ATTACK_DURATION = 0.3
 const ATTACK_COOLDOWN = 1.0
@@ -37,7 +36,7 @@ var air_dash_used = false
 var last_direction = 1
 
 # Variables de combate
-var current_health = MAX_HEALTH
+var current_health = max_health
 var is_attacking = false
 var attack_timer = 0.0
 var attack_cooldown_timer = 0.0
@@ -53,6 +52,7 @@ var ai_should_use_power = false
 var is_active = false
 
 var _last_action_received_time := 0.0
+var _has_received_valid_action := false
 var _encounter_reported := false
 var _darkness_cooldown_timer := 0.0
 var _power_active := false
@@ -61,17 +61,40 @@ var _power_cooldown_timer := 0.0
 var _jump_cooldown_timer := 0.0
 var _double_jump_cooldown_timer := 0.0
 var _darkness_try_timer := 0.0
-var _prev_ai_should_jump := false
-var _prev_ai_should_dash := false
+var _attack_cooldown_runtime := ATTACK_COOLDOWN
+var _jump_cooldown_runtime := 0.0
+var _double_jump_cooldown_runtime := 0.0
+var _dash_cooldown_runtime := 0.0
+var _darkness_cooldown_runtime := 0.0
+var _darkness_cast_interval_runtime := 0.0
+var _power_cooldown_scale := 1.0
+var _heuristic_jump_chance := 0.35
+var _heuristic_dash_chance := 0.35
+var _allow_darkness_cast := true
+var _runtime_metrics_enabled := false
+var _runtime_distance_sum := 0.0
+var _runtime_sample_count := 0
+var _runtime_player_dash_ticks := 0
+var _runtime_player_attack_ticks := 0
+var _runtime_player_jump_events := 0
+var _runtime_left_side_ticks := 0
+var _runtime_right_side_ticks := 0
+var _runtime_player_air_ticks := 0
+var _runtime_close_range_ticks := 0
+var _runtime_low_health_ticks := 0
+var _runtime_power_active_ticks := 0
+var _runtime_prev_player_on_floor := true
 
 const ACTION_TIMEOUT_SECONDS := 0.35
 const HEURISTIC_ATTACK_DISTANCE := 44.0
-const HEURISTIC_DASH_DISTANCE := 180.0
+const HEURISTIC_DASH_DISTANCE := 130.0
 const AUTO_ATTACK_DISTANCE_X := 72.0
 const AUTO_ATTACK_DISTANCE_Y := 44.0
 
+@export var max_health = 3
 @export var force_heuristic_only := false
 @export var debug_combat_logs := false
+@export var debug_mobility_logs := false
 @export var despawn_on_death := true
 @export var jump_cooldown_seconds := 0.85
 @export var double_jump_cooldown_seconds := 1.30
@@ -100,6 +123,7 @@ const AUTO_ATTACK_DISTANCE_Y := 44.0
 @export var darkness_cast_interval_seconds := 6.0
 @export var darkness_relax_distance_checks := true
 @export_enum("auto", "cyan", "red", "yellow") var forced_power := "auto"
+@export var apply_level_balance := true
 
 # Variables de poder
 var current_power = "none"  # none, cyan, red, yellow
@@ -123,7 +147,9 @@ func _ready():
 	_ensure_darkness_container()
 	# Asignar poder según nivel
 	_assign_power()
+	_apply_level_balance()
 	_apply_persistent_difficulty()
+	_apply_player_profile_adaptation()
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
 		ai_controller.init(player)
@@ -145,30 +171,92 @@ func _physics_process(delta):
 
 	if force_heuristic_only or _should_use_heuristic():
 		_use_heuristic()
-
-	var jump_pressed := ai_should_jump and not _prev_ai_should_jump
-	var dash_pressed := ai_should_dash and not _prev_ai_should_dash
 	
 	_handle_timers(delta)
 	_handle_gravity(delta)
 	_handle_movement(delta)
-	_handle_jump(jump_pressed)
-	_handle_dash(delta, dash_pressed)
+	_handle_jump(ai_should_jump)
+	_handle_dash(delta, ai_should_dash)
 	_handle_attack(delta)
 	_apply_pattern_overrides()
 	_handle_power()
+	_collect_runtime_player_metrics()
 	_update_animation()
 	_update_power_visuals()
 	
 	was_on_floor = is_on_floor()
-	_prev_ai_should_jump = ai_should_jump
-	_prev_ai_should_dash = ai_should_dash
 	move_and_slide()
+
+
+func _apply_level_balance() -> void:
+	_attack_cooldown_runtime = ATTACK_COOLDOWN
+	_jump_cooldown_runtime = jump_cooldown_seconds
+	_double_jump_cooldown_runtime = double_jump_cooldown_seconds
+	_dash_cooldown_runtime = dash_cooldown_seconds
+	_darkness_cooldown_runtime = darkness_cast_cooldown
+	_darkness_cast_interval_runtime = darkness_cast_interval_seconds
+	_power_cooldown_scale = 1.0
+	_heuristic_jump_chance = 0.35
+	_heuristic_dash_chance = 0.35
+	_allow_darkness_cast = true
+
+	if not apply_level_balance:
+		return
+
+	var scene_root := get_tree().current_scene
+	if scene_root != null:
+		var scene_path := String(scene_root.scene_file_path).to_lower()
+		if scene_path.find("entrenamiento_umbra") != -1:
+			return
+
+	var level := GameState.current_level if "current_level" in GameState else 1
+	match level:
+		1:
+			_attack_cooldown_runtime *= 1.70
+			_jump_cooldown_runtime *= 1.30
+			_double_jump_cooldown_runtime *= 1.25
+			_dash_cooldown_runtime *= 1.35
+			_darkness_cooldown_runtime *= 2.10
+			_darkness_cast_interval_runtime *= 1.95
+			_power_cooldown_scale = 1.35
+			_heuristic_jump_chance = 0.24
+			_heuristic_dash_chance = 0.38
+			_allow_darkness_cast = true
+		2:
+			_attack_cooldown_runtime *= 1.20
+			_jump_cooldown_runtime *= 1.10
+			_double_jump_cooldown_runtime *= 1.08
+			_dash_cooldown_runtime *= 1.12
+			_darkness_cooldown_runtime *= 1.18
+			_darkness_cast_interval_runtime *= 1.12
+			_power_cooldown_scale = 1.12
+			_heuristic_jump_chance = 0.30
+			_heuristic_dash_chance = 0.28
 
 
 func _apply_persistent_difficulty() -> void:
 	var difficulty_scale := GameState.get_umbra_difficulty_scale()
-	current_health = int(round(float(MAX_HEALTH) * difficulty_scale))
+	current_health = int(round(float(max_health) * difficulty_scale))
+
+
+func _apply_player_profile_adaptation() -> void:
+	var metrics := GameState.get_umbra_player_metrics()
+	if metrics.is_empty():
+		return
+
+	# Adapt baseline behavior against the player profile learned across level encounters.
+	var dash_frequency := clampf(float(metrics.get("dash_frequency", 0.0)), 0.0, 1.0)
+	var jump_frequency := clampf(float(metrics.get("jump_frequency", 0.0)), 0.0, 1.0)
+	var close_range_ratio := clampf(float(metrics.get("close_range_ratio", 0.0)), 0.0, 1.0)
+	var air_time_ratio := clampf(float(metrics.get("air_time_ratio", 0.0)), 0.0, 1.0)
+	var power_usage := clampf(float(metrics.get("power_usage_frequency", 0.0)), 0.0, 1.0)
+
+	_heuristic_dash_chance = clampf(_heuristic_dash_chance + dash_frequency * 0.25 + power_usage * 0.10, 0.18, 0.90)
+	_heuristic_jump_chance = clampf(_heuristic_jump_chance + jump_frequency * 0.20 + air_time_ratio * 0.12, 0.16, 0.85)
+	_attack_cooldown_runtime = clampf(_attack_cooldown_runtime - close_range_ratio * 0.22, 0.25, 3.0)
+	_darkness_cast_interval_runtime = clampf(_darkness_cast_interval_runtime - power_usage * 0.75, 1.8, 12.0)
+
+	_runtime_metrics_enabled = true
 
 func _handle_timers(delta):
 	if dash_cooldown_timer > 0:
@@ -215,26 +303,32 @@ func _get_speed():
 		return SPEED * POWER_SPEED_MULTIPLIER
 	return SPEED
 
-func _handle_jump(jump_pressed: bool):
+func _handle_jump(jump_requested: bool):
+	# Preserve double-jump availability while falling, even if jump is not pressed this frame.
+	if was_on_floor and not is_on_floor() and velocity.y >= 0:
+		can_double_jump = true
+
 	if is_dashing:
 		return
-	if not jump_pressed:
+	if not jump_requested:
 		return
 
 	if is_on_floor() and _jump_cooldown_timer <= 0.0:
 		velocity.y = JUMP_VELOCITY
 		can_double_jump = true
-		_jump_cooldown_timer = jump_cooldown_seconds
+		_jump_cooldown_timer = _jump_cooldown_runtime
+		if debug_mobility_logs:
+			print("Umbra JUMP start")
 		return
 
 	if can_double_jump and _double_jump_cooldown_timer <= 0.0:
 		velocity.y = JUMP_VELOCITY
 		can_double_jump = false
-		_double_jump_cooldown_timer = double_jump_cooldown_seconds
-	if was_on_floor and not is_on_floor() and velocity.y >= 0:
-		can_double_jump = true
+		_double_jump_cooldown_timer = _double_jump_cooldown_runtime
+		if debug_mobility_logs:
+			print("Umbra DOUBLE JUMP start")
 
-func _handle_dash(delta, dash_pressed: bool):
+func _handle_dash(delta, dash_requested: bool):
 	if is_dashing:
 		dash_timer -= delta
 		if dash_timer <= 0:
@@ -244,19 +338,26 @@ func _handle_dash(delta, dash_pressed: bool):
 			velocity.x = dash_direction * DASH_SPEED
 		return
 	
-	if dash_pressed and dash_cooldown_timer <= 0 and (is_on_floor() or not air_dash_used):
+	if dash_requested and dash_cooldown_timer <= 0 and (is_on_floor() or not air_dash_used):
+		if is_attacking:
+			_cancel_attack_state()
 		is_dashing = true
 		dash_timer = DASH_DURATION
-		dash_cooldown_timer = dash_cooldown_seconds
+		dash_cooldown_timer = _dash_cooldown_runtime
 		if not is_on_floor():
 			air_dash_used = true
 		dash_direction = ai_move_direction if ai_move_direction != 0 else last_direction
 		velocity.y = 0
+		if debug_mobility_logs:
+			print("Umbra DASH start dir=", dash_direction, " floor=", is_on_floor())
 
 	if is_on_floor():
 		air_dash_used = false
 
 func _handle_attack(delta):
+	if is_dashing:
+		return
+
 	if is_attacking:
 		velocity.x = 0.0
 		attack_timer -= delta
@@ -278,13 +379,20 @@ func _handle_attack(delta):
 		is_attacking = true
 		ai_move_direction = 0
 		attack_timer = ATTACK_DURATION
-		attack_cooldown_timer = ATTACK_COOLDOWN
+		attack_cooldown_timer = _attack_cooldown_runtime
 		attack_hitbox.monitoring = true
 		attack_hitbox.monitorable = true
 		# Posicionar hitbox según dirección
 		attack_hitbox.position = Vector2(14 * last_direction, 0)
 		if debug_combat_logs:
 			print("Umbra ATTACK start | ai=", ai_should_attack, " auto=", auto_attack, " dir=", last_direction)
+
+
+func _cancel_attack_state() -> void:
+	is_attacking = false
+	attack_timer = 0.0
+	attack_hitbox.monitoring = false
+	attack_hitbox.monitorable = false
 		
 
 
@@ -296,7 +404,7 @@ func _apply_pattern_overrides() -> void:
 	var rel := player.global_position - global_position
 	var abs_x := absf(rel.x)
 
-	if current_power == "yellow" and current_health <= int(ceil(float(MAX_HEALTH) * 0.45)):
+	if current_power == "yellow" and current_health <= int(ceil(float(max_health) * 0.45)):
 		ai_should_use_power = true
 	elif current_power == "red" and abs_x <= 120.0:
 		ai_should_use_power = true
@@ -307,10 +415,6 @@ func _apply_pattern_overrides() -> void:
 		ai_should_dash = true
 
 func _handle_power():
-	if _darkness_try_timer <= 0.0:
-		_darkness_try_timer = darkness_cast_interval_seconds
-		_try_cast_darkness_zone()
-
 	if ai_should_use_power and not _power_active and _power_cooldown_timer <= 0.0:
 		_power_active = true
 		_power_timer = _get_power_duration(current_power)
@@ -326,7 +430,12 @@ func _handle_power():
 
 	var darkness_power_gate := (not darkness_requires_power) or _is_power_active()
 	var darkness_power_type_gate := darkness_available_in_all_powers or current_power == "red"
-	if not (darkness_power_gate and darkness_power_type_gate):
+	var darkness_allowed := _allow_darkness_cast and darkness_power_gate and darkness_power_type_gate
+	if darkness_allowed:
+		if _darkness_try_timer <= 0.0:
+			_darkness_try_timer = _darkness_cast_interval_runtime
+			_try_cast_darkness_zone()
+	else:
 		_darkness_try_timer = minf(_darkness_try_timer, 0.6)
 
 func _update_animation():
@@ -376,7 +485,10 @@ func die():
 
 func activate():
 	is_active = true
+	_apply_level_balance()
+	_apply_player_profile_adaptation()
 	_encounter_reported = false
+	_has_received_valid_action = false
 	_last_action_received_time = Time.get_ticks_msec() / 1000.0
 	_darkness_cooldown_timer = 0.0
 	_power_active = false
@@ -385,24 +497,27 @@ func activate():
 	_jump_cooldown_timer = 0.0
 	_double_jump_cooldown_timer = 0.0
 	_darkness_try_timer = 0.0
-	_prev_ai_should_jump = false
-	_prev_ai_should_dash = false
+	_reset_runtime_metrics()
 	hurtbox.monitorable = true
 	is_invincible = false
 	invincibility_timer = 0.0
 
 func set_ai_action(action):
 	var normalized := _normalize_ai_action(action)
-	if normalized.is_empty():
+	
+	# Si no hay acción válida o está en timeout, usar heurística
+	if normalized.is_empty() or _should_use_heuristic():
 		_use_heuristic()
 		return
-
-	ai_move_direction = int(normalized.get("move", 1)) - 1  # 0,1,2 → -1,0,1
+	
+	# Procesar la acción del modelo
+	ai_move_direction = int(normalized.get("move", 1)) - 1  # 0,1,2 -> -1,0,1
 	ai_should_jump = int(normalized.get("jump", 0)) == 1
 	ai_should_attack = int(normalized.get("attack", 0)) == 1
 	ai_should_dash = int(normalized.get("dash", 0)) == 1
 	ai_should_use_power = int(normalized.get("power", 0)) == 1
-
+	
+	_has_received_valid_action = true
 	_last_action_received_time = Time.get_ticks_msec() / 1000.0
 
 
@@ -443,7 +558,6 @@ func _normalize_ai_action(action) -> Dictionary:
 
 	return {}
 
-
 func _should_use_heuristic() -> bool:
 	var now := Time.get_ticks_msec() / 1000.0
 	return now - _last_action_received_time > ACTION_TIMEOUT_SECONDS
@@ -457,11 +571,13 @@ func _use_heuristic() -> void:
 	var rel: Vector2 = player.global_position - global_position
 	var abs_x := absf(rel.x)
 	var abs_y := absf(rel.y)
+	var should_ground_jump := rel.y < -30.0 and is_on_floor() and _jump_cooldown_timer <= 0.0
+	var should_air_double_jump := can_double_jump and (not is_on_floor()) and velocity.y > 30.0 and _double_jump_cooldown_timer <= 0.0 and abs_y > 20.0
 
 	ai_move_direction = signi(int(rel.x))
 	ai_should_attack = abs_x <= HEURISTIC_ATTACK_DISTANCE and abs_y < 24.0
-	ai_should_jump = rel.y < -30.0 and is_on_floor() and _jump_cooldown_timer <= 0.0 and randf() < 0.35
-	ai_should_dash = abs_x > HEURISTIC_DASH_DISTANCE and dash_cooldown_timer <= 0.0 and randf() < 0.35
+	ai_should_jump = should_air_double_jump or (should_ground_jump and randf() < _heuristic_jump_chance)
+	ai_should_dash = abs_x > HEURISTIC_DASH_DISTANCE and dash_cooldown_timer <= 0.0 and randf() < _heuristic_dash_chance
 	ai_should_use_power = abs_x > 120.0
 
 
@@ -484,11 +600,11 @@ func _get_power_duration(power_name: String) -> float:
 func _get_power_cooldown(power_name: String) -> float:
 	match power_name:
 		"cyan":
-			return power_cooldown_cyan
+			return power_cooldown_cyan * _power_cooldown_scale
 		"red":
-			return power_cooldown_red
+			return power_cooldown_red * _power_cooldown_scale
 		"yellow":
-			return power_cooldown_yellow
+			return power_cooldown_yellow * _power_cooldown_scale
 		_:
 			return 0.0
 
@@ -565,7 +681,7 @@ func _try_cast_darkness_zone() -> void:
 
 	var spawn_pos := player.global_position + Vector2(darkness_spawn_offset_x, darkness_spawn_offset_y)
 	_spawn_darkness_zone(spawn_pos)
-	_darkness_cooldown_timer = darkness_cast_cooldown
+	_darkness_cooldown_timer = _darkness_cooldown_runtime
 
 	if debug_darkness_logs:
 		print("Umbra CAST darkness @", spawn_pos)
@@ -578,6 +694,9 @@ func _spawn_darkness_zone(spawn_pos: Vector2) -> void:
 	var zone := Area2D.new()
 	zone.script = DARKNESS_ZONE_SCRIPT
 	zone.global_position = spawn_pos
+	zone.top_level = true
+	zone.z_as_relative = false
+	zone.z_index = 5000
 	zone.collision_layer = 16
 	zone.collision_mask = 4
 
@@ -605,6 +724,8 @@ func _report_encounter(umbra_won: bool) -> void:
 	if ai_controller and ai_controller.has_method("build_encounter_snapshot"):
 		var snapshot = ai_controller.build_encounter_snapshot(umbra_won)
 		GameState.register_umbra_encounter(snapshot)
+	elif _runtime_sample_count > 0:
+		GameState.register_umbra_encounter(_build_runtime_snapshot(umbra_won))
 
 	_encounter_reported = true
 
@@ -621,9 +742,111 @@ func _exit_tree() -> void:
 		# If Umbra leaves the tree while alive, treat it as a win for Umbra.
 		_report_encounter(true)
 
+
+func _reset_runtime_metrics() -> void:
+	_runtime_distance_sum = 0.0
+	_runtime_sample_count = 0
+	_runtime_player_dash_ticks = 0
+	_runtime_player_attack_ticks = 0
+	_runtime_player_jump_events = 0
+	_runtime_left_side_ticks = 0
+	_runtime_right_side_ticks = 0
+	_runtime_player_air_ticks = 0
+	_runtime_close_range_ticks = 0
+	_runtime_low_health_ticks = 0
+	_runtime_power_active_ticks = 0
+
+	var player := get_tree().get_first_node_in_group("player") as CharacterBody2D
+	if player != null:
+		_runtime_prev_player_on_floor = player.is_on_floor()
+	else:
+		_runtime_prev_player_on_floor = true
+
+
+func _collect_runtime_player_metrics() -> void:
+	if not _runtime_metrics_enabled:
+		return
+
+	var player := get_tree().get_first_node_in_group("player") as CharacterBody2D
+	if player == null:
+		return
+
+	var distance := global_position.distance_to(player.global_position)
+	_runtime_distance_sum += distance
+	_runtime_sample_count += 1
+
+	if player.global_position.x < global_position.x:
+		_runtime_left_side_ticks += 1
+	else:
+		_runtime_right_side_ticks += 1
+
+	if bool(player.get("is_dashing")):
+		_runtime_player_dash_ticks += 1
+
+	var combat_node = player.get_node_or_null("Combat")
+	if combat_node and bool(combat_node.get("is_attacking")):
+		_runtime_player_attack_ticks += 1
+
+	var current_on_floor := player.is_on_floor()
+	if not current_on_floor:
+		_runtime_player_air_ticks += 1
+
+	if distance <= 90.0:
+		_runtime_close_range_ticks += 1
+
+	var health_node = player.get_node_or_null("Health")
+	if health_node != null and float(health_node.get("current_health")) <= float(health_node.get("MAX_HEALTH")) * 0.35:
+		_runtime_low_health_ticks += 1
+
+	var color_manager = player.get_node_or_null("ColorManager")
+	if color_manager and bool(color_manager.get("power_active")):
+		_runtime_power_active_ticks += 1
+
+	if _runtime_prev_player_on_floor and not current_on_floor and float(player.velocity.y) < 0.0:
+		_runtime_player_jump_events += 1
+
+	_runtime_prev_player_on_floor = current_on_floor
+
+
+func _build_runtime_snapshot(umbra_won: bool) -> Dictionary:
+	if _runtime_sample_count <= 0:
+		return {
+			"umbra_won": umbra_won,
+			"player_metrics": GameState.get_umbra_player_metrics()
+		}
+
+	var count := float(_runtime_sample_count)
+	var metrics := {
+		"avg_distance": _runtime_distance_sum / count,
+		"dash_frequency": float(_runtime_player_dash_ticks) / count,
+		"attack_frequency": float(_runtime_player_attack_ticks) / count,
+		"jump_frequency": float(_runtime_player_jump_events) / count,
+		"preferred_side": float(_runtime_right_side_ticks - _runtime_left_side_ticks) / count,
+		"air_time_ratio": float(_runtime_player_air_ticks) / count,
+		"close_range_ratio": float(_runtime_close_range_ticks) / count,
+		"low_health_ratio": float(_runtime_low_health_ticks) / count,
+		"power_usage_frequency": float(_runtime_power_active_ticks) / count
+	}
+
+	return {
+		"umbra_won": umbra_won,
+		"player_metrics": metrics
+	}
+
 func _on_hurtbox_area_entered(area: Area2D):
 	if area.is_in_group("player_hitbox"):
-		take_damage(1)
+		var attacker := area.get_parent()
+		# Player combat script already applies damage to enemy_hurtbox targets.
+		# Keep this callback as fallback for other hitbox sources to avoid double hits.
+		if attacker and attacker.is_in_group("player") and attacker.get_node_or_null("Combat") != null:
+			return
+
+		var damage := 1
+		if attacker and attacker.has_method("get") and attacker.is_in_group("player"):
+			var attacker_multiplier = float(attacker.get("damage_multiplier"))
+			damage = maxi(1, int(round(attacker_multiplier)))
+
+		take_damage(damage)
 
 func _on_attack_hitbox_body_entered(body):
 	if body.is_in_group("player"):
