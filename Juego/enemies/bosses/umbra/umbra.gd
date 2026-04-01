@@ -393,8 +393,8 @@ func die():
 	velocity = Vector2.ZERO
 	is_attacking = false
 	is_dashing = false
-	attack_hitbox.monitoring = false
-	attack_hitbox.monitorable = false
+	attack_hitbox.set_deferred("monitoring", false)
+	attack_hitbox.set_deferred("monitorable", false)
 
 func activate():
 	is_active = true
@@ -411,7 +411,7 @@ func activate():
 	_double_jump_cooldown_timer = 0.0
 	_darkness_try_timer = 0.0
 	_reset_runtime_metrics()
-	hurtbox.monitorable = true
+	hurtbox.set_deferred("monitorable", true)
 	is_invincible = false
 	invincibility_timer = 0.0
 

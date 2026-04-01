@@ -48,18 +48,23 @@ func set_death_callback(callback: Callable) -> void:
 func die():
 	emit_signal("died", player)
 	if death_callback.is_valid():
-		death_callback.call()
+		call_deferred("_invoke_death_callback")
 		return
-	get_tree().reload_current_scene()
+	get_tree().call_deferred("reload_current_scene")
+
+
+func _invoke_death_callback() -> void:
+	if death_callback.is_valid():
+		death_callback.call()
 
 func _handle_invincibility(delta):
 	if is_invincible:
 		invincibility_timer -= delta
-		hurtbox.monitorable = false
+		hurtbox.set_deferred("monitorable", false)
 		sprite.visible = not sprite.visible if fmod(invincibility_timer, 0.2) < 0.1 else true
 		if invincibility_timer <= 0:
 			is_invincible = false
-			hurtbox.monitorable = true
+			hurtbox.set_deferred("monitorable", true)
 			sprite.visible = true
 
 func _handle_flash(delta):

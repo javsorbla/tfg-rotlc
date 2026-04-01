@@ -25,7 +25,7 @@ func _ready() -> void:
 	visible = true
 	top_level = false
 	z_as_relative = false
-	z_index = 5000
+	z_index = 100
 	monitoring = true
 	monitorable = true
 	collision_layer = 16
@@ -43,7 +43,7 @@ func _setup_visual() -> void:
 	_visual.animation = &"default"
 	_visual.modulate = Color(1.0, 1.0, 1.0, 0.62)
 	_visual.z_as_relative = false
-	_visual.z_index = 5100
+	_visual.z_index = 101
 	add_child(_visual)
 	_visual.play()
 
@@ -52,7 +52,7 @@ func _setup_visual() -> void:
 	_ring.polygon = _build_circle_polygon(52.0, 28)
 	_ring.color = Color(0.12, 0.04, 0.2, 0.42)
 	_ring.z_as_relative = false
-	_ring.z_index = 5090
+	_ring.z_index = 100
 	add_child(_ring)
 
 

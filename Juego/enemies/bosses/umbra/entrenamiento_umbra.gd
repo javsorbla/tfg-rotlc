@@ -408,7 +408,7 @@ func _reset_human_player() -> void:
 		health.invincibility_timer = 0.0
 	var hurtbox = _human_player.get_node_or_null("Hurtbox")
 	if hurtbox:
-		hurtbox.monitorable = true
+		hurtbox.set_deferred("monitorable", true)
 
 
 func _get_active_player_health() -> int:

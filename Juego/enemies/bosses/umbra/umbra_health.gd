@@ -5,7 +5,7 @@ extends Node
 
 
 func setup() -> void:
-	hurtbox.monitorable = true
+	hurtbox.set_deferred("monitorable", true)
 	if not hurtbox.area_entered.is_connected(_on_hurtbox_area_entered):
 		hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 
@@ -15,7 +15,7 @@ func process_timers(delta: float) -> void:
 		umbra.invincibility_timer -= delta
 		if umbra.invincibility_timer <= 0.0:
 			umbra.is_invincible = false
-			hurtbox.monitorable = true
+			hurtbox.set_deferred("monitorable", true)
 
 
 func take_damage(amount: int) -> void:
@@ -25,7 +25,7 @@ func take_damage(amount: int) -> void:
 	umbra.current_health -= amount
 	umbra.is_invincible = true
 	umbra.invincibility_timer = umbra.INVINCIBILITY_DURATION
-	hurtbox.monitorable = false
+	hurtbox.set_deferred("monitorable", false)
 	if umbra.current_health <= 0:
 		umbra.die()
 

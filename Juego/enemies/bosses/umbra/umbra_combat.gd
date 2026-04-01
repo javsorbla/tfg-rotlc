@@ -77,6 +77,9 @@ func cancel_attack_state() -> void:
 
 
 func _ensure_darkness_container() -> void:
+	if _darkness_container != null and is_instance_valid(_darkness_container):
+		return
+
 	var scene_root := umbra.get_tree().current_scene
 	if scene_root == null:
 		scene_root = umbra.get_tree().root
@@ -87,7 +90,7 @@ func _ensure_darkness_container() -> void:
 
 	_darkness_container = Node2D.new()
 	_darkness_container.name = "DarknessContainer"
-	scene_root.add_child(_darkness_container)
+	scene_root.call_deferred("add_child", _darkness_container)
 
 
 func _try_cast_darkness_zone() -> void:
@@ -132,7 +135,7 @@ func _spawn_darkness_zone(spawn_pos: Vector2) -> void:
 		zone.script = DARKNESS_ZONE_SCRIPT
 	zone.top_level = false
 	zone.z_as_relative = false
-	zone.z_index = 5000
+	zone.z_index = 100
 	zone.collision_layer = 16
 	zone.collision_mask = 4
 
