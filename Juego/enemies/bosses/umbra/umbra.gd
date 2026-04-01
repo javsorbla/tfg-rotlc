@@ -2,9 +2,6 @@ extends CharacterBody2D
 
 signal defeated(umbra_won: bool)
 
-const UMBRA_SHADER := preload("res://enemies/bosses/umbra/Umbra.gdshader")
-const DARKNESS_ZONE_SCRIPT := preload("res://enemies/bosses/umbra/darkness_zone.gd")
-
 # Constantes de movimiento
 const SPEED = 100.0
 const JUMP_VELOCITY = -300.0
@@ -20,10 +17,6 @@ const ATTACK_COOLDOWN = 1.0
 const INVINCIBILITY_DURATION = 0.5
 const POWER_SPEED_MULTIPLIER = 1.45
 const POWER_DAMAGE_MULTIPLIER = 2
-
-const TINT_CYAN_PRIMARY := Color(0.0, 0.85, 1.0, 1.0)
-const TINT_RED_PRIMARY := Color(1.0, 0.2, 0.2, 1.0)
-const TINT_YELLOW_PRIMARY := Color(1.0, 0.9, 0.0, 1.0)
 
 # Variables de movimiento
 var can_double_jump = false
@@ -132,19 +125,15 @@ var current_power = "none"  # none, cyan, red, yellow
 @onready var attack_hitbox = $AttackHitbox
 @onready var hurtbox = $Hurtbox
 @onready var ai_controller = $AIController2D
-
-var _darkness_container: Node2D
+@onready var health = $Health
+@onready var combat = $Combat
+@onready var color_manager = $ColorManager
 
 func _ready():
 	add_to_group("umbra_boss")
-	attack_hitbox.monitoring = false
-	attack_hitbox.monitorable = false
-	hurtbox.monitorable = true
-	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
-	attack_hitbox.body_entered.connect(_on_attack_hitbox_body_entered)
-	attack_hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
-	_ensure_visual_shader()
-	_ensure_darkness_container()
+	combat.setup()
+	health.setup()
+	color_manager.setup()
 	# Asignar poder según nivel
 	_assign_power()
 	_apply_level_balance()
@@ -263,26 +252,13 @@ func _handle_timers(delta):
 		dash_cooldown_timer -= delta
 	if attack_cooldown_timer > 0:
 		attack_cooldown_timer -= delta
-	if _darkness_cooldown_timer > 0:
-		_darkness_cooldown_timer -= delta
-	if _darkness_try_timer > 0:
-		_darkness_try_timer -= delta
-	if _power_cooldown_timer > 0:
-		_power_cooldown_timer -= delta
 	if _jump_cooldown_timer > 0:
 		_jump_cooldown_timer -= delta
 	if _double_jump_cooldown_timer > 0:
 		_double_jump_cooldown_timer -= delta
-	if _power_active:
-		_power_timer -= delta
-		if _power_timer <= 0.0:
-			_power_active = false
-			_power_cooldown_timer = _get_power_cooldown(current_power)
-	if invincibility_timer > 0:
-		invincibility_timer -= delta
-		if invincibility_timer <= 0:
-			is_invincible = false
-			hurtbox.monitorable = true
+	combat.process_timers(delta)
+	color_manager.process_timers(delta)
+	health.process_timers(delta)
 
 func _handle_gravity(delta):
 	if not is_on_floor():
@@ -298,10 +274,7 @@ func _handle_movement(delta):
 		velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
 
 func _get_speed():
-	# Cyan aumenta la velocidad
-	if current_power == "cyan" and _is_power_active():
-		return SPEED * POWER_SPEED_MULTIPLIER
-	return SPEED
+	return color_manager.get_speed()
 
 func _handle_jump(jump_requested: bool):
 	# Preserve double-jump availability while falling, even if jump is not pressed this frame.
@@ -355,44 +328,11 @@ func _handle_dash(delta, dash_requested: bool):
 		air_dash_used = false
 
 func _handle_attack(delta):
-	if is_dashing:
-		return
-
-	if is_attacking:
-		velocity.x = 0.0
-		attack_timer -= delta
-		if attack_timer <= 0:
-			is_attacking = false
-			attack_hitbox.monitoring = false
-			attack_hitbox.monitorable = false
-		return
-
-	var auto_attack := false
-	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
-	if player != null:
-		var rel: Vector2 = player.global_position - global_position
-		auto_attack = absf(rel.x) <= AUTO_ATTACK_DISTANCE_X and absf(rel.y) <= AUTO_ATTACK_DISTANCE_Y
-		if auto_attack and absf(rel.x) > 6.0:
-			last_direction = signi(int(rel.x))
-
-	if (ai_should_attack or auto_attack) and attack_cooldown_timer <= 0:
-		is_attacking = true
-		ai_move_direction = 0
-		attack_timer = ATTACK_DURATION
-		attack_cooldown_timer = _attack_cooldown_runtime
-		attack_hitbox.monitoring = true
-		attack_hitbox.monitorable = true
-		# Posicionar hitbox según dirección
-		attack_hitbox.position = Vector2(14 * last_direction, 0)
-		if debug_combat_logs:
-			print("Umbra ATTACK start | ai=", ai_should_attack, " auto=", auto_attack, " dir=", last_direction)
+	combat.process(delta)
 
 
 func _cancel_attack_state() -> void:
-	is_attacking = false
-	attack_timer = 0.0
-	attack_hitbox.monitoring = false
-	attack_hitbox.monitorable = false
+	combat.cancel_attack_state()
 		
 
 
@@ -415,28 +355,8 @@ func _apply_pattern_overrides() -> void:
 		ai_should_dash = true
 
 func _handle_power():
-	if ai_should_use_power and not _power_active and _power_cooldown_timer <= 0.0:
-		_power_active = true
-		_power_timer = _get_power_duration(current_power)
-
-	# Amarillo activa escudo
-	if current_power == "yellow" and _is_power_active():
-		is_invincible = true
-		hurtbox.monitorable = false
-	elif current_power == "yellow" and not _is_power_active():
-		if invincibility_timer <= 0.0:
-			is_invincible = false
-			hurtbox.monitorable = true
-
-	var darkness_power_gate := (not darkness_requires_power) or _is_power_active()
-	var darkness_power_type_gate := darkness_available_in_all_powers or current_power == "red"
-	var darkness_allowed := _allow_darkness_cast and darkness_power_gate and darkness_power_type_gate
-	if darkness_allowed:
-		if _darkness_try_timer <= 0.0:
-			_darkness_try_timer = _darkness_cast_interval_runtime
-			_try_cast_darkness_zone()
-	else:
-		_darkness_try_timer = minf(_darkness_try_timer, 0.6)
+	color_manager.handle_power()
+	combat.handle_darkness_attack()
 
 func _update_animation():
 	if is_dashing:
@@ -459,14 +379,7 @@ func _update_animation():
 		sprite.flip_h = true
 
 func take_damage(amount: int):
-	if is_invincible:
-		return
-	current_health -= amount
-	is_invincible = true
-	invincibility_timer = INVINCIBILITY_DURATION
-	hurtbox.monitorable = false
-	if current_health <= 0:
-		die()
+	health.take_damage(amount)
 
 func die():
 	# Guardar métricas para el siguiente encuentro
@@ -581,151 +494,8 @@ func _use_heuristic() -> void:
 	ai_should_use_power = abs_x > 120.0
 
 
-func _is_power_active() -> bool:
-	return _power_active
-
-
-func _get_power_duration(power_name: String) -> float:
-	match power_name:
-		"cyan":
-			return power_duration_cyan
-		"red":
-			return power_duration_red
-		"yellow":
-			return power_duration_yellow
-		_:
-			return 0.0
-
-
-func _get_power_cooldown(power_name: String) -> float:
-	match power_name:
-		"cyan":
-			return power_cooldown_cyan * _power_cooldown_scale
-		"red":
-			return power_cooldown_red * _power_cooldown_scale
-		"yellow":
-			return power_cooldown_yellow * _power_cooldown_scale
-		_:
-			return 0.0
-
-
-func _get_attack_damage() -> int:
-	if current_power == "red" and _is_power_active():
-		return int(DAMAGE * POWER_DAMAGE_MULTIPLIER)
-	return DAMAGE
-
-
-func _ensure_visual_shader() -> void:
-	if sprite == null:
-		return
-
-	var material := sprite.material as ShaderMaterial
-	if material == null:
-		material = ShaderMaterial.new()
-		material.shader = UMBRA_SHADER
-		sprite.material = material
-	elif material.shader == null:
-		material.shader = UMBRA_SHADER
-
-
 func _update_power_visuals() -> void:
-	var material := sprite.material as ShaderMaterial
-	if material == null:
-		return
-
-	if not _is_power_active():
-		material.set_shader_parameter("power_strength", 0.0)
-		return
-
-	var tint := Color(1.0, 1.0, 1.0, 1.0)
-	match current_power:
-		"cyan":
-			tint = TINT_CYAN_PRIMARY
-		"red":
-			tint = TINT_RED_PRIMARY
-		"yellow":
-			tint = TINT_YELLOW_PRIMARY
-
-	material.set_shader_parameter("power_tint", tint)
-	material.set_shader_parameter("power_strength", 0.78)
-
-
-func _ensure_darkness_container() -> void:
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		scene_root = get_tree().root
-
-	_darkness_container = scene_root.get_node_or_null("DarknessContainer") as Node2D
-	if _darkness_container != null:
-		return
-
-	_darkness_container = Node2D.new()
-	_darkness_container.name = "DarknessContainer"
-	scene_root.add_child(_darkness_container)
-
-
-func _try_cast_darkness_zone() -> void:
-	if _darkness_cooldown_timer > 0.0:
-		return
-
-	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
-	if player == null:
-		return
-
-	var dist := global_position.distance_to(player.global_position)
-	if not darkness_relax_distance_checks and (dist < darkness_min_cast_distance or dist > darkness_max_cast_distance):
-		return
-
-	if darkness_try_chance < 0.999 and randf() > darkness_try_chance:
-		return
-
-	var spawn_pos := player.global_position + Vector2(darkness_spawn_offset_x, darkness_spawn_offset_y)
-	_spawn_darkness_zone(spawn_pos)
-	_darkness_cooldown_timer = _darkness_cooldown_runtime
-
-	if debug_darkness_logs:
-		print("Umbra CAST darkness @", spawn_pos)
-
-
-func _spawn_darkness_zone(spawn_pos: Vector2) -> void:
-	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
-	var spawn_parent: Node = null
-	if player != null and player.get_parent() != null:
-		spawn_parent = player.get_parent()
-	else:
-		if _darkness_container == null or not is_instance_valid(_darkness_container) or not _darkness_container.is_inside_tree():
-			_ensure_darkness_container()
-		spawn_parent = _darkness_container
-
-	if spawn_parent == null:
-		return
-
-	var zone := DARKNESS_ZONE_SCRIPT.new() as Area2D
-	if zone == null:
-		zone = Area2D.new()
-		zone.script = DARKNESS_ZONE_SCRIPT
-	zone.top_level = false
-	zone.z_as_relative = false
-	zone.z_index = 5000
-	zone.collision_layer = 16
-	zone.collision_mask = 4
-
-	var shape := CollisionShape2D.new()
-	var circle := CircleShape2D.new()
-	circle.radius = darkness_zone_radius
-	shape.shape = circle
-	zone.add_child(shape)
-
-	if zone.has_method("configure"):
-		zone.configure(
-			darkness_zone_tick_damage,
-			darkness_zone_tick_interval,
-			darkness_zone_duration,
-			darkness_zone_arming_delay
-		)
-
-	spawn_parent.call_deferred("add_child", zone)
-	zone.set_deferred("global_position", spawn_pos)
+	color_manager.update_power_visuals()
 
 
 func _report_encounter(umbra_won: bool) -> void:
@@ -843,41 +613,3 @@ func _build_runtime_snapshot(umbra_won: bool) -> Dictionary:
 		"umbra_won": umbra_won,
 		"player_metrics": metrics
 	}
-
-func _on_hurtbox_area_entered(area: Area2D):
-	if area.is_in_group("player_hitbox"):
-		var attacker := area.get_parent()
-		# Player combat script already applies damage to enemy_hurtbox targets.
-		# Keep this callback as fallback for other hitbox sources to avoid double hits.
-		if attacker and attacker.is_in_group("player") and attacker.get_node_or_null("Combat") != null:
-			return
-
-		var damage := 1
-		if attacker and attacker.has_method("get") and attacker.is_in_group("player"):
-			var attacker_multiplier = float(attacker.get("damage_multiplier"))
-			damage = maxi(1, int(round(attacker_multiplier)))
-
-		take_damage(damage)
-
-func _on_attack_hitbox_body_entered(body):
-	if body.is_in_group("player"):
-		if debug_combat_logs:
-			print("Umbra HIT player")
-		if body.has_method("get"):
-			var health_node = body.get("health")
-			if health_node and health_node.has_method("take_damage"):
-				health_node.take_damage(_get_attack_damage())
-
-
-func _on_attack_hitbox_area_entered(area: Area2D) -> void:
-	if not area.is_in_group("player_hurtbox"):
-		return
-
-	var owner = area.get_parent()
-	if owner and owner.is_in_group("player"):
-		if debug_combat_logs:
-			print("Umbra HIT player hurtbox")
-		if owner.has_method("get"):
-			var health_node = owner.get("health")
-			if health_node and health_node.has_method("take_damage"):
-				health_node.take_damage(_get_attack_damage())
