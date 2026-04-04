@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=4 uid="uid://dc8npb5o6dmm3"]
+[gd_scene load_steps=36 format=4 uid="uid://dc8npb5o6dmm3"]
 
 [ext_resource type="Script" path="res://scenes/campos_de_zafiro.gd" id="1_1fbct"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_5ebei"]
@@ -14,8 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://behbmfc1i8f6b" path="res://scenes/enviroment/ZonaMuerte.tscn" id="9_xppf1"]
 [ext_resource type="PackedScene" uid="uid://cebumpot7e5vm" path="res://enemies/bosses/ice_guardian/GuardianHielo.tscn" id="11_wcswp"]
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="14_3sfkm"]
-[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="15_ct6xk"]
-[ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="14_g5mn7"]
+[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="15_ybk7q"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k56g7"]
 texture = ExtResource("1_kj2pu")
@@ -444,17 +443,17 @@ position = Vector2(7617, -758)
 max_health = 10
 
 [node name="AIController2D" parent="Umbra" index="0"]
+control_mode = 3
 onnx_model_path = "umbra.onnx"
-[node name="OrbeDeLuz" parent="." instance=ExtResource("14_g5mn7")]
-position = Vector2(4865, -285)
+
+[node name="Sync" type="Node" parent="."]
+script = ExtResource("15_ybk7q")
+control_mode = 2
+action_repeat = 1
+onnx_model_path = "umbra.onnx"
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("1_5ebei")]
 position = Vector2(6728, -770)
-
-[node name="Sync" type="Node" parent="."]
-script = ExtResource("15_ct6xk")
-control_mode = 2
-onnx_model_path = "umbra.onnx"
 
 [editable path="Entorno/ZonaViento"]
 [editable path="Entorno/ZonaViento2"]

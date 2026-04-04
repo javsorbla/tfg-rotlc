@@ -1,0 +1,107 @@
+[gd_scene load_steps=14 format=3 uid="uid://cumc5ifv66xjv"]
+
+[ext_resource type="Script" path="res://enemies/bosses/umbra/player_dummy.gd" id="1_oll2d"]
+[ext_resource type="Shader" path="res://player/Player.gdshader" id="2_k0f6f"]
+[ext_resource type="Texture2D" uid="uid://c1dj3olr6sscm" path="res://assets/player/idle/iris_idle_001.png" id="3_y6gec"]
+[ext_resource type="Texture2D" uid="uid://crt1tjn65vrnm" path="res://assets/player/walk/left/iris_left_001.png" id="4_kb3vs"]
+[ext_resource type="Texture2D" uid="uid://b18080jtfg1ny" path="res://assets/player/walk/right/iris_right_001.png" id="5_cseke"]
+[ext_resource type="Script" path="res://player/player_combat.gd" id="6_kkml5"]
+[ext_resource type="Script" path="res://player/player_health.gd" id="7_6tl8j"]
+[ext_resource type="Script" path="res://player/player_colors.gd" id="8_48doq"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sgw7u"]
+radius = 7.0
+height = 26.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_eqlrx"]
+shader = ExtResource("2_k0f6f")
+shader_parameter/flash_amount = 0.0
+shader_parameter/flash_color = Color(1, 1, 1, 1)
+shader_parameter/color_primary = Color(1, 1, 1, 1)
+shader_parameter/color_secondary = Color(0.925, 0.91, 0.91, 1)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1o3aa"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_y6gec")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [],
+"loop": true,
+"name": &"jump",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_kb3vs")
+}],
+"loop": true,
+"name": &"walk_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_cseke")
+}],
+"loop": true,
+"name": &"walk_right",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qxcp4"]
+size = Vector2(30, 26)
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_dffot"]
+radius = 7.0
+height = 26.0
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+collision_layer = 4
+script = ExtResource("1_oll2d")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 1)
+shape = SubResource("CapsuleShape2D_sgw7u")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+material = SubResource("ShaderMaterial_eqlrx")
+position = Vector2(1.90735e-06, 2)
+scale = Vector2(0.609375, 0.5625)
+sprite_frames = SubResource("SpriteFrames_1o3aa")
+animation = &"idle"
+
+[node name="AttackHitbox" type="Area2D" parent="." groups=["player_hitbox"]]
+collision_layer = 4
+collision_mask = 16
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
+position = Vector2(0, 1)
+shape = SubResource("RectangleShape2D_qxcp4")
+
+[node name="Hurtbox" type="Area2D" parent="." groups=["player_hurtbox"]]
+collision_layer = 4
+collision_mask = 18
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, 1)
+shape = SubResource("CapsuleShape2D_dffot")
+debug_color = Color(0.8778, 0.31399, 0.357215, 0.42)
+
+[node name="Combat" type="Node" parent="."]
+script = ExtResource("6_kkml5")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("7_6tl8j")
+
+[node name="ColorManager" type="Node" parent="."]
+script = ExtResource("8_48doq")
+
+[connection signal="area_entered" from="AttackHitbox" to="." method="_on_attack_hitbox_area_entered"]
+[connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]
+[connection signal="body_entered" from="Hurtbox" to="." method="_on_hurtbox_body_entered"]
