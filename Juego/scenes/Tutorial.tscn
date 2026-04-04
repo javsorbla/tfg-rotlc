@@ -8,7 +8,6 @@
 [ext_resource type="Texture2D" uid="uid://dv4vvt7xg4rio" path="res://assets/traps/pincho.png" id="2_1v6r6"]
 [ext_resource type="Texture2D" uid="uid://mh07oyyyljv2" path="res://assets/traps/fuego.png" id="2_ym1qa"]
 [ext_resource type="FontFile" uid="uid://b5yw8u8qdipr6" path="res://assets/text/Minecraft.ttf" id="3_q2tak"]
-[ext_resource type="Texture2D" uid="uid://c78b1eerhl6js" path="res://assets/potions/pocion.png" id="6_1jylv"]
 [ext_resource type="PackedScene" uid="uid://b7kj5rrupn1ou" path="res://enemies/common/caminante_helado/CaminanteHelado.tscn" id="7_e86ce"]
 [ext_resource type="Script" path="res://scenes/camara.gd" id="10_ajmfl"]
 
@@ -227,6 +226,9 @@ default_font = ExtResource("3_q2tak")
 
 [sub_resource type="LabelSettings" id="LabelSettings_de41u"]
 
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_k2hqp"]
+load_path = "res://.godot/imported/orbeluz.png-c6b790c612613c239d724a47f9ed4e53.ctex"
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u2a58"]
 size = Vector2(146, 46)
 
@@ -403,7 +405,7 @@ layout_mode = 2
 [node name="Label" type="Label" parent="Nivel/TextoPocion/VBoxContainer"]
 layout_mode = 2
 theme = SubResource("Theme_w0tsj")
-text = "Ayuda: Las pociones que encuentres
+text = "Ayuda: Los orbes de luz que encuentres
 a lo largo de tu aventura restaurarán
 un corazón de salud"
 horizontal_alignment = 1
@@ -412,9 +414,9 @@ horizontal_alignment = 1
 position = Vector2(3783, 98)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(4126, 9.75)
-scale = Vector2(0.8125, 0.703125)
-texture = ExtResource("6_1jylv")
+position = Vector2(4127, 12)
+scale = Vector2(2.04687, 1.90234)
+texture = SubResource("CompressedTexture2D_k2hqp")
 
 [node name="Statue" parent="." instance=ExtResource("2_1nw4v")]
 position = Vector2(-19, 87)

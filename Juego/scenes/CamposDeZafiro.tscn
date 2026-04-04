@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=4 uid="uid://dc8npb5o6dmm3"]
+[gd_scene load_steps=37 format=4 uid="uid://dc8npb5o6dmm3"]
 
 [ext_resource type="Script" path="res://scenes/campos_de_zafiro.gd" id="1_1fbct"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_5ebei"]
@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://cebumpot7e5vm" path="res://enemies/bosses/ice_guardian/GuardianHielo.tscn" id="11_wcswp"]
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="14_3sfkm"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="15_ct6xk"]
+[ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="14_g5mn7"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k56g7"]
 texture = ExtResource("1_kj2pu")
@@ -444,6 +445,8 @@ max_health = 10
 
 [node name="AIController2D" parent="Umbra" index="0"]
 onnx_model_path = "umbra.onnx"
+[node name="OrbeDeLuz" parent="." instance=ExtResource("14_g5mn7")]
+position = Vector2(4865, -285)
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("1_5ebei")]
 position = Vector2(6728, -770)

@@ -159,18 +159,26 @@ func _on_enemy_hitbox_area_entered(area: Area2D):
 	if area.is_in_group("player_hurtbox"):
 		var target = area.get_parent()
 		
+		# Si el jugador tiene escudo, rebota como contra una pared
+		if target.get("is_shielding") == true:
+			roll_direction *= -1
+			$AnimatedSprite2D.flip_h = roll_direction > 0
+			return
+		
 		if target.has_method("take_damage"):
 			target.take_damage(DAMAGE)
 			
 		if target is CharacterBody2D:
 			var dir = (target.global_position - global_position).normalized()
 			dir.y = 0
-			target.velocity = dir * 230 
+			target.velocity = dir * 230
 
 
 func _on_enemy_hurtbox_area_entered(area: Area2D):
 	if area.is_in_group("player_hitbox"):
-		take_damage(1)
+		var player_node = get_tree().get_first_node_in_group("player")
+		var multiplier = player_node.damage_multiplier if player_node else 1.0
+		take_damage(int(1 * multiplier))
 
 
 func take_damage(amount: int) -> void:

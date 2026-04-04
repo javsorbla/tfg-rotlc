@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://bf18w08n218xn"]
+
+[ext_resource type="Script" path="res://objects/orbe_de_luz.gd" id="1_4rgyt"]
+[ext_resource type="Texture2D" uid="uid://daklo3s4cbdxv" path="res://assets/objects/orbeluz.png" id="2_vskx4"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_oqbjr"]
+radius = 7.0
+
+[node name="OrbeDeLuz" type="Area2D"]
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("1_4rgyt")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-1, 0)
+shape = SubResource("CircleShape2D_oqbjr")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-1, 0)
+scale = Vector2(0.296875, 0.28125)
+texture = ExtResource("2_vskx4")
