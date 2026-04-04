@@ -6,13 +6,6 @@ const CAMPOS_SCENE := "res://scenes/CamposDeZafiro.tscn"
 func _ready() -> void:
 	GameState.current_level = 1
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	if Input.is_key_pressed(KEY_F7):
-		GameState.coming_from_transition = true
-		get_tree().call_deferred("change_scene_to_file", CAMPOS_SCENE)
-
 func _on_final_body_entered(body) -> void:
 	if body is CharacterBody2D:
 		GameState.coming_from_transition = true

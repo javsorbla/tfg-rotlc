@@ -50,7 +50,29 @@ func die():
 	if death_callback.is_valid():
 		call_deferred("_invoke_death_callback")
 		return
-	get_tree().call_deferred("reload_current_scene")
+	_reset_player()
+
+func _reset_player():
+	current_health = MAX_HEALTH
+	is_invincible = true
+	invincibility_timer = 0.6
+	flash_timer = 0.0
+	if sprite.material:
+		sprite.material.set_shader_parameter("flash_amount", 0.0)
+	sprite.visible = true
+	hurtbox.set_deferred("monitorable", false)
+	player.global_position = GameState.spawn_position
+	player.velocity = Vector2.ZERO
+	player.can_double_jump = false
+	player.is_dashing = false
+	player.is_shielding = false
+	player.can_jump = true
+	var color_manager = player.get_node_or_null("ColorManager")
+	if color_manager and color_manager.has_method("reset_for_respawn"):
+		color_manager.reset_for_respawn()
+	if hud:
+		hud.update_hearts(current_health, MAX_HEALTH)
+	GameState.level_reset.emit()
 
 
 func _invoke_death_callback() -> void:

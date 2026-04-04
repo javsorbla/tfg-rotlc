@@ -27,6 +27,7 @@ var dash_cooldown_timer = 0.0
 var dash_direction = 1.0
 var air_dash_used = false
 var last_direction = 1
+var spawn_position = Vector2.ZERO
 
 # Variables de combate
 var current_health = max_health
@@ -117,6 +118,7 @@ const AUTO_ATTACK_DISTANCE_Y := 44.0
 @export var darkness_relax_distance_checks := true
 @export_enum("auto", "cyan", "red", "yellow") var forced_power := "auto"
 @export var apply_level_balance := true
+@export var debug_model_indicator := true
 
 # Variables de poder
 var current_power = "none"  # none, cyan, red, yellow
@@ -129,8 +131,12 @@ var current_power = "none"  # none, cyan, red, yellow
 @onready var combat = $Combat
 @onready var color_manager = $ColorManager
 
+var _model_indicator_layer: CanvasLayer
+var _model_indicator_label: Label
+
 func _ready():
 	add_to_group("umbra_boss")
+	spawn_position = global_position
 	combat.setup()
 	health.setup()
 	color_manager.setup()
@@ -142,6 +148,118 @@ func _ready():
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
 		ai_controller.init(player)
+	print("Control mode: ", ai_controller.control_mode)
+	print("ONNX path: ", ai_controller.onnx_model_path)
+	print("ONNX model (ready snapshot): ", ai_controller.onnx_model)
+	_setup_model_indicator()
+	_update_model_indicator()
+	call_deferred("_log_model_indicator_snapshot")
+	if not GameState.level_reset.is_connected(_on_level_reset):
+		GameState.level_reset.connect(_on_level_reset)
+
+
+func _process(_delta):
+	_update_model_indicator()
+
+func _on_level_reset():
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	current_health = max_health
+	is_active = false
+	is_dashing = false
+	is_attacking = false
+	ai_move_direction = 0
+	ai_should_jump = false
+	ai_should_attack = false
+	ai_should_dash = false
+	ai_should_use_power = false
+	_has_received_valid_action = false
+	_last_action_received_time = Time.get_ticks_msec() / 1000.0
+	_encounter_reported = false
+	attack_hitbox.set_deferred("monitoring", false)
+	attack_hitbox.set_deferred("monitorable", false)
+	hurtbox.set_deferred("monitorable", true)
+
+func _setup_model_indicator() -> void:
+	if not debug_model_indicator:
+		return
+	if _model_indicator_layer != null:
+		return
+
+	_model_indicator_layer = CanvasLayer.new()
+	_model_indicator_layer.name = "ModelIndicatorLayer"
+	_model_indicator_layer.layer = 20
+	add_child(_model_indicator_layer)
+
+	_model_indicator_label = Label.new()
+	_model_indicator_label.name = "ModelIndicatorLabel"
+	_model_indicator_label.text = ""
+	_model_indicator_label.add_theme_font_size_override("font_size", 9)
+	_model_indicator_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_model_indicator_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_model_indicator_label.size = Vector2(64, 12)
+	_model_indicator_label.position = Vector2.ZERO
+	_model_indicator_layer.add_child(_model_indicator_label)
+
+
+func _log_model_indicator_snapshot() -> void:
+	_update_model_indicator()
+
+
+func _get_model_indicator_state() -> Dictionary:
+	if not is_active:
+		return {
+			"text": "INACT",
+			"color": Color(0.70, 0.70, 0.70, 1.0)
+		}
+
+	if force_heuristic_only:
+		return {
+			"text": "HEUR",
+			"color": Color(0.95, 0.25, 0.25, 1.0)
+		}
+
+	var is_onnx := false
+	if ai_controller != null:
+		is_onnx = (
+			ai_controller.control_mode == ai_controller.ControlModes.ONNX_INFERENCE
+			and ai_controller.onnx_model != null
+		)
+
+	if is_onnx and not _has_received_valid_action:
+		return {
+			"text": "WAIT",
+			"color": Color(0.95, 0.85, 0.25, 1.0)
+		}
+
+	if is_onnx and _should_use_heuristic():
+		return {
+			"text": "HEUR",
+			"color": Color(0.95, 0.25, 0.25, 1.0)
+		}
+
+	if is_onnx:
+		return {
+			"text": "ONNX",
+			"color": Color(0.25, 0.95, 0.35, 1.0)
+		}
+
+	return {
+		"text": "HEUR",
+		"color": Color(0.95, 0.25, 0.25, 1.0)
+	}
+
+
+func _update_model_indicator() -> void:
+	if not debug_model_indicator:
+		return
+	if _model_indicator_layer == null or _model_indicator_label == null:
+		return
+
+	var state := _get_model_indicator_state()
+	_model_indicator_label.text = state["text"]
+	_model_indicator_label.add_theme_color_override("font_color", state["color"])
+	_model_indicator_label.position = get_global_transform_with_canvas().origin + Vector2(-20.0, -30.0)
 
 func _assign_power():
 	if forced_power != "auto":
@@ -417,7 +535,7 @@ func activate():
 
 func set_ai_action(action):
 	var normalized := _normalize_ai_action(action)
-	
+	print("Accion recibida: ", action, " | Normalizada: ", normalized, " | Heuristica: ", _should_use_heuristic())
 	# Si no hay acción válida o está en timeout, usar heurística
 	if normalized.is_empty() or _should_use_heuristic():
 		_use_heuristic()
@@ -473,7 +591,15 @@ func _normalize_ai_action(action) -> Dictionary:
 
 func _should_use_heuristic() -> bool:
 	var now := Time.get_ticks_msec() / 1000.0
-	return now - _last_action_received_time > ACTION_TIMEOUT_SECONDS
+	var time_since_action := now - _last_action_received_time
+	if not _has_received_valid_action:
+		var startup_timeout := ACTION_TIMEOUT_SECONDS * 3.0
+		if time_since_action > startup_timeout:
+			print("Usando heuristica - timeout inicial sin accion: ", time_since_action)
+		return time_since_action > startup_timeout
+	if time_since_action > ACTION_TIMEOUT_SECONDS:
+		print("Usando heuristica - tiempo sin accion: ", time_since_action)
+	return time_since_action > ACTION_TIMEOUT_SECONDS
 
 
 func _use_heuristic() -> void:

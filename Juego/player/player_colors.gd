@@ -145,3 +145,22 @@ func change_state(new_state):
 
 func unlock_power(color: String):
 	unlocked[color] = true
+
+
+func reset_for_respawn() -> void:
+	if current_state != neutral_state:
+		change_state(neutral_state)
+	else:
+		neutral_state.enter()
+
+	active_power = ""
+	power_timer = 0.0
+	power_active = false
+
+	for power in cooldown_timers.keys():
+		cooldown_timers[power] = 0.0
+
+	_update_sprite_color(
+		Color(1.0, 1.0, 1.0),
+		Color(0.925, 0.910, 0.910)
+	)

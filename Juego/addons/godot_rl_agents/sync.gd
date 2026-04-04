@@ -215,6 +215,12 @@ func _training_process():
 
 
 func _inference_process():
+	var valid_inference_agents: Array = []
+	for agent in agents_inference:
+		if is_instance_valid(agent):
+			valid_inference_agents.append(agent)
+	agents_inference = valid_inference_agents
+
 	if agents_inference.size() > 0:
 		var obs: Array = _get_obs_from_agents(agents_inference)
 		var actions = []
@@ -527,7 +533,8 @@ func _reset_agents(agents = all_agents):
 func _get_obs_from_agents(agents: Array = all_agents):
 	var obs = []
 	for agent in agents:
-		obs.append(agent.get_obs())
+		if is_instance_valid(agent):
+			obs.append(agent.get_obs())
 	return obs
 
 
@@ -551,7 +558,8 @@ func _get_done_from_agents(agents: Array = agents_training):
 
 func _set_agent_actions(actions, agents: Array = all_agents):
 	for i in range(len(actions)):
-		agents[i].set_action(actions[i])
+		if i < len(agents) and is_instance_valid(agents[i]):
+			agents[i].set_action(actions[i])
 
 
 func clamp_array(arr: Array, min: float, max: float):

@@ -11,6 +11,9 @@ func _ready():
 	add_to_group("boss_room")
 	_room_key = _build_room_key()
 	trigger.body_entered.connect(_on_trigger_entered)
+	call_deferred("_check_player_inside_trigger")
+	if not GameState.level_reset.is_connected(_on_level_reset):
+		GameState.level_reset.connect(_on_level_reset)
 
 	if GameState.is_boss_room_cleared(_room_key):
 		_deactivate_trigger_permanently()
@@ -21,6 +24,15 @@ func _ready():
 
 	pared_izquierda_collision.set_deferred("disabled", true)
 	pared_derecha_collision.set_deferred("disabled", true)
+
+
+func _check_player_inside_trigger() -> void:
+	if GameState.is_boss_room_cleared(_room_key):
+		return
+
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null and trigger.overlaps_body(player):
+		_on_trigger_entered(player)
 
 func _on_trigger_entered(body):
 	if body.is_in_group("player"):
@@ -104,3 +116,23 @@ func _remove_room_boss_if_present() -> void:
 	var boss := _get_nearest_boss_to_room_center()
 	if boss != null:
 		boss.call_deferred("queue_free")
+
+
+func _on_level_reset() -> void:
+	if GameState.is_boss_room_cleared(_room_key):
+		return
+
+	# Unlock room and arm trigger again after player respawn.
+	pared_izquierda_collision.set_deferred("disabled", true)
+	pared_derecha_collision.set_deferred("disabled", true)
+	trigger.set_deferred("monitorable", true)
+	trigger.set_deferred("monitoring", true)
+
+	var camera = get_tree().get_first_node_in_group("camera")
+	if camera:
+		camera.boss_room_mode = false
+		camera.boss_room_target = Vector2.ZERO
+		var tween = create_tween()
+		tween.tween_property(camera, "zoom", Vector2(1.0, 1.0), 0.25)
+
+	_active_boss = null

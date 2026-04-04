@@ -1,7 +1,22 @@
 # Guia de entrenamiento de Umbra
 
 ## Objetivo
-Esta guia explica como entrenar a Umbra desde Godot, como guardar lo aprendido para usarlo en el primer enfrentamiento real, y como resetear el progreso si la dificultad se dispara.
+Esta guia explica el flujo actual de entrenamiento de Umbra con `stable_baselines3_example.py`, cómo exportar el modelo ONNX y cómo usar ese modelo en el combate real.
+
+## Flujo principal
+1. Entrenar modelo con `stable_baselines3_example.py`.
+2. Exportar ONNX al terminar el entrenamiento.
+3. Configurar `Sync` + `AIController2D` en modo `ONNX_INFERENCE`.
+4. Mantener heuristica solo como fallback (timeout/error).
+
+Comando base (desde la raiz del repo):
+- `python stable_baselines3_example.py --onnx_export_path=umbra.onnx`
+
+Resultado esperado:
+- Se genera `Juego/umbra.onnx`.
+- Umbra puede inferir directamente desde ese modelo en la escena real.
+
+Nota: Es necesario tener instalado Godot 4.3 en su versión .NET para no tener problemas
 
 ## Que se guarda y donde
 Hay dos niveles de persistencia:
@@ -107,13 +122,32 @@ Uso rapido recomendado:
 - Para auditar progreso: `F10` periodicamente.
 
 ## Como impacta en el primer enfrentamiento real
-Primer encuentro (tutorial):
-- `Juego/scenes/tutorial.gd` instancia Umbra.
-- Umbra lee progreso persistido via `GameState` al activarse.
-- Se aplica dificultad persistida (`difficulty_scale`) y metricas agregadas del jugador.
+En el combate real se combinan dos capas:
+
+1. Politica ONNX (prioritaria)
+- `Sync` entrega acciones del modelo a `AIController2D`.
+- Umbra ejecuta esas acciones en tiempo real.
+
+2. Memoria persistente de `GameState` (ajuste fino)
+- `difficulty_scale` y `player_metrics` siguen ajustando balance y sesgos.
 
 Resultado:
-- El Umbra del juego real arranca con memoria del entrenamiento acumulado.
+- Umbra arranca usando modelo ONNX y conserva adaptacion persistente entre encuentros.
+
+## Configuracion minima en escena real
+Para que ONNX funcione en juego real:
+
+1. Nodo `Sync` en la escena
+- `script = res://addons/godot_rl_agents/sync.gd`
+- `control_mode = ONNX_INFERENCE`
+- `onnx_model_path = "res://umbra.onnx"`
+
+2. Nodo `AIController2D` hijo de Umbra
+- `control_mode = ONNX_INFERENCE`
+- `onnx_model_path = "res://umbra.onnx"`
+
+3. Archivo de modelo
+- Debe existir en `Juego/umbra.onnx`.
 
 ## Flujo recomendado de uso
 ### Opcion A: ajuste rapido
@@ -151,9 +185,8 @@ Resultado:
 Implementado:
 - Aprendizaje incremental persistente usable en juego real.
 - Registro por episodios.
-- Modos `HUMAN`/`SMART_BOT`.
+- Modos `HUMAN`/`SMART_BOT` para sparring.
 - Presets y auto-stop opcional.
 - Resumen y reset rapido.
-
-No implementado aun (siguiente fase opcional):
-- Cargar un modelo RL ONNX entrenado externamente para inferencia directa en el boss real.
+- Entrenamiento externo con `stable_baselines3_example.py` + export ONNX.
+- Inferencia ONNX en el boss real con fallback heuristico por timeout/error.
