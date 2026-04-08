@@ -21,6 +21,7 @@ var current_health: int = MAX_HEALTH
 var player: Node2D = null
 var facing_dir: float = 1.0 
 var patrol_origin_x: float = 0.0
+var spawn_position = Vector2.ZERO
 
 # Temporizadores y Cooldowns
 var stun_timer: float = 0.0
@@ -30,6 +31,7 @@ var flip_cooldown: float = 0.0
 var jump_cooldown: float = 0.0 
 var dash_cooldown: float = 0.0
 var dash_timer: float = 0.0
+var _combat_reset_state: Dictionary = {}
 
 # --- NODOS ---
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -42,11 +44,14 @@ func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
 	patrol_origin_x = global_position.x
+	spawn_position = global_position
+	GameState.level_reset.connect(_on_level_reset)
 
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	vision.target_position = Vector2(20, 40) 
 	_enter_state(State.IDLE)
@@ -92,6 +97,19 @@ func _physics_process(delta: float) -> void:
 			elif current_state in [State.PATROL, State.CHASE]:
 				sprite.play("run")
 
+func _on_level_reset():
+	set_physics_process(true)
+	visible = true
+	current_health = MAX_HEALTH
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	_enter_state(State.IDLE)
+
+
+func _despawn_dead_instance() -> void:
+	velocity = Vector2.ZERO
+	EnemyResetUtils.despawn(self)
 
 # --- MANEJO DE ESTADOS ---
 
@@ -139,7 +157,7 @@ func _enter_state(new_state: State) -> void:
 			velocity.x = 0
 			
 			await get_tree().create_timer(0.7).timeout
-			queue_free()
+			_despawn_dead_instance()
 
 
 # --- LÓGICA DE VISIÓN ---

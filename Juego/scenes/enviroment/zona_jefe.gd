@@ -6,11 +6,13 @@ extends Node2D
 
 var _room_key: String = ""
 var _active_boss: Node
+var _pending_rearm_after_reset: bool = false
 
 func _ready():
 	add_to_group("boss_room")
 	_room_key = _build_room_key()
 	trigger.body_entered.connect(_on_trigger_entered)
+	trigger.body_exited.connect(_on_trigger_exited)
 	call_deferred("_check_player_inside_trigger")
 	if not GameState.level_reset.is_connected(_on_level_reset):
 		GameState.level_reset.connect(_on_level_reset)
@@ -122,11 +124,13 @@ func _on_level_reset() -> void:
 	if GameState.is_boss_room_cleared(_room_key):
 		return
 
-	# Unlock room and arm trigger again after player respawn.
+	# Keep the trigger disabled until the player leaves the area again.
 	pared_izquierda_collision.set_deferred("disabled", true)
 	pared_derecha_collision.set_deferred("disabled", true)
+	_pending_rearm_after_reset = true
+	trigger.set_deferred("monitoring", false)
 	trigger.set_deferred("monitorable", true)
-	trigger.set_deferred("monitoring", true)
+	call_deferred("_try_rearm_trigger_after_reset")
 
 	var camera = get_tree().get_first_node_in_group("camera")
 	if camera:
@@ -136,3 +140,27 @@ func _on_level_reset() -> void:
 		tween.tween_property(camera, "zoom", Vector2(1.0, 1.0), 0.25)
 
 	_active_boss = null
+
+
+func _on_trigger_exited(body) -> void:
+	if not _pending_rearm_after_reset:
+		return
+	if not body.is_in_group("player"):
+		return
+	call_deferred("_try_rearm_trigger_after_reset")
+
+
+func _try_rearm_trigger_after_reset() -> void:
+	if not _pending_rearm_after_reset:
+		return
+	if GameState.is_boss_room_cleared(_room_key):
+		_pending_rearm_after_reset = false
+		return
+
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null and trigger.overlaps_body(player):
+		return
+
+	_pending_rearm_after_reset = false
+	trigger.set_deferred("monitorable", true)
+	trigger.set_deferred("monitoring", true)
