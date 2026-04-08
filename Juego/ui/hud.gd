@@ -1,9 +1,17 @@
 extends CanvasLayer
 
 @onready var hearts = [$Hearts/Heart1, $Hearts/Heart2, $Hearts/Heart3]
-
 var heart_full: Texture2D = preload("res://assets//ui/heart.png")
 var heart_empty: Texture2D = preload("res://assets//ui/heart_empty.png")
+
+func _ready():
+	hide() 
+
+func show_hud():
+	show()
+
+func hide_hud():
+	hide()
 
 func update_hearts(current: int, maximum: int):
 	for i in hearts.size():

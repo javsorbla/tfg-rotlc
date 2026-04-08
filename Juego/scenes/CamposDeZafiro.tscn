@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=4 uid="uid://dc8npb5o6dmm3"]
+[gd_scene load_steps=31 format=4 uid="uid://dc8npb5o6dmm3"]
 
 [ext_resource type="Script" path="res://scenes/campos_de_zafiro.gd" id="1_1fbct"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_5ebei"]
@@ -7,7 +7,6 @@
 [ext_resource type="Texture2D" uid="uid://b0ge27g4bx1xb" path="res://assets/traps/pincho_hielo.png" id="3_3il7j"]
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="3_sugcs"]
 [ext_resource type="PackedScene" uid="uid://b7kj5rrupn1ou" path="res://enemies/common/caminante_helado/CaminanteHelado.tscn" id="4_r3u8c"]
-[ext_resource type="PackedScene" uid="uid://bce6576tqo4wu" path="res://ui/HUD.tscn" id="4_xt17c"]
 [ext_resource type="PackedScene" uid="uid://b4xv5brfpegl" path="res://scenes/enviroment/PlataformaRompible.tscn" id="5_u0h4b"]
 [ext_resource type="PackedScene" uid="uid://bqqdmbdc26rjc" path="res://scenes/enviroment/ZonaViento.tscn" id="8_34elj"]
 [ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="8_mqecc"]
@@ -149,8 +148,6 @@ size = Vector2(1993.5, 30)
 
 [node name="CamposDeZafiro" type="Node2D"]
 script = ExtResource("1_1fbct")
-
-[node name="Hud" parent="." groups=["hud"] instance=ExtResource("4_xt17c")]
 
 [node name="Nivel" type="TileMapLayer" parent="." groups=["spikes"]]
 position = Vector2(2162, 6)

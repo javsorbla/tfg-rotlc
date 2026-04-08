@@ -19,6 +19,7 @@ func _ready():
 	hurtbox.monitorable = true
 	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	Hud.update_hearts(current_health, MAX_HEALTH)
 
 func process(delta):
 	_handle_invincibility(delta)
@@ -28,6 +29,7 @@ func take_damage(amount: int, bypass_shield: bool = false):
 	if (player.is_shielding and not bypass_shield) or is_invincible:
 		return
 	current_health -= amount
+	Hud.update_hearts(current_health, MAX_HEALTH)
 	is_invincible = true
 	invincibility_timer = INVINCIBILITY_DURATION
 	flash_timer = FLASH_DURATION
