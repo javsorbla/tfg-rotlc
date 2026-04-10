@@ -65,7 +65,7 @@ func process(delta):
 		current_state.process(delta)
 	_handle_input()
 	
-	Hud.update_cooldowns(cooldown_timers, active_power, unlocked)
+	Hud.update_cooldowns(cooldown_timers, active_power, unlocked, power_timer)
 
 func _start_cooldown(power: String):
 	cooldown_timers[power] = POWER_COOLDOWNS[power]

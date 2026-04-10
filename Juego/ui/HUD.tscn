@@ -141,18 +141,24 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 300.0
+offset_left = 454.0
 offset_top = 190.0
-offset_right = 500.0
+offset_right = 654.0
 offset_bottom = 254.0
 grow_horizontal = 0
 grow_vertical = 0
 scale = Vector2(0.75, 0.75)
 
-[node name="Cyan" type="TextureProgressBar" parent="Control/Powers"]
+[node name="Cyan" type="Control" parent="Control/Powers"]
+layout_mode = 2
+
+[node name="RechargeBar" type="TextureProgressBar" parent="Control/Powers/Cyan"]
 modulate = Color(1, 1, 1, 0.588235)
 custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
+offset_left = -204.0
+offset_right = -140.0
+offset_bottom = 64.0
 max_value = 1.0
 step = 0.01
 fill_mode = 3
@@ -160,10 +166,27 @@ texture_under = ExtResource("5_hh3xi")
 texture_progress = ExtResource("4_hfj0l")
 tint_under = Color(1, 1, 1, 0.501961)
 
-[node name="Red" type="TextureProgressBar" parent="Control/Powers"]
+[node name="DurationBar" type="TextureProgressBar" parent="Control/Powers/Cyan"]
+layout_mode = 0
+offset_left = -204.0
+offset_right = -140.0
+offset_bottom = 64.0
+max_value = 1.0
+step = 0.01
+fill_mode = 2
+texture_under = ExtResource("5_hh3xi")
+texture_progress = ExtResource("4_hfj0l")
+
+[node name="Red" type="Control" parent="Control/Powers"]
+layout_mode = 2
+
+[node name="RechargeBar" type="TextureProgressBar" parent="Control/Powers/Red"]
 modulate = Color(1, 1, 1, 0.588235)
 custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
+offset_left = -140.0
+offset_right = -76.0
+offset_bottom = 64.0
 max_value = 1.0
 step = 0.01
 fill_mode = 3
@@ -171,13 +194,40 @@ texture_under = ExtResource("7_hrp81")
 texture_progress = ExtResource("5_lgkob")
 tint_under = Color(1, 1, 1, 0.501961)
 
-[node name="Yellow" type="TextureProgressBar" parent="Control/Powers"]
+[node name="DurationBar" type="TextureProgressBar" parent="Control/Powers/Red"]
+layout_mode = 0
+offset_left = -140.0
+offset_right = -76.0
+offset_bottom = 64.0
+max_value = 1.0
+step = 0.01
+texture_under = ExtResource("7_hrp81")
+texture_progress = ExtResource("5_lgkob")
+
+[node name="Yellow" type="Control" parent="Control/Powers"]
+layout_mode = 2
+
+[node name="RechargeBar" type="TextureProgressBar" parent="Control/Powers/Yellow"]
 modulate = Color(1, 1, 1, 0.588235)
 custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
+offset_left = -76.0
+offset_right = -12.0
+offset_bottom = 64.0
 max_value = 1.0
 step = 0.01
+value = 0.5
 fill_mode = 3
 texture_under = ExtResource("9_0082l")
 texture_progress = ExtResource("6_h1fjt")
 tint_under = Color(1, 1, 1, 0.501961)
+
+[node name="DurationBar" type="TextureProgressBar" parent="Control/Powers/Yellow"]
+layout_mode = 0
+offset_left = -76.0
+offset_right = -12.0
+offset_bottom = 64.0
+max_value = 1.0
+step = 0.01
+texture_under = ExtResource("9_0082l")
+texture_progress = ExtResource("6_h1fjt")
