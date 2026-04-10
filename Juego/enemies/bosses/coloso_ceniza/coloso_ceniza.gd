@@ -1,0 +1,226 @@
+extends Node2D
+
+enum State { IDLE, HURT, DEAD }
+enum Phase { ONE, TWO }
+
+const MAX_HEALTH: int = 50
+const PHASE_TWO_THRESHOLD: float = 0.35
+const BOSS_HALF_WIDTH: float = 60.0
+
+const MOVE_SPEED: float = 40.0
+const TURN_SPEED: float = 1.8
+const TURN_DELAY_TIME: float = 0.5
+const TURN_SNAP: float = 0.08
+
+const DAMAGE_FLASH_TIME: float = 0.08
+
+var current_health: int = MAX_HEALTH
+var current_state: State = State.IDLE
+var current_phase: Phase = Phase.ONE
+var DAMAGE: int = 1
+var player: Node2D = null
+var is_active: bool = false
+var spawn_position: Vector2 = Vector2.ZERO
+
+var action_timer: float = 0.0
+var move_direction: Vector2 = Vector2.ZERO
+var target_direction: Vector2 = Vector2.ZERO
+var damage_flash_tween: Tween = null
+
+var room_left_limit: float = 0.0
+var room_right_limit: float = 0.0
+var room_top_limit: float = 0.0
+var room_bottom_limit: float = 0.0
+
+var facing_left: bool = false
+var turn_timer: float = 0.0
+var pending_facing_left: bool = false
+var turning: bool = false
+var last_position_x: float = 0.0
+var last_target_left: bool = false
+
+
+@onready var sprite = $AnimatedSprite2D
+@onready var body_hitbox = $AttackHitbox
+@onready var normal_hurtbox = $NormalHurtbox
+
+func _ready():
+	player = get_tree().get_first_node_in_group("player")
+	spawn_position = global_position
+	move_direction = Vector2.RIGHT
+	last_position_x = global_position.x
+	GameState.level_reset.connect(_on_level_reset)
+
+	if not normal_hurtbox.is_in_group("boss_core"):
+		normal_hurtbox.add_to_group("boss_core")
+	if not body_hitbox.is_in_group("boss_hitbox"):
+		body_hitbox.add_to_group("boss_hitbox")
+	if not body_hitbox.area_entered.is_connected(_on_attack_hitbox_area_entered):
+		body_hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
+	if not $NormalHurtbox.area_entered.is_connected(_on_normal_hurtbox_area_entered):
+		$NormalHurtbox.area_entered.connect(_on_normal_hurtbox_area_entered)
+	if not is_in_group("boss"):
+		add_to_group("boss")
+
+	body_hitbox.monitoring = true
+	body_hitbox.monitorable = true
+
+func _physics_process(delta):
+	if not is_active:
+		return
+
+	if room_right_limit == 0.0:
+		var boss_room = get_tree().get_first_node_in_group("boss_room")
+		if boss_room:
+			room_left_limit = boss_room.get_node("LimiteIzquierda").global_position.x
+			room_right_limit = boss_room.get_node("LimiteDerecha").global_position.x
+			room_top_limit = boss_room.get_node("LimiteArriba").global_position.y
+			room_bottom_limit = boss_room.get_node("LimiteAbajo").global_position.y
+
+	if current_state == State.DEAD:
+		return
+
+	if turning:
+		turn_timer -= delta
+
+		if turn_timer <= 0.0:
+			facing_left = pending_facing_left
+			sprite.flip_h = facing_left
+			turning = false
+			
+	if player:
+		sprite.flip_h = player.global_position.x > global_position.x
+
+	_check_phase()
+	_handle_state(delta)
+
+func _check_phase():
+	if current_phase == Phase.ONE and current_health <= MAX_HEALTH * PHASE_TWO_THRESHOLD:
+		current_phase = Phase.TWO
+		_enter_phase_two()
+
+func _enter_phase_two():
+	pass
+
+func _handle_state(delta):
+	match current_state:
+		State.IDLE:
+			_idle_state(delta)
+
+func _idle_state(delta):
+	if not player:
+		return
+
+	var speed = MOVE_SPEED
+
+	var dist_x = player.global_position.x - global_position.x
+	var desired_left = dist_x < 0
+
+	if desired_left != last_target_left:
+		_update_flip(desired_left)
+		last_target_left = desired_left
+
+	if turning:
+		move_direction.x = 0
+	else:
+		move_direction.x = sign(dist_x)
+
+	move_direction.y = 0
+
+	position.x += move_direction.x * speed * delta
+
+	position.y = spawn_position.y
+
+	position.x = clamp(position.x,
+		room_left_limit + BOSS_HALF_WIDTH,
+		room_right_limit - BOSS_HALF_WIDTH)
+
+
+func _update_flip(should_face_left: bool):
+	if turning:
+		return
+
+	pending_facing_left = should_face_left
+	turn_timer = TURN_DELAY_TIME
+	turning = true
+
+	move_direction = Vector2.ZERO
+	target_direction = Vector2.ZERO
+
+
+func activate():
+	_reset_for_encounter(true)
+
+func _on_level_reset() -> void:
+	_reset_for_encounter(false)
+
+
+func _reset_for_encounter(make_active: bool) -> void:
+	if damage_flash_tween:
+		damage_flash_tween.kill()
+		damage_flash_tween = null
+
+	global_position = spawn_position
+	current_health = MAX_HEALTH
+	current_state = State.IDLE
+	current_phase = Phase.ONE
+	action_timer = 0.0
+	move_direction = Vector2.RIGHT
+	target_direction = Vector2.ZERO
+	body_hitbox.monitoring = true
+	body_hitbox.monitorable = true
+	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	_update_flip(false)
+	is_active = make_active
+
+
+func take_damage(amount: int):
+	current_health -= amount
+	_play_damage_flash()
+	if current_health <= 0:
+		die()
+
+
+func _play_damage_flash():
+	if not sprite:
+		return
+	if damage_flash_tween:
+		damage_flash_tween.kill()
+	damage_flash_tween = create_tween()
+	sprite.modulate = Color(2.2, 2.2, 2.2, 1.0)
+	damage_flash_tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), DAMAGE_FLASH_TIME)
+
+
+func _on_normal_hurtbox_area_entered(area: Area2D):
+	if area == null:
+		return
+
+	if not area.is_in_group("player_hitbox"):
+		return
+
+	if area.is_in_group("boss"):
+		return
+
+	var player_node = get_tree().get_first_node_in_group("player")
+	var multiplier = player_node.damage_multiplier if player_node else 1.0
+
+	take_damage(int(1 * multiplier))
+
+
+func _on_attack_hitbox_area_entered(area: Area2D):
+	if area == null:
+		return
+
+	var player_node = area.get_parent()
+
+	if player_node and player_node.is_in_group("player"):
+		if player_node.has_method("take_damage"):
+			player_node.take_damage(DAMAGE)
+
+
+func die():
+	current_state = State.DEAD
+	var boss_room = get_tree().get_first_node_in_group("boss_room")
+	if boss_room:
+		boss_room.on_boss_defeated()
+	queue_free()

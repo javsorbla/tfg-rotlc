@@ -1,0 +1,56 @@
+[gd_scene load_steps=4 format=3 uid="uid://j3iq0wr4lk5y"]
+
+[ext_resource type="Script" path="res://enemies/bosses/coloso_ceniza/coloso_ceniza.gd" id="1_8pb1f"]
+[ext_resource type="Texture2D" uid="uid://gqny0mm1jot1" path="res://assets/enemies/bosses/coloso_ceniza/coloso.png" id="2_govsp"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_26eiy"]
+resource_local_to_scene = true
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_govsp")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[node name="ColosoCeniza" type="Node2D" groups=["boss"]]
+script = ExtResource("1_8pb1f")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(4.76837e-07, 0)
+scale = Vector2(0.988281, 1.02148)
+sprite_frames = SubResource("SpriteFrames_26eiy")
+animation = &"idle"
+
+[node name="NormalHurtbox" type="Area2D" parent="." groups=["boss_hurtbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="NormalHurtbox"]
+modulate = Color(0, 0, 1, 1)
+position = Vector2(-15.7755, -2.21777)
+scale = Vector2(1.38204, 1.31885)
+polygon = PackedVector2Array(0, 2, 24, 2, 48, 42, -23, 42)
+
+[node name="AttackHitbox" type="Area2D" parent="." groups=["boss_hitbox"]]
+position = Vector2(-48, -1)
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="AttackHitbox"]
+position = Vector2(-13.5532, 2.34166)
+scale = Vector2(1.2766, 1.31667)
+polygon = PackedVector2Array(15, 38, 38, -1, 33, -10, 12.1833, 13.4114, 2, 2, 20, -23, 29, -31, 40, -35, 49, -37, 60, -35, 70, -31, 80, -25, 96, 1, 87.3833, 12.6519, 67, -14, 60, -2, 83, 38)
+
+[node name="CoreHurtbox" type="Area2D" parent="." groups=["boss_core"]]
+position = Vector2(0, -14)
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="CoreHurtbox"]
+modulate = Color(0, 1, 0, 1)
+position = Vector2(-0.732639, -1.6492)
+scale = Vector2(1.23264, 1.41129)
+polygon = PackedVector2Array(19, -20, -17, -20, -17, -3, -11, 11, 12, 11, 19, -3)
