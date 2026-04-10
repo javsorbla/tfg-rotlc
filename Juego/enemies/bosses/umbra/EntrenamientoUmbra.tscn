@@ -1,0 +1,218 @@
+[gd_scene load_steps=10 format=4 uid="uid://di7adgdg5ymcq"]
+
+[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="1_2ac4d"]
+[ext_resource type="Script" path="res://enemies/bosses/umbra/entrenamiento_umbra.gd" id="1_xhvoh"]
+[ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="2_y4o4n"]
+[ext_resource type="Texture2D" uid="uid://dfevusenu4qc8" path="res://assets/tilesets/Gray_Tile_Terrain (16 x 16).png" id="3_1rq4w"]
+[ext_resource type="PackedScene" uid="uid://cumc5ifv66xjv" path="res://enemies/bosses/umbra/PlayerDummy.tscn" id="4_n1die"]
+[ext_resource type="Script" path="res://enemies/bosses/umbra/killzone.gd" id="6_2hfra"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i546j"]
+texture = ExtResource("3_1rq4w")
+1:1/0 = 0
+2:1/0 = 0
+4:1/0 = 0
+7:1/0 = 0
+9:1/0 = 0
+1:3/0 = 0
+9:3/0 = 0
+17:3/0 = 0
+25:3/0 = 0
+4:4/0 = 0
+4:4/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+5:4/0 = 0
+12:4/0 = 0
+13:4/0 = 0
+20:4/0 = 0
+21:4/0 = 0
+28:4/0 = 0
+29:4/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+12:5/0 = 0
+13:5/0 = 0
+20:5/0 = 0
+21:5/0 = 0
+28:5/0 = 0
+29:5/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+4:6/0 = 0
+5:6/0 = 0
+6:6/0 = 0
+7:6/0 = 0
+10:6/0 = 0
+11:6/0 = 0
+12:6/0 = 0
+13:6/0 = 0
+14:6/0 = 0
+15:6/0 = 0
+18:6/0 = 0
+19:6/0 = 0
+20:6/0 = 0
+21:6/0 = 0
+22:6/0 = 0
+23:6/0 = 0
+26:6/0 = 0
+27:6/0 = 0
+28:6/0 = 0
+29:6/0 = 0
+30:6/0 = 0
+31:6/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+7:7/0 = 0
+10:7/0 = 0
+11:7/0 = 0
+12:7/0 = 0
+13:7/0 = 0
+14:7/0 = 0
+15:7/0 = 0
+18:7/0 = 0
+19:7/0 = 0
+20:7/0 = 0
+21:7/0 = 0
+22:7/0 = 0
+23:7/0 = 0
+26:7/0 = 0
+27:7/0 = 0
+28:7/0 = 0
+29:7/0 = 0
+30:7/0 = 0
+31:7/0 = 0
+4:8/0 = 0
+5:8/0 = 0
+12:8/0 = 0
+13:8/0 = 0
+20:8/0 = 0
+21:8/0 = 0
+28:8/0 = 0
+29:8/0 = 0
+2:11/0 = 0
+2:11/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+3:11/0 = 0
+3:11/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+4:11/0 = 0
+4:11/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+6:11/0 = 0
+10:11/0 = 0
+11:11/0 = 0
+12:11/0 = 0
+14:11/0 = 0
+18:11/0 = 0
+19:11/0 = 0
+20:11/0 = 0
+22:11/0 = 0
+26:11/0 = 0
+27:11/0 = 0
+28:11/0 = 0
+30:11/0 = 0
+3:13/0 = 0
+5:13/0 = 0
+6:13/0 = 0
+11:13/0 = 0
+13:13/0 = 0
+14:13/0 = 0
+19:13/0 = 0
+21:13/0 = 0
+22:13/0 = 0
+27:13/0 = 0
+29:13/0 = 0
+30:13/0 = 0
+3:14/0 = 0
+5:14/0 = 0
+6:14/0 = 0
+11:14/0 = 0
+13:14/0 = 0
+14:14/0 = 0
+19:14/0 = 0
+21:14/0 = 0
+22:14/0 = 0
+27:14/0 = 0
+29:14/0 = 0
+30:14/0 = 0
+3:15/0 = 0
+11:15/0 = 0
+19:15/0 = 0
+27:15/0 = 0
+5:16/0 = 0
+7:16/0 = 0
+13:16/0 = 0
+15:16/0 = 0
+21:16/0 = 0
+23:16/0 = 0
+29:16/0 = 0
+31:16/0 = 0
+3:18/0 = 0
+5:18/0 = 0
+7:18/0 = 0
+11:18/0 = 0
+13:18/0 = 0
+15:18/0 = 0
+19:18/0 = 0
+21:18/0 = 0
+23:18/0 = 0
+27:18/0 = 0
+29:18/0 = 0
+31:18/0 = 0
+5:20/0 = 0
+7:20/0 = 0
+13:20/0 = 0
+15:20/0 = 0
+21:20/0 = 0
+23:20/0 = 0
+29:20/0 = 0
+31:20/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_xthih"]
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_i546j")
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dm5ie"]
+size = Vector2(1687, 36)
+
+[node name="PruebaUmbra" type="Node"]
+script = ExtResource("1_xhvoh")
+training_preset = 2
+auto_stop_on_target = true
+min_episodes_before_stop = 80
+
+[node name="Sync" type="Node" parent="."]
+script = ExtResource("1_2ac4d")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+tile_map_data = PackedByteArray("AAAAAAAAAAACAAsAAAABAAAAAAADAAsAAAACAAAAAAADAAsAAAADAAAAAAADAAsAAAAEAAAAAAADAAsAAAAFAAAAAAADAAsAAAAGAAAAAAADAAsAAAAHAAAAAAADAAsAAAAIAAAAAAADAAsAAAAJAAAAAAADAAsAAAAKAAAAAAADAAsAAAALAAAAAAADAAsAAAAMAAAAAAADAAsAAAANAAAAAAADAAsAAAAOAAAAAAADAAsAAAAPAAAAAAADAAsAAAAQAAAAAAADAAsAAAARAAAAAAADAAsAAAASAAAAAAADAAsAAAATAAAAAAADAAsAAAAUAAAAAAADAAsAAAAVAAAAAAADAAsAAAAWAAAAAAADAAsAAAAXAAAAAAADAAsAAAAYAAAAAAADAAsAAAAZAAAAAAADAAsAAAAaAAAAAAADAAsAAAAbAAAAAAADAAsAAAAcAAAAAAADAAsAAAAdAAAAAAADAAsAAAAeAAAAAAADAAsAAAAfAAAAAAADAAsAAAAgAAAAAAADAAsAAAAhAAAAAAADAAsAAAAiAAAAAAADAAsAAAAjAAAAAAADAAsAAAAkAAAAAAADAAsAAAAlAAAAAAADAAsAAAAmAAAAAAADAAsAAAAnAAAAAAADAAsAAAAoAAAAAAADAAsAAAApAAAAAAADAAsAAAAqAAAAAAADAAsAAAArAAAAAAADAAsAAAAsAAAAAAADAAsAAAAtAAAAAAADAAsAAAAuAAAAAAADAAsAAAAvAAAAAAADAAsAAAAwAAAAAAADAAsAAAAxAAAAAAADAAsAAAAyAAAAAAADAAsAAAAzAAAAAAADAAsAAAA0AAAAAAAEAAsAAAA=")
+tile_set = SubResource("TileSet_xthih")
+
+[node name="Umbra" parent="." groups=["enemies"] instance=ExtResource("2_y4o4n")]
+position = Vector2(473, -20)
+collision_layer = 16
+
+[node name="Player" parent="." instance=ExtResource("4_n1die")]
+position = Vector2(367, -14)
+
+[node name="Killzone" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 20
+script = ExtResource("6_2hfra")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Killzone"]
+position = Vector2(465.5, 33)
+shape = SubResource("RectangleShape2D_dm5ie")
+
+[node name="SpawnPlayer" type="Marker2D" parent="."]
+position = Vector2(367, -15)
+
+[node name="SpawnUmbra" type="Marker2D" parent="."]
+position = Vector2(465, -26)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(422, -120)
+zoom = Vector2(0.53, 0.53)
+position_smoothing_enabled = true
+
+[editable path="Umbra"]
+[editable path="Player"]

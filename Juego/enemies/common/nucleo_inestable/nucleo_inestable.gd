@@ -176,7 +176,9 @@ func _on_enemy_hitbox_area_entered(area: Area2D):
 
 func _on_enemy_hurtbox_area_entered(area: Area2D):
 	if area.is_in_group("player_hitbox"):
-		take_damage(1)
+		var player_node = get_tree().get_first_node_in_group("player")
+		var multiplier = player_node.damage_multiplier if player_node else 1.0
+		take_damage(int(1 * multiplier))
 
 
 func take_damage(amount: int) -> void:

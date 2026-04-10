@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 
 enum State { IDLE, CHARGE, PROJECTILE, JUMP, HURT, DEAD }
 enum Phase { ONE, TWO }
@@ -78,6 +78,11 @@ func _ready():
 		core_hurtbox.add_to_group("boss_core")
 	if not attack_hitbox.is_in_group("enemy_hitbox"):
 		attack_hitbox.add_to_group("enemy_hitbox")
+	if not $NormalHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
+		$NormalHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	if not is_in_group("boss"):
+		add_to_group("boss")
+
 	attack_hitbox.monitoring = false
 	attack_hitbox.monitorable = false
 
@@ -339,7 +344,7 @@ func take_damage(amount: int):
 	_play_damage_flash()
 	if current_health <= 0:
 		die()
-
+	
 func _play_damage_flash():
 	if not sprite:
 		return
@@ -403,6 +408,12 @@ func _resolve_ground_y_at_x(x: float) -> float:
 		if hit_y >= room_bottom_limit - FLOOR_NEAR_BOTTOM_THRESHOLD:
 			return hit_y
 	return room_bottom_limit
+
+func _on_enemy_hurtbox_area_entered(area: Area2D):
+	if area.is_in_group("player_hitbox"):
+		var player_node = get_tree().get_first_node_in_group("player")
+		var multiplier = player_node.damage_multiplier if player_node else 1.0
+		take_damage(int(1 * multiplier))
 
 func die():
 	current_state = State.DEAD

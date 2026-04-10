@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Rise Of The Lost Colors"
 run/main_scene="res://scenes/Tutorial.tscn"
-config/features=PackedStringArray("4.3", "Forward Plus")
+config/features=PackedStringArray("4.3", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -27,6 +27,14 @@ window/size/viewport_height=260
 window/size/window_width_override=920
 window/size/window_height_override=520
 window/stretch/mode="canvas_items"
+
+[dotnet]
+
+project/assembly_name="Rise Of The Lost Colors"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_rl_agents/plugin.cfg")
 
 [input]
 

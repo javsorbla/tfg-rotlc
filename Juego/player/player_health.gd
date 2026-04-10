@@ -1,5 +1,7 @@
 extends Node
 
+signal died(owner: Node)
+
 const MAX_HEALTH = 3
 const INVINCIBILITY_DURATION = 1.0
 const FLASH_DURATION = 0.1
@@ -8,6 +10,7 @@ var current_health = MAX_HEALTH
 var is_invincible = false
 var invincibility_timer = 0.0
 var flash_timer = 0.0
+var death_callback: Callable
 
 @onready var player = get_parent()
 @onready var hurtbox = get_parent().get_node("Hurtbox")
@@ -42,17 +45,52 @@ func take_damage(amount: int, bypass_shield: bool = false):
 	if current_health <= 0:
 		die()
 
+
+func set_death_callback(callback: Callable) -> void:
+	death_callback = callback
+
 func die():
-	get_tree().reload_current_scene()
+	emit_signal("died", player)
+	if death_callback.is_valid():
+		call_deferred("_invoke_death_callback")
+		return
+	_reset_player()
+
+func _reset_player():
+	current_health = MAX_HEALTH
+	is_invincible = true
+	invincibility_timer = 0.6
+	flash_timer = 0.0
+	if sprite.material:
+		sprite.material.set_shader_parameter("flash_amount", 0.0)
+	sprite.visible = true
+	hurtbox.set_deferred("monitorable", false)
+	player.global_position = GameState.spawn_position
+	player.velocity = Vector2.ZERO
+	player.can_double_jump = false
+	player.is_dashing = false
+	player.is_shielding = false
+	player.can_jump = true
+	var color_manager = player.get_node_or_null("ColorManager")
+	if color_manager and color_manager.has_method("reset_for_respawn"):
+		color_manager.reset_for_respawn()
+	if hud:
+		hud.update_hearts(current_health, MAX_HEALTH)
+	GameState.level_reset.emit()
+
+
+func _invoke_death_callback() -> void:
+	if death_callback.is_valid():
+		death_callback.call()
 
 func _handle_invincibility(delta):
 	if is_invincible:
 		invincibility_timer -= delta
-		hurtbox.monitorable = false
+		hurtbox.set_deferred("monitorable", false)
 		sprite.visible = not sprite.visible if fmod(invincibility_timer, 0.2) < 0.1 else true
 		if invincibility_timer <= 0:
 			is_invincible = false
-			hurtbox.monitorable = true
+			hurtbox.set_deferred("monitorable", true)
 			sprite.visible = true
 
 func _handle_flash(delta):

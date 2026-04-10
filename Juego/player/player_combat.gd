@@ -66,12 +66,10 @@ func spawn_hit_particles(pos: Vector2):
 
 func _on_attack_hitbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("boss_core"):
-		var damage = int(2 * player.damage_multiplier)
+		var damage = int(player.damage_multiplier)
 		area.get_parent().take_damage(damage)
 		spawn_hit_particles(area.global_position)
 		hitstop_timer = HITSTOP_DURATION
 	elif area.is_in_group("enemy_hurtbox"):
-		var damage = int(1 * player.damage_multiplier)
-		area.get_parent().take_damage(damage)
 		spawn_hit_particles(area.global_position)
 		hitstop_timer = HITSTOP_DURATION

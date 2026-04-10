@@ -1,0 +1,64 @@
+[gd_scene load_steps=10 format=3 uid="uid://cpm34f5c602i5"]
+
+[ext_resource type="Script" path="res://enemies/bosses/umbra/umbra.gd" id="1_quebn"]
+[ext_resource type="Script" path="res://enemies/bosses/umbra/ai_controller_2d.gd" id="2_u7ihi"]
+[ext_resource type="SpriteFrames" uid="uid://dwne7hn6ues1n" path="res://assets/enemies/bosses/umbra/umbra.tres" id="3_8gdcn"]
+[ext_resource type="Script" path="res://enemies/bosses/umbra/umbra_health.gd" id="4_8dco9"]
+[ext_resource type="Script" path="res://enemies/bosses/umbra/umbra_combat.gd" id="5_j17h2"]
+[ext_resource type="Script" path="res://enemies/bosses/umbra/umbra_colors.gd" id="6_6qn2i"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ifwve"]
+radius = 12.0
+height = 40.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3di5o"]
+size = Vector2(35, 50)
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1digt"]
+radius = 12.0
+height = 40.0
+
+[node name="Umbra" type="CharacterBody2D"]
+script = ExtResource("1_quebn")
+jump_cooldown_seconds = 1.5
+double_jump_cooldown_seconds = 2.0
+dash_cooldown_seconds = 3.0
+debug_darkness_logs = true
+
+[node name="AIController2D" type="Node2D" parent="."]
+script = ExtResource("2_u7ihi")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("4_8dco9")
+
+[node name="Combat" type="Node" parent="."]
+script = ExtResource("5_j17h2")
+
+[node name="ColorManager" type="Node" parent="."]
+script = ExtResource("6_6qn2i")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_ifwve")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-1, -18)
+scale = Vector2(0.684615, 0.746154)
+sprite_frames = ExtResource("3_8gdcn")
+animation = &"attack"
+
+[node name="AttackHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
+position = Vector2(0.5, 0)
+shape = SubResource("RectangleShape2D_3di5o")
+debug_color = Color(0.905808, 0.272961, 0.350986, 0.42)
+
+[node name="Hurtbox" type="Area2D" parent="." groups=["enemy_hurtbox"]]
+collision_layer = 16
+collision_mask = 6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("CapsuleShape2D_1digt")
+debug_color = Color(0.198362, 0.618767, 0.482553, 0.42)
