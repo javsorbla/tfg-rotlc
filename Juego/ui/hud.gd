@@ -22,6 +22,9 @@ const MAX_COOLDOWNS = {
 
 func _ready():
 	hearts = [$Control/Hearts/Heart1, $Control/Hearts/Heart2, $Control/Hearts/Heart3]
+	for heart in hearts:
+		if heart != null:
+			heart.texture = heart_full
 	power_nodes = {
 		"cyan": $Control/Powers/Cyan/RechargeBar,
 		"red": $Control/Powers/Red/RechargeBar,

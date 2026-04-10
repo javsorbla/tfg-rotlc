@@ -24,11 +24,18 @@ func _ready():
 	hurtbox.monitorable = true
 	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	call_deferred("_init_hud")
+
+
+func _init_hud():
+	current_health = MAX_HEALTH
 	Hud.update_hearts(current_health, MAX_HEALTH)
+
 
 func process(delta):
 	_handle_invincibility(delta)
 	_handle_flash(delta)
+
 
 func take_damage(amount: int, bypass_shield: bool = false):
 	if (player.is_shielding and not bypass_shield) or is_invincible:
@@ -50,11 +57,9 @@ func set_death_callback(callback: Callable) -> void:
 	death_callback = callback
 
 func die():
-	emit_signal("died", player)
-	if death_callback.is_valid():
-		call_deferred("_invoke_death_callback")
-		return
-	_reset_player()
+	current_health = MAX_HEALTH
+	Hud.update_hearts(current_health, MAX_HEALTH)
+	get_tree().reload_current_scene()
 
 func _reset_player():
 	current_health = MAX_HEALTH
