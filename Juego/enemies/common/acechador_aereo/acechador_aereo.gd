@@ -24,6 +24,7 @@ var dive_direction: Vector2 = Vector2.ZERO
 var dive_started_pos: Vector2 = Vector2.ZERO
 var has_hit_player: bool = false
 var stun_timer: float = 0.0
+var spawn_position = Vector2.ZERO
 
 # Returning
 var return_start_pos: Vector2 = Vector2.ZERO
@@ -37,16 +38,21 @@ var patrol_y_phase: float = 0.0
 # Despawn tras morir
 var death_grounded_timer: float = -1.0
 var has_landed: bool = false
+var _combat_reset_state: Dictionary = {}
 
 
 func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
-
+	
+	spawn_position = global_position
+	GameState.level_reset.connect(_on_level_reset)
+	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	patrol_origin = global_position
 	_enter_state(State.IDLE)
@@ -71,10 +77,25 @@ func _physics_process(delta: float) -> void:
 			if has_landed:
 				death_grounded_timer -= delta
 				if death_grounded_timer <= 0.0:
-					queue_free()
+					_despawn_dead_instance()
 
 	move_and_slide()
 
+func _on_level_reset():
+	set_physics_process(true)
+	visible = true
+	current_health = MAX_HEALTH
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	has_landed = false
+	death_grounded_timer = -1.0
+	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	_enter_state(State.IDLE)
+
+
+func _despawn_dead_instance() -> void:
+	velocity = Vector2.ZERO
+	EnemyResetUtils.despawn(self)
 
 # Cambio de estados
 func _enter_state(new_state: State) -> void:

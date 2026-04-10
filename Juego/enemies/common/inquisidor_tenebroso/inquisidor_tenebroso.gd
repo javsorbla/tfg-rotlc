@@ -23,8 +23,9 @@ var current_health: int = MAX_HEALTH
 var player: Node2D = null
 var stun_timer: float = 0.0
 var shoot_timer: float = 0.0
-
 var death_timer: float = -1.0
+var spawn_position = Vector2.ZERO
+var _combat_reset_state: Dictionary = {}
 
 @onready var attack_scene = preload("res://enemies/common/inquisidor_tenebroso/AtaqueInquisidor.tscn")
 
@@ -32,11 +33,14 @@ var death_timer: float = -1.0
 func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
-
+	spawn_position = global_position
+	GameState.level_reset.connect(_on_level_reset)
+	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	_enter_state(State.IDLE)
 
@@ -62,10 +66,25 @@ func _physics_process(delta: float) -> void:
 			if death_timer > 0:
 				death_timer -= delta
 				if death_timer <= 0.0:
-					queue_free()
+					_despawn_dead_instance()
 
 	move_and_slide()
 
+func _on_level_reset():
+	set_physics_process(true)
+	visible = true
+	current_health = MAX_HEALTH
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	death_timer = -1.0
+	shoot_timer = 0.0
+	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	_enter_state(State.IDLE)
+
+
+func _despawn_dead_instance() -> void:
+	velocity = Vector2.ZERO
+	EnemyResetUtils.despawn(self)
 
 func _enter_state(new_state: State) -> void:
 	current_state = new_state

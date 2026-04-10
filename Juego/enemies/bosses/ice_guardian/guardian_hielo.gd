@@ -40,6 +40,7 @@ var current_phase = Phase.ONE
 var DAMAGE = 1
 var player = null
 var is_active = false
+var spawn_position = Vector2.ZERO
 
 var charge_timer = 0.0
 var projectile_timer = 0.0
@@ -72,6 +73,8 @@ func _ready():
 	player = get_tree().get_first_node_in_group("player")
 	charge_timer = CHARGE_COOLDOWN
 	projectile_timer = PROJECTILE_COOLDOWN
+	spawn_position = global_position
+	GameState.level_reset.connect(_on_level_reset)
 	original_y = position.y
 	core_hurtbox_base_x = abs(core_hurtbox_shape.position.x)
 	if not core_hurtbox.is_in_group("boss_core"):
@@ -335,9 +338,35 @@ func _update_flip(flipped: bool):
 	core_hurtbox_shape.position.x = -core_hurtbox_base_x if flipped else core_hurtbox_base_x
 
 func activate():
-	is_active = true
+	_reset_for_encounter(true)
+
+
+func _on_level_reset() -> void:
+	_reset_for_encounter(false)
+
+
+func _reset_for_encounter(make_active: bool) -> void:
+	if damage_flash_tween:
+		damage_flash_tween.kill()
+		damage_flash_tween = null
+
+	global_position = spawn_position
+	current_health = MAX_HEALTH
+	current_state = State.IDLE
+	current_phase = Phase.ONE
 	charge_timer = CHARGE_COOLDOWN
 	projectile_timer = PROJECTILE_COOLDOWN
+	jump_timer = 0.0
+	action_timer = 0.0
+	post_jump_recover_timer = 0.0
+	jump_velocity = Vector2.ZERO
+	charge_direction = Vector2.ZERO
+	has_summoned_fury_walkers = false
+	attack_hitbox.monitoring = false
+	attack_hitbox.monitorable = false
+	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	_update_flip(false)
+	is_active = make_active
 
 func take_damage(amount: int):
 	current_health -= amount
@@ -367,6 +396,7 @@ func _summon_fury_walkers_async():
 
 func _spawn_single_walker(spawn_x: float):
 	var walker = caminante_helado_scene.instantiate()
+	walker.is_spawned = true
 	get_parent().add_child(walker)
 	var ground_y: float = _resolve_ground_y_at_x(spawn_x)
 	var feet_offset: float = _get_walker_feet_offset(walker)

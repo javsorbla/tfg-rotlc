@@ -19,6 +19,7 @@ var current_health: int = MAX_HEALTH
 var player: Node2D = null
 var facing_dir: float = -1.0 
 var patrol_origin_x: float = 0.0
+var spawn_position = Vector2.ZERO
 
 var stun_timer: float = 0.0
 var idle_timer: float = 0.0
@@ -28,6 +29,7 @@ var flip_cooldown: float = 0.0
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var vision: RayCast2D = $Vision
 
+@export var is_spawned := false # Invocado por el jefe
 
 # --- CICLO PRINCIPAL ---
 
@@ -35,7 +37,10 @@ func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
 	patrol_origin_x = global_position.x
-
+	if not is_spawned:
+		spawn_position = global_position
+		GameState.level_reset.connect(_on_level_reset)
+	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
@@ -68,6 +73,15 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_animations()
 
+func _on_level_reset():
+	if is_spawned:
+		queue_free()
+		return
+	current_health = MAX_HEALTH
+	global_position = spawn_position
+	current_state = State.IDLE
+	velocity = Vector2.ZERO
+	$EnemyHurtbox.monitorable = true
 
 # --- LÓGICA DE ANIMACIÓN ---
 
