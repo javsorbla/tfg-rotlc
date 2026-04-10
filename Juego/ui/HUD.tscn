@@ -24,6 +24,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Hearts" type="HBoxContainer" parent="Control"]
+layout_mode = 0
 offset_right = 200.0
 offset_bottom = 64.0
 
@@ -62,7 +63,6 @@ initial_velocity_min = 10.0
 initial_velocity_max = 30.0
 scale_amount_min = 0.4
 scale_amount_max = 0.5
-color = Color(0, 1, 0, 1)
 
 [node name="Heart2" type="TextureRect" parent="Control/Hearts"]
 layout_mode = 2
@@ -98,7 +98,6 @@ initial_velocity_min = 10.0
 initial_velocity_max = 30.0
 scale_amount_min = 0.4
 scale_amount_max = 0.5
-color = Color(0, 1, 0, 1)
 
 [node name="Heart3" type="TextureRect" parent="Control/Hearts"]
 layout_mode = 2
@@ -134,7 +133,6 @@ initial_velocity_min = 10.0
 initial_velocity_max = 30.0
 scale_amount_min = 0.4
 scale_amount_max = 0.5
-color = Color(0, 1, 0, 1)
 
 [node name="Powers" type="HBoxContainer" parent="Control"]
 layout_mode = 1
@@ -143,16 +141,17 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 240.0
-offset_top = 156.0
-offset_right = 440.0
-offset_bottom = 220.0
+offset_left = 300.0
+offset_top = 190.0
+offset_right = 500.0
+offset_bottom = 254.0
 grow_horizontal = 0
 grow_vertical = 0
+scale = Vector2(0.75, 0.75)
 
 [node name="Cyan" type="TextureProgressBar" parent="Control/Powers"]
 modulate = Color(1, 1, 1, 0.588235)
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
 max_value = 1.0
 step = 0.01
@@ -163,7 +162,7 @@ tint_under = Color(1, 1, 1, 0.501961)
 
 [node name="Red" type="TextureProgressBar" parent="Control/Powers"]
 modulate = Color(1, 1, 1, 0.588235)
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
 max_value = 1.0
 step = 0.01
@@ -174,7 +173,7 @@ tint_under = Color(1, 1, 1, 0.501961)
 
 [node name="Yellow" type="TextureProgressBar" parent="Control/Powers"]
 modulate = Color(1, 1, 1, 0.588235)
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
 max_value = 1.0
 step = 0.01

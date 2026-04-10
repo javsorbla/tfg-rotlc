@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=4 uid="uid://bmmg7n8gcdsue"]
+[gd_scene load_steps=19 format=4 uid="uid://bmmg7n8gcdsue"]
 
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_74p10"]
 [ext_resource type="Script" path="res://scenes/tutorial.gd" id="1_p6cp1"]
@@ -8,7 +8,9 @@
 [ext_resource type="Texture2D" uid="uid://mh07oyyyljv2" path="res://assets/traps/fuego.png" id="2_ym1qa"]
 [ext_resource type="FontFile" uid="uid://b5yw8u8qdipr6" path="res://assets/text/Minecraft.ttf" id="3_q2tak"]
 [ext_resource type="PackedScene" uid="uid://b7kj5rrupn1ou" path="res://enemies/common/caminante_helado/CaminanteHelado.tscn" id="7_e86ce"]
+[ext_resource type="Texture2D" uid="uid://daklo3s4cbdxv" path="res://assets/objects/orbeluz.png" id="7_u8v25"]
 [ext_resource type="Script" path="res://scenes/camara.gd" id="10_ajmfl"]
+[ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="10_m0nmi"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i6t85"]
 texture = ExtResource("1_whyj1")
@@ -225,9 +227,6 @@ default_font = ExtResource("3_q2tak")
 
 [sub_resource type="LabelSettings" id="LabelSettings_de41u"]
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_k2hqp"]
-load_path = "res://.godot/imported/orbeluz.png-c6b790c612613c239d724a47f9ed4e53.ctex"
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u2a58"]
 size = Vector2(146, 46)
 
@@ -411,9 +410,9 @@ horizontal_alignment = 1
 position = Vector2(3783, 98)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(4127, 12)
-scale = Vector2(2.04687, 1.90234)
-texture = SubResource("CompressedTexture2D_k2hqp")
+position = Vector2(4125.38, 10.5313)
+scale = Vector2(0.519528, 0.514647)
+texture = ExtResource("7_u8v25")
 
 [node name="Statue" parent="." instance=ExtResource("2_1nw4v")]
 position = Vector2(-19, 87)
@@ -438,5 +437,8 @@ position = Vector2(4580.49, 54.5826)
 position = Vector2(42, -19)
 position_smoothing_enabled = true
 script = ExtResource("10_ajmfl")
+
+[node name="OrbeDeLuz" parent="." instance=ExtResource("10_m0nmi")]
+position = Vector2(647, 24)
 
 [connection signal="body_entered" from="Final" to="." method="_on_final_body_entered"]
