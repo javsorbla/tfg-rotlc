@@ -227,7 +227,6 @@ default_font = ExtResource("3_q2tak")
 [sub_resource type="LabelSettings" id="LabelSettings_de41u"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_k2hqp"]
-load_path = "res://.godot/imported/orbeluz.png-c6b790c612613c239d724a47f9ed4e53.ctex"
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u2a58"]
 size = Vector2(146, 46)

@@ -31,10 +31,12 @@ var current_speed: float = CHASE_SPEED_SHIELD
 
 var patrol_dir: float = 1.0
 var patrol_origin: Vector2 = Vector2.ZERO
-
+var spawn_position = Vector2.ZERO
 
 func _ready() -> void:
 	player = get_tree().get_first_node_in_group("player")
+	spawn_position = global_position
+	GameState.level_reset.connect(_on_level_reset)
 
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
@@ -63,6 +65,13 @@ func _physics_process(delta: float) -> void:
 	$AnimatedSprite2D.flip_h = is_facing_right
 	move_and_slide()
 
+func _on_level_reset():
+	current_health = MAX_HEALTH
+	global_position = spawn_position
+	current_state = State.PATROL
+	velocity = Vector2.ZERO
+	visible = true
+	$EnemyHurtbox.monitorable = true
 
 func _enter_state(new_state: State) -> void:
 	current_state = new_state
