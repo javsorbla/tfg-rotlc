@@ -31,7 +31,8 @@ script = ExtResource("1_8pb1f")
 position = Vector2(4.76837e-07, 0)
 scale = Vector2(0.988281, 1.02148)
 sprite_frames = SubResource("SpriteFrames_26eiy")
-animation = &"hurt"
+animation = &"idle"
+frame_progress = 0.118049
 
 [node name="NormalHurtbox" type="Area2D" parent="." groups=["boss_hurtbox"]]
 collision_layer = 16
@@ -41,7 +42,7 @@ collision_mask = 4
 modulate = Color(0, 0, 1, 1)
 position = Vector2(-15.7755, -2.21777)
 scale = Vector2(1.38204, 1.31885)
-polygon = PackedVector2Array(0, 2, 24, 2, 48, 42, -23, 42)
+polygon = PackedVector2Array(-5.22742, 2.43983, 27.3331, 0.923357, 48, 42, -23, 42)
 
 [node name="AttackHitbox" type="Area2D" parent="." groups=["boss_hitbox"]]
 position = Vector2(-48, -1)
@@ -62,4 +63,4 @@ collision_mask = 4
 modulate = Color(0, 1, 0, 1)
 position = Vector2(-0.732639, -1.6492)
 scale = Vector2(1.23264, 1.41129)
-polygon = PackedVector2Array(19, -20, -17, -20, -17, -3, -11, 11, 12, 11, 19, -3)
+polygon = PackedVector2Array(20.0648, -22.2143, -16.4422, -19.38, -27.8, 2.58572, -36.7239, 50.06, 42.7802, 50.06, 30.6112, 13.2143, 44.4028, 4.71143)

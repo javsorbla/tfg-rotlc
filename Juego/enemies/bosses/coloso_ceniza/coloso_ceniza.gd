@@ -8,11 +8,18 @@ const PHASE_TWO_THRESHOLD: float = 0.35
 const BOSS_HALF_WIDTH: float = 60.0
 
 const MOVE_SPEED: float = 40.0
-const TURN_SPEED: float = 1.8
 const TURN_DELAY_TIME: float = 0.5
-const TURN_SNAP: float = 0.08
 
 const DAMAGE_FLASH_TIME: float = 0.08
+
+const LEG_MAX_HEALTH: int = 7
+const HURT_DURATION: float = 4.0
+const LEG_REGEN_DELAY: float = 1.0
+
+var leg_health: int = LEG_MAX_HEALTH
+var hurt_timer: float = 0.0
+var leg_regen_timer: float = 0.0
+var is_vulnerable: bool = false
 
 var current_health: int = MAX_HEALTH
 var current_state: State = State.IDLE
@@ -39,10 +46,10 @@ var turning: bool = false
 var last_position_x: float = 0.0
 var last_target_left: bool = false
 
-
 @onready var sprite = $AnimatedSprite2D
 @onready var body_hitbox = $AttackHitbox
 @onready var normal_hurtbox = $NormalHurtbox
+@onready var core_hurtbox = $CoreHurtbox
 
 func _ready():
 	player = get_tree().get_first_node_in_group("player")
@@ -57,20 +64,29 @@ func _ready():
 		last_target_left = desired_left
 		sprite.flip_h = !facing_left
 
-	if not normal_hurtbox.is_in_group("boss_core"):
-		normal_hurtbox.add_to_group("boss_core")
+	if not normal_hurtbox.is_in_group("boss_legs"):
+		normal_hurtbox.add_to_group("boss_legs")
+	if not core_hurtbox.is_in_group("boss_core"):
+		core_hurtbox.add_to_group("boss_core")
 	if not body_hitbox.is_in_group("boss_hitbox"):
 		body_hitbox.add_to_group("boss_hitbox")
+
 	if not body_hitbox.area_entered.is_connected(_on_attack_hitbox_area_entered):
 		body_hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
-	if not $NormalHurtbox.area_entered.is_connected(_on_normal_hurtbox_area_entered):
-		$NormalHurtbox.area_entered.connect(_on_normal_hurtbox_area_entered)
+	if not normal_hurtbox.area_entered.is_connected(_on_leg_hurtbox_area_entered):
+		normal_hurtbox.area_entered.connect(_on_leg_hurtbox_area_entered)
+	if not core_hurtbox.area_entered.is_connected(_on_core_hurtbox_area_entered):
+		core_hurtbox.area_entered.connect(_on_core_hurtbox_area_entered)
+
 	if not is_in_group("boss"):
 		add_to_group("boss")
 
 	body_hitbox.monitoring = true
 	body_hitbox.monitorable = true
-	
+
+	core_hurtbox.monitoring = false
+	core_hurtbox.monitorable = false
+
 
 func _physics_process(delta):
 	if not is_active:
@@ -94,6 +110,16 @@ func _physics_process(delta):
 			sprite.flip_h = !facing_left
 			turning = false
 
+	if current_state == State.HURT:
+		hurt_timer -= delta
+		if hurt_timer <= 0.0:
+			_recover_from_hurt()
+
+	if leg_regen_timer > 0.0:
+		leg_regen_timer -= delta
+		if leg_regen_timer <= 0.0:
+			leg_health = LEG_MAX_HEALTH
+
 	_check_phase()
 	_handle_state(delta)
 
@@ -110,6 +136,9 @@ func _handle_state(delta):
 	match current_state:
 		State.IDLE:
 			_idle_state(delta)
+		State.HURT:
+			pass
+
 
 func _idle_state(delta):
 	if not player:
@@ -131,10 +160,44 @@ func _idle_state(delta):
 		room_right_limit - BOSS_HALF_WIDTH)
 
 
+func _enter_hurt():
+	current_state = State.HURT
+	hurt_timer = HURT_DURATION
+	is_vulnerable = true
+	move_direction = Vector2.ZERO
+	
+	sprite.stop()
+	sprite.animation = "hurt"
+	sprite.frame = 0
+	sprite.play("hurt")
+
+	body_hitbox.set_deferred("monitoring", false)
+	body_hitbox.set_deferred("monitorable", false)
+	core_hurtbox.set_deferred("monitoring", true)
+	core_hurtbox.set_deferred("monitorable", true)
+	normal_hurtbox.set_deferred("monitoring", false)
+	normal_hurtbox.set_deferred("monitorable", false)
+
+
+func _recover_from_hurt():
+	current_state = State.IDLE
+	is_vulnerable = false
+	hurt_timer = 0.0
+	$AnimatedSprite2D.play("idle")
+
+	body_hitbox.set_deferred("monitoring", true)
+	body_hitbox.set_deferred("monitorable", true)
+	core_hurtbox.set_deferred("monitoring", false)
+	core_hurtbox.set_deferred("monitorable", false)
+	normal_hurtbox.set_deferred("monitoring", true)
+	normal_hurtbox.set_deferred("monitorable", true)
+
+	leg_regen_timer = LEG_REGEN_DELAY
+
+
 func _update_flip(should_face_left: bool):
 	if turning:
 		return
-
 	pending_facing_left = should_face_left
 	turn_timer = TURN_DELAY_TIME
 	turning = true
@@ -142,6 +205,8 @@ func _update_flip(should_face_left: bool):
 
 func activate():
 	_reset_for_encounter(true)
+	sprite.play("idle")
+
 
 func _on_level_reset() -> void:
 	_reset_for_encounter(false)
@@ -154,13 +219,23 @@ func _reset_for_encounter(make_active: bool) -> void:
 
 	global_position = spawn_position
 	current_health = MAX_HEALTH
+	leg_health = LEG_MAX_HEALTH
 	current_state = State.IDLE
 	current_phase = Phase.ONE
 	action_timer = 0.0
-	move_direction = Vector2.RIGHT
+	hurt_timer = 0.0
+	leg_regen_timer = 0.0
+	is_vulnerable = false
+	move_direction = Vector2.ZERO
 	target_direction = Vector2.ZERO
-	body_hitbox.monitoring = true
-	body_hitbox.monitorable = true
+
+	body_hitbox.set_deferred("monitoring", true)
+	body_hitbox.set_deferred("monitorable", true)
+	core_hurtbox.set_deferred("monitoring", false)
+	core_hurtbox.set_deferred("monitorable", false)
+	normal_hurtbox.set_deferred("monitoring", true)
+	normal_hurtbox.set_deferred("monitorable", true)
+
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 	if player:
@@ -171,6 +246,9 @@ func _reset_for_encounter(make_active: bool) -> void:
 	else:
 		_update_flip(false)
 
+	is_active = make_active
+	
+	sprite.play("idle")
 	is_active = make_active
 
 
@@ -191,20 +269,46 @@ func _play_damage_flash():
 	damage_flash_tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), DAMAGE_FLASH_TIME)
 
 
-func _on_normal_hurtbox_area_entered(area: Area2D):
+func _on_leg_hurtbox_area_entered(area: Area2D):
 	if area == null:
 		return
 	if not area.is_in_group("player_hitbox"):
 		return
-	if area.is_in_group("boss_core") or area.is_in_group("boss_hitbox") or area.is_in_group("enemy_hitbox"):
+	if current_state == State.HURT:
+		return
+	if leg_regen_timer > 0.0:
+		return
+
+	var player_node = get_tree().get_first_node_in_group("player")
+	var multiplier = player_node.damage_multiplier if player_node else 1.0
+	leg_health -= int(1 * multiplier)
+
+	_play_damage_flash()
+
+	if leg_health <= 0:
+		leg_health = 0
+		_enter_hurt()
+
+
+func _on_core_hurtbox_area_entered(area: Area2D):
+	if area == null:
+		return
+	if not area.is_in_group("player_hitbox"):
+		return
+	if not is_vulnerable:
 		return
 	var player_node = get_tree().get_first_node_in_group("player")
 	var multiplier = player_node.damage_multiplier if player_node else 1.0
 	take_damage(int(1 * multiplier))
+	
+	
+func is_hurting() -> bool:
+	return current_state == State.HURT
 
 
 func _on_attack_hitbox_area_entered(area: Area2D):
-	pass
+	if current_state == State.HURT:
+		return
 
 
 func die():
