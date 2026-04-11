@@ -74,6 +74,7 @@ position = Vector2(690, -17)
 
 [node name="AnimatedSprite2D" parent="ColosoCeniza" index="0"]
 sprite_frames = SubResource("SpriteFrames_esgw8")
+animation = &"idle"
 
 [node name="PlataformaRompible10" parent="." instance=ExtResource("4_wxn0d")]
 position = Vector2(433, -143)

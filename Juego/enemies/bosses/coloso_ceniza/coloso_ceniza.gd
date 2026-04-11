@@ -51,6 +51,12 @@ func _ready():
 	last_position_x = global_position.x
 	GameState.level_reset.connect(_on_level_reset)
 
+	if player:
+		var desired_left = player.global_position.x < global_position.x
+		facing_left = desired_left
+		last_target_left = desired_left
+		sprite.flip_h = !facing_left
+
 	if not normal_hurtbox.is_in_group("boss_core"):
 		normal_hurtbox.add_to_group("boss_core")
 	if not body_hitbox.is_in_group("boss_hitbox"):
@@ -64,6 +70,7 @@ func _ready():
 
 	body_hitbox.monitoring = true
 	body_hitbox.monitorable = true
+	
 
 func _physics_process(delta):
 	if not is_active:
@@ -82,17 +89,14 @@ func _physics_process(delta):
 
 	if turning:
 		turn_timer -= delta
-
 		if turn_timer <= 0.0:
 			facing_left = pending_facing_left
-			sprite.flip_h = facing_left
+			sprite.flip_h = !facing_left
 			turning = false
-			
-	if player:
-		sprite.flip_h = player.global_position.x > global_position.x
 
 	_check_phase()
 	_handle_state(delta)
+
 
 func _check_phase():
 	if current_phase == Phase.ONE and current_health <= MAX_HEALTH * PHASE_TWO_THRESHOLD:
@@ -111,26 +115,17 @@ func _idle_state(delta):
 	if not player:
 		return
 
-	var speed = MOVE_SPEED
-
 	var dist_x = player.global_position.x - global_position.x
 	var desired_left = dist_x < 0
 
-	if desired_left != last_target_left:
-		_update_flip(desired_left)
+	if desired_left != last_target_left and not turning:
 		last_target_left = desired_left
+		_update_flip(desired_left)
 
-	if turning:
-		move_direction.x = 0
-	else:
-		move_direction.x = sign(dist_x)
-
+	move_direction.x = sign(dist_x)
 	move_direction.y = 0
-
-	position.x += move_direction.x * speed * delta
-
+	position.x += move_direction.x * MOVE_SPEED * delta
 	position.y = spawn_position.y
-
 	position.x = clamp(position.x,
 		room_left_limit + BOSS_HALF_WIDTH,
 		room_right_limit - BOSS_HALF_WIDTH)
@@ -143,9 +138,6 @@ func _update_flip(should_face_left: bool):
 	pending_facing_left = should_face_left
 	turn_timer = TURN_DELAY_TIME
 	turning = true
-
-	move_direction = Vector2.ZERO
-	target_direction = Vector2.ZERO
 
 
 func activate():
@@ -170,7 +162,15 @@ func _reset_for_encounter(make_active: bool) -> void:
 	body_hitbox.monitoring = true
 	body_hitbox.monitorable = true
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
-	_update_flip(false)
+
+	if player:
+		var desired_left = player.global_position.x < global_position.x
+		facing_left = desired_left
+		last_target_left = desired_left
+		sprite.flip_h = !facing_left
+	else:
+		_update_flip(false)
+
 	is_active = make_active
 
 
@@ -194,28 +194,17 @@ func _play_damage_flash():
 func _on_normal_hurtbox_area_entered(area: Area2D):
 	if area == null:
 		return
-
 	if not area.is_in_group("player_hitbox"):
 		return
-
-	if area.is_in_group("boss"):
+	if area.is_in_group("boss_core") or area.is_in_group("boss_hitbox") or area.is_in_group("enemy_hitbox"):
 		return
-
 	var player_node = get_tree().get_first_node_in_group("player")
 	var multiplier = player_node.damage_multiplier if player_node else 1.0
-
 	take_damage(int(1 * multiplier))
 
 
 func _on_attack_hitbox_area_entered(area: Area2D):
-	if area == null:
-		return
-
-	var player_node = area.get_parent()
-
-	if player_node and player_node.is_in_group("player"):
-		if player_node.has_method("take_damage"):
-			player_node.take_damage(DAMAGE)
+	pass
 
 
 func die():
