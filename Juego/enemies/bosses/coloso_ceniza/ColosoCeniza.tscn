@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://j3iq0wr4lk5y"]
+[gd_scene load_steps=6 format=3 uid="uid://j3iq0wr4lk5y"]
 
 [ext_resource type="Script" path="res://enemies/bosses/coloso_ceniza/coloso_ceniza.gd" id="1_8pb1f"]
+[ext_resource type="Texture2D" uid="uid://bp73nfu16pj8n" path="res://assets/enemies/bosses/coloso_ceniza/puñetazo.png" id="2_besj6"]
 [ext_resource type="Texture2D" uid="uid://pykyxvncyfos" path="res://assets/enemies/bosses/coloso_ceniza/coloso_herido.png" id="2_f5qym"]
 [ext_resource type="Texture2D" uid="uid://gqny0mm1jot1" path="res://assets/enemies/bosses/coloso_ceniza/coloso.png" id="2_govsp"]
 
@@ -22,6 +23,14 @@ animations = [{
 "loop": true,
 "name": &"idle",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_besj6")
+}],
+"loop": true,
+"name": &"punch",
+"speed": 5.0
 }]
 
 [node name="ColosoCeniza" type="Node2D" groups=["boss"]]
@@ -32,7 +41,6 @@ position = Vector2(4.76837e-07, 0)
 scale = Vector2(0.988281, 1.02148)
 sprite_frames = SubResource("SpriteFrames_26eiy")
 animation = &"idle"
-frame_progress = 0.118049
 
 [node name="NormalHurtbox" type="Area2D" parent="." groups=["boss_hurtbox"]]
 collision_layer = 16
@@ -52,7 +60,7 @@ collision_mask = 4
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="AttackHitbox"]
 position = Vector2(-13.5532, 2.34166)
 scale = Vector2(1.2766, 1.31667)
-polygon = PackedVector2Array(15, 38, 38, -1, 33, -10, 12.1833, 13.4114, 2, 2, 20, -23, 29, -31, 40, -35, 49, -37, 60, -35, 70, -31, 80, -25, 96, 1, 87.3833, 12.6519, 67, -14, 60, -2, 83, 38)
+polygon = PackedVector2Array(20.0166, 37.7151, 38, -1, 33, -10, 30.1999, -3.29745, 25.4999, 2.77848, 12.1833, 13.4114, 5.13332, 10.3734, 2, 2, 1.21667, -7.09491, 8.26665, -13.9303, 21.5833, -20.7658, 29, -31, 40, -35, 43.5165, -39.7531, 48.9998, -40.5126, 60, -35, 70.1498, -37.4746, 77.9831, -32.9176, 81.8997, -26.0822, 92.083, -19.2468, 96.783, -14.6898, 96, 1, 92.8664, 8.09492, 87.3833, 12.6519, 80.3331, 8.85441, 74.8498, 1.2595, 67, -14, 60, -2, 76.4164, 37.7151)
 
 [node name="CoreHurtbox" type="Area2D" parent="." groups=["boss_core"]]
 position = Vector2(0, -14)
@@ -63,4 +71,4 @@ collision_mask = 4
 modulate = Color(0, 1, 0, 1)
 position = Vector2(-0.732639, -1.6492)
 scale = Vector2(1.23264, 1.41129)
-polygon = PackedVector2Array(20.0648, -22.2143, -16.4422, -19.38, -27.8, 2.58572, -36.7239, 50.06, 42.7802, 50.06, 30.6112, 13.2143, 44.4028, 4.71143)
+polygon = PackedVector2Array(20.0648, -22.2143, 1.40563, -21.5057, -5.0845, -18.6714, -16.4422, -19.38, -27.8, 2.58572, -26.9887, 14.6314, -31.045, 25.9686, -38.3464, 42.9743, -36.7239, 50.06, 42.7802, 50.06, 30.6112, 13.2143, 41.969, 4.00286, 36.2901, -7.33428, 28.1774, -19.38)

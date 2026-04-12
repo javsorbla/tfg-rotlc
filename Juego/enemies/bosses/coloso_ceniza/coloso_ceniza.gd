@@ -1,6 +1,6 @@
 extends Node2D
 
-enum State { IDLE, HURT, DEAD }
+enum State { IDLE, HURT, DEAD, PUNCH }
 enum Phase { ONE, TWO }
 
 const MAX_HEALTH: int = 50
@@ -15,6 +15,13 @@ const DAMAGE_FLASH_TIME: float = 0.08
 const LEG_MAX_HEALTH: int = 7
 const HURT_DURATION: float = 4.0
 const LEG_REGEN_DELAY: float = 1.0
+
+const PUNCH_RANGE: float = 80.0
+const PUNCH_COOLDOWN: float = 5.0
+const PUNCH_DURATION: float = 1.0
+const PUNCH_WINDUP: float = 0.35
+const PUNCH_KNOCKBACK: float = 600.0
+
 
 var leg_health: int = LEG_MAX_HEALTH
 var hurt_timer: float = 0.0
@@ -46,6 +53,11 @@ var turning: bool = false
 var last_position_x: float = 0.0
 var last_target_left: bool = false
 
+var punch_timer: float = 0.0
+var punch_state_timer: float = 0.0
+var punch_hit_done: bool = false
+var punch_damage: int = 2
+
 @onready var sprite = $AnimatedSprite2D
 @onready var body_hitbox = $AttackHitbox
 @onready var normal_hurtbox = $NormalHurtbox
@@ -62,7 +74,7 @@ func _ready():
 		var desired_left = player.global_position.x < global_position.x
 		facing_left = desired_left
 		last_target_left = desired_left
-		sprite.flip_h = !facing_left
+		scale.x = -1.0 if !facing_left else 1.0
 
 	if not normal_hurtbox.is_in_group("boss_legs"):
 		normal_hurtbox.add_to_group("boss_legs")
@@ -70,13 +82,14 @@ func _ready():
 		core_hurtbox.add_to_group("boss_core")
 	if not body_hitbox.is_in_group("boss_hitbox"):
 		body_hitbox.add_to_group("boss_hitbox")
-
+	
 	if not body_hitbox.area_entered.is_connected(_on_attack_hitbox_area_entered):
 		body_hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
 	if not normal_hurtbox.area_entered.is_connected(_on_leg_hurtbox_area_entered):
 		normal_hurtbox.area_entered.connect(_on_leg_hurtbox_area_entered)
 	if not core_hurtbox.area_entered.is_connected(_on_core_hurtbox_area_entered):
 		core_hurtbox.area_entered.connect(_on_core_hurtbox_area_entered)
+		
 
 	if not is_in_group("boss"):
 		add_to_group("boss")
@@ -107,7 +120,7 @@ func _physics_process(delta):
 		turn_timer -= delta
 		if turn_timer <= 0.0:
 			facing_left = pending_facing_left
-			sprite.flip_h = !facing_left
+			scale.x = -1.0 if !facing_left else 1.0
 			turning = false
 
 	if current_state == State.HURT:
@@ -119,6 +132,9 @@ func _physics_process(delta):
 		leg_regen_timer -= delta
 		if leg_regen_timer <= 0.0:
 			leg_health = LEG_MAX_HEALTH
+	
+	if punch_timer > 0.0:
+		punch_timer -= delta
 
 	_check_phase()
 	_handle_state(delta)
@@ -129,8 +145,10 @@ func _check_phase():
 		current_phase = Phase.TWO
 		_enter_phase_two()
 
+
 func _enter_phase_two():
 	pass
+
 
 func _handle_state(delta):
 	match current_state:
@@ -138,9 +156,12 @@ func _handle_state(delta):
 			_idle_state(delta)
 		State.HURT:
 			pass
+		State.PUNCH:
+			_punch_state(delta)
 
 
 func _idle_state(delta):
+
 	if not player:
 		return
 
@@ -151,13 +172,21 @@ func _idle_state(delta):
 		last_target_left = desired_left
 		_update_flip(desired_left)
 
-	move_direction.x = sign(dist_x)
+	if turning:
+		move_direction.x = 0
+	else:
+		move_direction.x = sign(dist_x)
+
 	move_direction.y = 0
 	position.x += move_direction.x * MOVE_SPEED * delta
 	position.y = spawn_position.y
 	position.x = clamp(position.x,
 		room_left_limit + BOSS_HALF_WIDTH,
 		room_right_limit - BOSS_HALF_WIDTH)
+		
+	var dist = global_position.distance_to(player.global_position)
+	if dist <= PUNCH_RANGE and punch_timer <= 0.0:
+		_enter_punch()
 
 
 func _enter_hurt():
@@ -178,6 +207,52 @@ func _enter_hurt():
 	normal_hurtbox.set_deferred("monitoring", false)
 	normal_hurtbox.set_deferred("monitorable", false)
 
+
+func _enter_punch():
+	current_state = State.PUNCH
+	punch_state_timer = PUNCH_DURATION
+	punch_hit_done = false
+	move_direction = Vector2.ZERO
+	sprite.play("punch")
+
+	# Desactivar hitbox durante todo el ataque
+	body_hitbox.set_deferred("monitoring", false)
+	body_hitbox.set_deferred("monitorable", false)
+
+
+func _punch_state(delta):
+	punch_state_timer -= delta
+
+	if not punch_hit_done and punch_state_timer <= PUNCH_DURATION - PUNCH_WINDUP:
+		punch_hit_done = true
+		_do_punch()
+
+	if punch_state_timer <= 0.0:
+		punch_timer = PUNCH_COOLDOWN
+		current_state = State.IDLE
+		sprite.play("idle")
+		body_hitbox.set_deferred("monitoring", true)
+		body_hitbox.set_deferred("monitorable", true)
+
+
+func _do_punch():
+	if not player:
+		return
+	var dist = global_position.distance_to(player.global_position)
+	if dist > PUNCH_RANGE:
+		return
+
+	var push_x = sign(player.global_position.x - global_position.x)
+	var facing_dir = -1 if facing_left else 1
+	if push_x != facing_dir:
+		return
+
+	player.velocity = Vector2(push_x * PUNCH_KNOCKBACK * 0.3, -PUNCH_KNOCKBACK)
+
+	var health_node = player.get_node_or_null("Health")
+	if health_node and health_node.has_method("take_damage"):
+		health_node.take_damage(2)
+	
 
 func _recover_from_hurt():
 	current_state = State.IDLE
@@ -228,6 +303,9 @@ func _reset_for_encounter(make_active: bool) -> void:
 	is_vulnerable = false
 	move_direction = Vector2.ZERO
 	target_direction = Vector2.ZERO
+	punch_timer = 0.0
+	punch_state_timer = 0.0
+	punch_hit_done = false
 
 	body_hitbox.set_deferred("monitoring", true)
 	body_hitbox.set_deferred("monitorable", true)
@@ -242,7 +320,7 @@ func _reset_for_encounter(make_active: bool) -> void:
 		var desired_left = player.global_position.x < global_position.x
 		facing_left = desired_left
 		last_target_left = desired_left
-		sprite.flip_h = !facing_left
+		scale.x = -1.0 if !facing_left else 1.0
 	else:
 		_update_flip(false)
 
