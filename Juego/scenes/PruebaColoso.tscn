@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=4 uid="uid://bdyblmkw5v4ia"]
+[gd_scene load_steps=17 format=4 uid="uid://bdyblmkw5v4ia"]
 
 [ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_oxa8h"]
 [ext_resource type="PackedScene" uid="uid://j3iq0wr4lk5y" path="res://enemies/bosses/coloso_ceniza/ColosoCeniza.tscn" id="2_4biun"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="4_4g7u8"]
 [ext_resource type="PackedScene" uid="uid://b4xv5brfpegl" path="res://scenes/enviroment/PlataformaRompible.tscn" id="4_wxn0d"]
 [ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="5_81j65"]
+[ext_resource type="Texture2D" uid="uid://xks3jx3sfl8r" path="res://assets/enemies/bosses/coloso_ceniza/grito.png" id="6_yqpkc"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_w1apf"]
 texture = ExtResource("1_oxa8h")
@@ -69,6 +70,14 @@ animations = [{
 "loop": true,
 "name": &"punch",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_yqpkc")
+}],
+"loop": true,
+"name": &"wave",
+"speed": 5.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lxlvl"]
@@ -92,6 +101,7 @@ position = Vector2(690, -17)
 
 [node name="AnimatedSprite2D" parent="ColosoCeniza" index="0"]
 sprite_frames = SubResource("SpriteFrames_esgw8")
+animation = &"wave"
 
 [node name="PlataformaRompible10" parent="." instance=ExtResource("4_wxn0d")]
 position = Vector2(433, -143)

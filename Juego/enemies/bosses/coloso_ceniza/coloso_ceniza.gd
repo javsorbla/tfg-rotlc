@@ -22,6 +22,8 @@ const PUNCH_DURATION: float = 1.0
 const PUNCH_WINDUP: float = 0.35
 const PUNCH_KNOCKBACK: float = 600.0
 
+const SPIKE_COOLDOWN: float = 9.5
+const SPIKE_SHOCKWAVE_FORCE: float = 500.0
 
 var leg_health: int = LEG_MAX_HEALTH
 var hurt_timer: float = 0.0
@@ -58,10 +60,13 @@ var punch_state_timer: float = 0.0
 var punch_hit_done: bool = false
 var punch_damage: int = 2
 
+var spike_timer: float = SPIKE_COOLDOWN
+
 @onready var sprite = $AnimatedSprite2D
 @onready var body_hitbox = $AttackHitbox
 @onready var normal_hurtbox = $NormalHurtbox
 @onready var core_hurtbox = $CoreHurtbox
+@onready var pincho_scene = preload("res://enemies/bosses/coloso_ceniza/PinchosMagma.tscn")
 
 func _ready():
 	player = get_tree().get_first_node_in_group("player")
@@ -89,8 +94,11 @@ func _ready():
 		normal_hurtbox.area_entered.connect(_on_leg_hurtbox_area_entered)
 	if not core_hurtbox.area_entered.is_connected(_on_core_hurtbox_area_entered):
 		core_hurtbox.area_entered.connect(_on_core_hurtbox_area_entered)
-		
 
+	core_hurtbox.collision_layer = 0
+	core_hurtbox.monitoring = false
+	core_hurtbox.monitorable = false
+	
 	if not is_in_group("boss"):
 		add_to_group("boss")
 
@@ -135,6 +143,9 @@ func _physics_process(delta):
 	
 	if punch_timer > 0.0:
 		punch_timer -= delta
+	
+	if spike_timer > 0.0 and current_state != State.HURT:
+		spike_timer -= delta
 
 	_check_phase()
 	_handle_state(delta)
@@ -184,6 +195,9 @@ func _idle_state(delta):
 		room_left_limit + BOSS_HALF_WIDTH,
 		room_right_limit - BOSS_HALF_WIDTH)
 		
+	if spike_timer <= 0.0:
+		_start_spike_attack()
+	
 	var dist = global_position.distance_to(player.global_position)
 	if dist <= PUNCH_RANGE and punch_timer <= 0.0:
 		_enter_punch()
@@ -192,7 +206,7 @@ func _idle_state(delta):
 func _enter_hurt():
 	current_state = State.HURT
 	hurt_timer = HURT_DURATION
-	is_vulnerable = true
+	is_vulnerable = false
 	move_direction = Vector2.ZERO
 	
 	sprite.stop()
@@ -202,10 +216,37 @@ func _enter_hurt():
 
 	body_hitbox.set_deferred("monitoring", false)
 	body_hitbox.set_deferred("monitorable", false)
-	core_hurtbox.set_deferred("monitoring", true)
-	core_hurtbox.set_deferred("monitorable", true)
 	normal_hurtbox.set_deferred("monitoring", false)
 	normal_hurtbox.set_deferred("monitorable", false)
+	
+	await get_tree().create_timer(0.3).timeout
+	if current_state == State.HURT:
+		is_vulnerable = true
+		core_hurtbox.set_deferred("collision_layer", 32)
+		core_hurtbox.set_deferred("monitoring", true)
+		core_hurtbox.set_deferred("monitorable", true)
+
+
+func _recover_from_hurt():
+	current_state = State.IDLE
+	is_vulnerable = false
+	hurt_timer = 0.0
+	$AnimatedSprite2D.play("wave")
+
+	body_hitbox.set_deferred("monitoring", true)
+	body_hitbox.set_deferred("monitorable", true)
+	core_hurtbox.set_deferred("collision_layer", 0)
+	core_hurtbox.set_deferred("monitoring", false)
+	core_hurtbox.set_deferred("monitorable", false)
+	normal_hurtbox.set_deferred("monitoring", true)
+	normal_hurtbox.set_deferred("monitorable", true)
+
+	leg_health = LEG_MAX_HEALTH
+	_spawn_shockwave()
+	
+	await get_tree().create_timer(sprite.sprite_frames.get_frame_count("wave") / sprite.sprite_frames.get_animation_speed("wave")).timeout
+	if current_state == State.IDLE:
+		sprite.play("idle")
 
 
 func _enter_punch():
@@ -215,7 +256,6 @@ func _enter_punch():
 	move_direction = Vector2.ZERO
 	sprite.play("punch")
 
-	# Desactivar hitbox durante todo el ataque
 	body_hitbox.set_deferred("monitoring", false)
 	body_hitbox.set_deferred("monitorable", false)
 
@@ -252,22 +292,71 @@ func _do_punch():
 	var health_node = player.get_node_or_null("Health")
 	if health_node and health_node.has_method("take_damage"):
 		health_node.take_damage(2)
+
+
+func _spawn_shockwave():
+	var p = get_tree().get_first_node_in_group("player")
+	if not p:
+		return
 	
+	var dist = global_position.distance_to(p.global_position)
+	if dist <= 130.0:
+		var push_x = sign(p.global_position.x - global_position.x)
+		p.velocity = Vector2(push_x * 600.0, -300.0)
 
-func _recover_from_hurt():
-	current_state = State.IDLE
-	is_vulnerable = false
-	hurt_timer = 0.0
-	$AnimatedSprite2D.play("idle")
 
-	body_hitbox.set_deferred("monitoring", true)
-	body_hitbox.set_deferred("monitorable", true)
-	core_hurtbox.set_deferred("monitoring", false)
-	core_hurtbox.set_deferred("monitorable", false)
-	normal_hurtbox.set_deferred("monitoring", true)
-	normal_hurtbox.set_deferred("monitorable", true)
+func _start_spike_attack():
+	spike_timer = SPIKE_COOLDOWN
+	
+	var p = get_tree().get_first_node_in_group("player")
+	if not p:
+		return
+	
+	var height_above_floor = room_bottom_limit - p.global_position.y
+	if height_above_floor > 80.0:
+		return
+		
+	var dist = global_position.distance_to(p.global_position)
+	if dist > 150.0:
+		return
+	
+	sprite.play("wave")
+	var push_x = sign(p.global_position.x - global_position.x)
+	p.velocity.x = push_x * SPIKE_SHOCKWAVE_FORCE
+	
+	await get_tree().create_timer(0.8).timeout
+	
+	if current_state == State.DEAD:
+		return
+	
+	p = get_tree().get_first_node_in_group("player")
+	if not p:
+		return
+		
+	var direction = sign(p.global_position.x - global_position.x)
+	var spike_width = 16
+	var spawn_x = global_position.x
+	
+	while true:
+		spawn_x += direction * spike_width
+		spawn_x = clamp(spawn_x, room_left_limit + BOSS_HALF_WIDTH, room_right_limit - BOSS_HALF_WIDTH)
+		_spawn_spike(spawn_x)
+		await get_tree().create_timer(0.04).timeout
+		if current_state == State.DEAD:
+			return
+		if direction > 0 and spawn_x >= room_right_limit - BOSS_HALF_WIDTH:
+			break
+		if direction < 0 and spawn_x <= room_left_limit + BOSS_HALF_WIDTH:
+			break
+	
+	if current_state == State.IDLE:
+		sprite.play("idle")
 
-	leg_regen_timer = LEG_REGEN_DELAY
+
+func _spawn_spike(spawn_x: float):
+	var spike = pincho_scene.instantiate()
+	get_parent().add_child(spike)
+	spike.global_position = Vector2(spawn_x, room_bottom_limit - 8.0)
 
 
 func _update_flip(should_face_left: bool):
@@ -306,6 +395,7 @@ func _reset_for_encounter(make_active: bool) -> void:
 	punch_timer = 0.0
 	punch_state_timer = 0.0
 	punch_hit_done = false
+	spike_timer = SPIKE_COOLDOWN
 
 	body_hitbox.set_deferred("monitoring", true)
 	body_hitbox.set_deferred("monitorable", true)
@@ -373,11 +463,19 @@ func _on_core_hurtbox_area_entered(area: Area2D):
 		return
 	if not area.is_in_group("player_hitbox"):
 		return
+	if current_state != State.HURT:
+		return
 	if not is_vulnerable:
 		return
+	is_vulnerable = false
+	core_hurtbox.set_deferred("monitoring", false)
 	var player_node = get_tree().get_first_node_in_group("player")
 	var multiplier = player_node.damage_multiplier if player_node else 1.0
 	take_damage(int(1 * multiplier))
+	await get_tree().create_timer(0.5).timeout
+	if current_state == State.HURT:
+		is_vulnerable = true
+		core_hurtbox.set_deferred("monitoring", true)
 	
 	
 func is_hurting() -> bool:
