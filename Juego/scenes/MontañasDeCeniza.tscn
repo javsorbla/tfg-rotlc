@@ -1,0 +1,70 @@
+[gd_scene load_steps=7 format=4 uid="uid://bu3kl4nm1dulx"]
+
+[ext_resource type="Script" path="res://scenes/montañas_de_ceniza.gd" id="1_fhvl8"]
+[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_wxf8w"]
+[ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="1_y5bao"]
+[ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="2_qyv1n"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lom2h"]
+texture = ExtResource("1_wxf8w")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+3:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+4:0/0 = 0
+4:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+0:1/0 = 0
+1:1/0 = 0
+1:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+2:1/0 = 0
+2:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+3:1/0 = 0
+3:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+4:1/0 = 0
+4:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+0:2/0 = 0
+1:2/0 = 0
+1:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+2:2/0 = 0
+2:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+3:2/0 = 0
+3:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+4:2/0 = 0
+4:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+4:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_isddp"]
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_lom2h")
+
+[node name="MontañasDeCeniza" type="Node2D"]
+script = ExtResource("1_fhvl8")
+
+[node name="Nivel" type="TileMapLayer" parent="." groups=["spikes"]]
+tile_map_data = PackedByteArray("AAD4/wIAAAADAAAAAAD5/wIAAAADAAAAAAD6/wIAAAADAAAAAAD7/wIAAAADAAAAAAD8/wIAAAADAAAAAAD9/wIAAAADAAAAAAD+/wIAAAADAAAAAAD//wIAAAADAAAAAAAAAAIAAAADAAAAAAABAAIAAAADAAAAAAABAAMAAAADAAAAAAACAAMAAAADAAAAAAADAAMAAAADAAAAAAAEAAMAAAADAAAAAAAEAAIAAAADAAAAAAAFAAIAAAADAAAAAAADAAIAAAADAAAAAAACAAIAAAADAAAAAAD4/wMAAAADAAAAAAD3/wMAAAADAAAAAAD5/wMAAAADAAAAAAD6/wMAAAADAAAAAAD7/wMAAAADAAAAAAD8/wMAAAADAAAAAAD9/wMAAAADAAAAAAD+/wMAAAADAAAAAAD//wMAAAADAAAAAAAAAAMAAAADAAAAAAD3/wIAAAADAAAAAAAFAAMAAAADAAAAAAAGAAMAAAADAAAAAAAGAAIAAAADAAAAAAA=")
+tile_set = SubResource("TileSet_isddp")
+
+[node name="TilesFondo" type="TileMapLayer" parent="."]
+z_index = -1
+
+[node name="Enemigos" type="Node2D" parent="."]
+
+[node name="Checkpoints" type="Node2D" parent="."]
+
+[node name="Entorno" type="Node2D" parent="."]
+
+[node name="Killzones" type="Node2D" parent="."]
+
+[node name="Camera2D" parent="." instance=ExtResource("1_y5bao")]
+
+[node name="Player" parent="." instance=ExtResource("2_qyv1n")]
