@@ -3,11 +3,9 @@ extends Node2D
 enum State { IDLE, HURT, DEAD, PUNCH }
 enum Phase { ONE, TWO }
 
-const MAX_HEALTH: int = 50
-const PHASE_TWO_THRESHOLD: float = 0.35
+const MAX_HEALTH: int = 40
 const BOSS_HALF_WIDTH: float = 60.0
 
-const MOVE_SPEED: float = 40.0
 const TURN_DELAY_TIME: float = 0.5
 
 const DAMAGE_FLASH_TIME: float = 0.08
@@ -25,7 +23,12 @@ const PUNCH_KNOCKBACK: float = 600.0
 const SPIKE_COOLDOWN: float = 9.5
 const SPIKE_SHOCKWAVE_FORCE: float = 500.0
 
+const LAVA_COOLDOWN: float = 14.0
+const LAVA_WARNING_TIME: float = 0.8
+const LAVA_DAMAGE: int = 2
+
 var leg_health: int = LEG_MAX_HEALTH
+var move_speed: float = 40.0
 var hurt_timer: float = 0.0
 var leg_regen_timer: float = 0.0
 var is_vulnerable: bool = false
@@ -61,12 +64,16 @@ var punch_hit_done: bool = false
 var punch_damage: int = 2
 
 var spike_timer: float = SPIKE_COOLDOWN
+var lava_timer: float = LAVA_COOLDOWN
+
+var phase_two: bool = false
 
 @onready var sprite = $AnimatedSprite2D
 @onready var body_hitbox = $AttackHitbox
 @onready var normal_hurtbox = $NormalHurtbox
 @onready var core_hurtbox = $CoreHurtbox
 @onready var pincho_scene = preload("res://enemies/bosses/coloso_ceniza/PinchosMagma.tscn")
+@onready var lava_scene = preload("res://enemies/bosses/coloso_ceniza/ChorroLava.tscn")
 
 func _ready():
 	player = get_tree().get_first_node_in_group("player")
@@ -146,19 +153,26 @@ func _physics_process(delta):
 	
 	if spike_timer > 0.0 and current_state != State.HURT:
 		spike_timer -= delta
+		
+	if lava_timer > 0.0 and current_state != State.HURT:
+		lava_timer -= delta
 
 	_check_phase()
 	_handle_state(delta)
 
 
 func _check_phase():
-	if current_phase == Phase.ONE and current_health <= MAX_HEALTH * PHASE_TWO_THRESHOLD:
-		current_phase = Phase.TWO
+	if not phase_two and current_health <= 15:
 		_enter_phase_two()
 
 
 func _enter_phase_two():
-	pass
+	phase_two = true
+	move_speed *= 1.75
+	sprite.play("rage") # pendiente de implementar
+	
+	if current_state == State.HURT:
+		_recover_from_hurt()
 
 
 func _handle_state(delta):
@@ -189,7 +203,7 @@ func _idle_state(delta):
 		move_direction.x = sign(dist_x)
 
 	move_direction.y = 0
-	position.x += move_direction.x * MOVE_SPEED * delta
+	position.x += move_direction.x * move_speed * delta
 	position.y = spawn_position.y
 	position.x = clamp(position.x,
 		room_left_limit + BOSS_HALF_WIDTH,
@@ -197,6 +211,9 @@ func _idle_state(delta):
 		
 	if spike_timer <= 0.0:
 		_start_spike_attack()
+	
+	if lava_timer <= 0.0:
+		_start_lava_attack()
 	
 	var dist = global_position.distance_to(player.global_position)
 	if dist <= PUNCH_RANGE and punch_timer <= 0.0:
@@ -231,7 +248,11 @@ func _recover_from_hurt():
 	current_state = State.IDLE
 	is_vulnerable = false
 	hurt_timer = 0.0
-	$AnimatedSprite2D.play("wave")
+
+	if phase_two:
+		sprite.play("rage") # pendiente de implementar
+	else:
+		sprite.play("wave")
 
 	body_hitbox.set_deferred("monitoring", true)
 	body_hitbox.set_deferred("monitorable", true)
@@ -351,12 +372,71 @@ func _start_spike_attack():
 	
 	if current_state == State.IDLE:
 		sprite.play("idle")
-
+		
 
 func _spawn_spike(spawn_x: float):
 	var spike = pincho_scene.instantiate()
 	get_parent().add_child(spike)
 	spike.global_position = Vector2(spawn_x, room_bottom_limit - 8.0)
+	
+
+func _start_lava_attack():
+	lava_timer = LAVA_COOLDOWN
+	
+	var p = get_tree().get_first_node_in_group("player")
+	if not p:
+		return
+	
+	var dist = global_position.distance_to(p.global_position)
+	if dist > 700.0:
+		return
+		
+	# Un chorro debajo del jugador siempre
+	_spawn_lava(Vector2(p.global_position.x, room_bottom_limit - 8.0))
+	
+	await get_tree().create_timer(0.2).timeout
+	
+	if not phase_two:
+		# Fase 1: un chorro adicional en zona aleatoria
+		var rand_x = randf_range(
+			room_left_limit + BOSS_HALF_WIDTH,
+			room_right_limit - BOSS_HALF_WIDTH
+		)
+		_spawn_lava(Vector2(rand_x, room_bottom_limit - 8.0))
+	
+	else:
+		# Fase 2: dos chorros adicionales en zona aleatoria
+		var positions: Array[float] = []
+		var min_distance := 300.0
+		var attempts := 0
+		
+		while positions.size() < 2 and attempts < 30:
+			attempts += 1
+			
+			var rand_x = randf_range(
+				room_left_limit + BOSS_HALF_WIDTH,
+				room_right_limit - BOSS_HALF_WIDTH
+			)
+			
+			var valid := true
+			
+			for x in positions:
+				if abs(x - rand_x) < min_distance:
+					valid = false
+					break
+			
+			if valid:
+				positions.append(rand_x)
+		
+		for i in positions.size():
+			await get_tree().create_timer(0.15).timeout
+			_spawn_lava(Vector2(positions[i], room_bottom_limit - 8.0))
+	
+		
+func _spawn_lava(pos: Vector2):
+	var lava = lava_scene.instantiate()
+	get_parent().add_child(lava)
+	lava.global_position = pos
 
 
 func _update_flip(should_face_left: bool):

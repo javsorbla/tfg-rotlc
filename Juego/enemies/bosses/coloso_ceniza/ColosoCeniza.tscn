@@ -31,6 +31,14 @@ animations = [{
 "loop": true,
 "name": &"punch",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_govsp")
+}],
+"loop": true,
+"name": &"rage",
+"speed": 5.0
 }]
 
 [node name="ColosoCeniza" type="Node2D" groups=["boss"]]
@@ -40,7 +48,7 @@ script = ExtResource("1_8pb1f")
 position = Vector2(4.76837e-07, 0)
 scale = Vector2(0.988281, 1.02148)
 sprite_frames = SubResource("SpriteFrames_26eiy")
-animation = &"idle"
+animation = &"rage"
 
 [node name="NormalHurtbox" type="Area2D" parent="." groups=["boss_hurtbox"]]
 collision_layer = 16
