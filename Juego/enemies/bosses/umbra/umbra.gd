@@ -178,6 +178,23 @@ func _ready():
 func _process(_delta):
 	_update_model_indicator()
 
+
+func _ensure_onnx_model_ready() -> bool:
+	if ai_controller == null:
+		return false
+
+	if ai_controller.onnx_model != null:
+		return true
+
+	if ai_controller.onnx_model_path.is_empty():
+		return false
+
+	var sync_node = get_tree().get_first_node_in_group("sync_node")
+	if sync_node != null and sync_node.has_method("reload_onnx_for_agents"):
+		sync_node.reload_onnx_for_agents(ai_controller.onnx_model_path)
+
+	return ai_controller.onnx_model != null
+
 func _on_level_reset():
 	global_position = spawn_position
 	velocity = Vector2.ZERO
@@ -292,6 +309,12 @@ func _assign_power():
 func _physics_process(delta):
 	if not is_active:
 		return
+
+	if ai_controller != null and ai_controller.control_mode == ai_controller.ControlModes.ONNX_INFERENCE:
+		if not _ensure_onnx_model_ready():
+			_has_received_valid_action = false
+			_last_action_received_time = Time.get_ticks_msec() / 1000.0
+			return
 
 	if force_heuristic_only or _should_use_heuristic():
 		_use_heuristic()
@@ -549,6 +572,12 @@ func activate():
 	var player := _resolve_player_target()
 	if player != null:
 		ai_controller.init(player)
+	if ai_controller != null and ai_controller.onnx_model_path != "":
+		var sync_node = get_tree().get_first_node_in_group("sync_node")
+		if sync_node != null and sync_node.has_method("reload_onnx_for_agents"):
+			sync_node.reload_onnx_for_agents(ai_controller.onnx_model_path)
+	if ai_controller != null and ai_controller.control_mode == ai_controller.ControlModes.ONNX_INFERENCE:
+		_ensure_onnx_model_ready()
 	if use_runtime_finetuned_model and GameState.check_finetuning_done():
 		var runtime_model_path := GameState.get_umbra_runtime_model_path()
 		if runtime_model_path != "":

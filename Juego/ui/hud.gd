@@ -68,6 +68,16 @@ func update_hearts(current: int, maximum: int):
 				hearts[i].texture = heart_empty
 
 
+func reset_for_respawn() -> void:
+	update_hearts(3, 3)
+	for power in power_overlays:
+		if power_overlays[power] != null:
+			power_overlays[power].visible = false
+	for power in duration_bars:
+		if duration_bars[power] != null:
+			duration_bars[power].visible = false
+
+
 func update_powers(active_power: String, unlocked: Dictionary):
 	for power in power_nodes:
 		if power_nodes[power] != null:

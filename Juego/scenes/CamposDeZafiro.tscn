@@ -445,7 +445,7 @@ max_health = 10
 
 [node name="AIController2D" parent="Umbra" index="0"]
 debug_move_diag_interval_ticks = 30
-onnx_model_path = "umbra.onnx"
+onnx_model_path = "res://umbra.onnx"
 
 [node name="CollisionShape2D" parent="Umbra/AttackHitbox" index="0"]
 position = Vector2(0.5, 2.5)
@@ -460,7 +460,7 @@ position = Vector2(6742, -764)
 script = ExtResource("15_ct6xk")
 control_mode = 2
 action_repeat = 5
-onnx_model_path = "umbra.onnx"
+onnx_model_path = "res://umbra.onnx"
 
 [editable path="Entorno/ZonaViento"]
 [editable path="Entorno/ZonaViento2"]

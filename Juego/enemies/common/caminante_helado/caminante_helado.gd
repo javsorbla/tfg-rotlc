@@ -9,6 +9,7 @@ const DETECTION_DISTANCE: float = 220.0
 const PATROL_X_RANGE: float = 48.0
 const STUN_DURATION: float = 0.5
 const HIT_PAUSE_DURATION: float = 1.1
+const DEAD_VISIBLE_TIME: float = 1.1
 
 # --- ESTADOS ---
 enum State { IDLE, PATROL, CHASE, STUNNED, DEAD, ATTACK_PAUSE }
@@ -25,6 +26,7 @@ var stun_timer: float = 0.0
 var idle_timer: float = 0.0
 var patrol_timer: float = 0.0
 var flip_cooldown: float = 0.0 
+var death_token: int = 0
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var vision: RayCast2D = $Vision
@@ -39,6 +41,7 @@ func _ready() -> void:
 	patrol_origin_x = global_position.x
 	if not is_spawned:
 		spawn_position = global_position
+	if not GameState.level_reset.is_connected(_on_level_reset):
 		GameState.level_reset.connect(_on_level_reset)
 	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
@@ -74,6 +77,7 @@ func _physics_process(delta: float) -> void:
 	_update_animations()
 
 func _on_level_reset():
+	death_token += 1
 	if is_spawned:
 		queue_free()
 		return
@@ -81,7 +85,19 @@ func _on_level_reset():
 	global_position = spawn_position
 	current_state = State.IDLE
 	velocity = Vector2.ZERO
+	visible = true
+	set_physics_process(true)
+	set_process(true)
 	$EnemyHurtbox.monitorable = true
+	$EnemyHitbox.monitoring = true
+	$EnemyHitbox.monitorable = true
+	$EnemyHitbox.collision_layer = 16
+	$EnemyHitbox.collision_mask = 4
+	$EnemyHurtbox.collision_layer = 16
+	$EnemyHurtbox.collision_mask = 4
+	sprite.modulate.a = 1.0
+	sprite.play("idle")
+	vision.enabled = true
 
 # --- LÓGICA DE ANIMACIÓN ---
 
@@ -135,10 +151,9 @@ func _enter_state(new_state: State) -> void:
 				$EnemyHitbox.set_deferred("monitorable", false)
 				$EnemyHitbox.set_deferred("collision_layer", 0)
 				$EnemyHitbox.set_deferred("collision_mask", 0)
+			if $EnemyHurtbox:
+				$EnemyHurtbox.set_deferred("monitorable", false)
 			velocity.x = 0
-			
-			await get_tree().create_timer(0.7).timeout
-			queue_free()
 
 
 # --- LÓGICA DE VISIÓN ---
@@ -313,3 +328,12 @@ func take_damage(amount: int) -> void:
 
 func die() -> void:
 	_enter_state(State.DEAD)
+	set_physics_process(false)
+	set_process(false)
+	var local_token := death_token + 1
+	death_token = local_token
+	await get_tree().create_timer(DEAD_VISIBLE_TIME).timeout
+	if death_token != local_token:
+		return
+	if current_state == State.DEAD:
+		visible = false

@@ -12,6 +12,7 @@ enum ControlModes { HUMAN, TRAINING, ONNX_INFERENCE }
 
 # Onnx model stored for each requested path
 var onnx_models: Dictionary
+const ONNX_MODEL_SCRIPT := preload("res://addons/godot_rl_agents/onnx/wrapper/ONNX_wrapper.gd")
 
 @onready var start_time = Time.get_ticks_msec()
 
@@ -67,39 +68,73 @@ func _ready():
 
 
 func reload_onnx_for_agents(new_onnx_path := "") -> void:
-	var target_path := new_onnx_path
-	if target_path.is_empty():
-		target_path = onnx_model_path
+	var target_path := _resolve_onnx_model_path(new_onnx_path if not new_onnx_path.is_empty() else onnx_model_path)
 
 	if target_path.is_empty():
-		push_warning("reload_onnx_for_agents: onnx_model_path vacio")
-		return
-
-	if not FileAccess.file_exists(target_path):
-		push_warning("reload_onnx_for_agents: no existe ONNX en %s" % target_path)
+		push_warning("reload_onnx_for_agents: onnx_model_path vacio o no resolvible")
 		return
 
 	onnx_model_path = target_path
-	onnx_models[target_path] = ONNXModel.new(target_path, 1)
+	onnx_models[target_path] = _get_or_create_onnx_model(target_path)
 
 	for agent in agents_inference:
 		if not is_instance_valid(agent):
 			continue
 
-		var agent_path: String = agent.onnx_model_path
+		var agent_path: String = _resolve_onnx_model_path(agent.onnx_model_path)
 		if agent_path.is_empty():
 			agent_path = target_path
 			agent.onnx_model_path = target_path
 
-		if not onnx_models.has(agent_path):
-			if not FileAccess.file_exists(agent_path):
-				continue
-			onnx_models[agent_path] = ONNXModel.new(agent_path, 1)
-
-		agent.onnx_model = onnx_models[agent_path]
+		agent.onnx_model = _get_or_create_onnx_model(agent_path)
 		if agent.onnx_model != null and not agent.onnx_model.action_means_only_set:
 			var action_space: Variant = agent.get_action_space()
 			agent.onnx_model.set_action_means_only(action_space)
+
+
+func _get_or_create_onnx_model(model_path: String):
+	var resolved_path := _resolve_onnx_model_path(model_path)
+	if resolved_path.is_empty():
+		return null
+
+	if onnx_models.has(resolved_path):
+		var existing_model = onnx_models[resolved_path]
+		if existing_model != null:
+			return existing_model
+
+	var created_model := ONNX_MODEL_SCRIPT.new(resolved_path, 1)
+	onnx_models[resolved_path] = created_model
+	return created_model
+
+
+func _is_agent_active_for_inference(agent: Node) -> bool:
+	if agent == null or not is_instance_valid(agent):
+		return false
+
+	var parent := agent.get_parent()
+	if parent == null:
+		return true
+
+	var active_state = parent.get("is_active")
+	if typeof(active_state) == TYPE_BOOL:
+		return active_state
+
+	return true
+
+
+func _resolve_onnx_model_path(model_path: String) -> String:
+	if model_path.is_empty():
+		return ""
+
+	if FileAccess.file_exists(model_path):
+		return model_path
+
+	if not model_path.begins_with("res://") and not model_path.begins_with("user://"):
+		var res_path := "res://" + model_path
+		if FileAccess.file_exists(res_path):
+			return res_path
+
+	return ""
 
 
 func _initialize():
@@ -148,17 +183,19 @@ func _initialize_training_agents():
 func _initialize_inference_agents():
 	if agents_inference.size() > 0:
 		if control_mode == ControlModes.ONNX_INFERENCE:
+			var resolved_onnx_path := _resolve_onnx_model_path(onnx_model_path)
 			assert(
-				FileAccess.file_exists(onnx_model_path),
+				not resolved_onnx_path.is_empty(),
 				"Onnx Model Path set on Sync node does not exist: %s" % onnx_model_path
 			)
-			onnx_models[onnx_model_path] = ONNXModel.new(onnx_model_path, 1)
+			onnx_model_path = resolved_onnx_path
+			onnx_models[onnx_model_path] = _get_or_create_onnx_model(onnx_model_path)
 
 		for agent in agents_inference:
 			var action_space = agent.get_action_space()
 			_action_space_inference.append(action_space)
 
-			var agent_onnx_model: ONNXModel
+			var agent_onnx_model
 			if agent.onnx_model_path.is_empty():
 				assert(
 					onnx_models.has(onnx_model_path),
@@ -177,16 +214,16 @@ func _initialize_inference_agents():
 				)
 				agent_onnx_model = onnx_models[onnx_model_path]
 			else:
-				if not onnx_models.has(agent.onnx_model_path):
-					assert(
-						FileAccess.file_exists(agent.onnx_model_path),
-						(
-							"Onnx Model Path set on %s node does not exist: %s"
-							% [agent.get_path(), agent.onnx_model_path]
-						)
+				var resolved_agent_path := _resolve_onnx_model_path(agent.onnx_model_path)
+				assert(
+					not resolved_agent_path.is_empty(),
+					(
+						"Onnx Model Path set on %s node does not exist: %s"
+						% [agent.get_path(), agent.onnx_model_path]
 					)
-					onnx_models[agent.onnx_model_path] = ONNXModel.new(agent.onnx_model_path, 1)
-				agent_onnx_model = onnx_models[agent.onnx_model_path]
+				)
+				agent.onnx_model_path = resolved_agent_path
+				agent_onnx_model = _get_or_create_onnx_model(agent.onnx_model_path)
 
 			agent.onnx_model = agent_onnx_model
 			if not agent_onnx_model.action_means_only_set:
@@ -271,7 +308,18 @@ func _inference_process():
 		_debug_inference_tick += 1
 
 		for agent_id in range(0, agents_inference.size()):
-			var model: ONNXModel = agents_inference[agent_id].onnx_model
+			if not _is_agent_active_for_inference(agents_inference[agent_id]):
+				actions.append(null)
+				continue
+
+			var model = agents_inference[agent_id].onnx_model
+			if model == null:
+				model = _get_or_create_onnx_model(agents_inference[agent_id].onnx_model_path)
+				agents_inference[agent_id].onnx_model = model
+			if model == null:
+				push_warning("Skipping ONNX inference for %s because no model could be loaded" % agents_inference[agent_id].get_path())
+				actions.append(null)
+				continue
 			var action = model.run_inference(
 				obs[agent_id]["obs"], 1.0
 			)
@@ -668,8 +716,13 @@ func _get_done_from_agents(agents: Array = agents_training):
 
 func _set_agent_actions(actions, agents: Array = all_agents):
 	for i in range(len(actions)):
-		if i < len(agents) and is_instance_valid(agents[i]):
-			agents[i].set_action(actions[i])
+		if i >= len(agents) or not is_instance_valid(agents[i]):
+			continue
+		if actions[i] == null:
+			continue
+		if not _is_agent_active_for_inference(agents[i]):
+			continue
+		agents[i].set_action(actions[i])
 
 
 func clamp_array(arr: Array, min: float, max: float):

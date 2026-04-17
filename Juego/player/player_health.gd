@@ -16,7 +16,6 @@ var death_callback: Callable
 @onready var hurtbox = get_parent().get_node("Hurtbox")
 @onready var sprite = get_parent().get_node("AnimatedSprite2D")
 @onready var camera = get_tree().get_first_node_in_group("camera")
-@onready var hud = get_tree().get_first_node_in_group("hud")
 @onready var heal_particles = get_parent().get_node("HealParticles")
 
 
@@ -47,8 +46,7 @@ func take_damage(amount: int, bypass_shield: bool = false):
 	flash_timer = FLASH_DURATION
 	if camera:
 		camera.shake()
-	if hud:
-		hud.update_hearts(current_health, MAX_HEALTH)
+	Hud.update_hearts(current_health, MAX_HEALTH)
 	if current_health <= 0:
 		die()
 
@@ -57,9 +55,8 @@ func set_death_callback(callback: Callable) -> void:
 	death_callback = callback
 
 func die():
-	current_health = MAX_HEALTH
-	Hud.update_hearts(current_health, MAX_HEALTH)
-	get_tree().reload_current_scene()
+	_invoke_death_callback()
+	_reset_player()
 
 func _reset_player():
 	current_health = MAX_HEALTH
@@ -79,8 +76,7 @@ func _reset_player():
 	var color_manager = player.get_node_or_null("ColorManager")
 	if color_manager and color_manager.has_method("reset_for_respawn"):
 		color_manager.reset_for_respawn()
-	if hud:
-		hud.update_hearts(current_health, MAX_HEALTH)
+	Hud.reset_for_respawn()
 	GameState.level_reset.emit()
 
 
