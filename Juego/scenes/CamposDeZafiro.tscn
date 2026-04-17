@@ -350,6 +350,9 @@ position = Vector2(440, 3)
 [node name="ZonaJefe2" parent="Entorno" instance=ExtResource("8_mqecc")]
 position = Vector2(6929, -740)
 
+[node name="Trigger" parent="Entorno/ZonaJefe2" index="0"]
+position = Vector2(-19, 5)
+
 [node name="CollisionShape2D" parent="Entorno/ZonaJefe2/Trigger" index="0"]
 position = Vector2(42, -102)
 shape = SubResource("RectangleShape2D_404vi")
@@ -440,21 +443,26 @@ position = Vector2(13635, -1838)
 [node name="CoreHurtbox" parent="GuardianHielo" index="4" groups=["boss_core"]]
 
 [node name="Umbra" parent="." groups=["boss"] instance=ExtResource("14_3sfkm")]
-position = Vector2(7617, -758)
+position = Vector2(7659, -759)
 max_health = 10
 
 [node name="AIController2D" parent="Umbra" index="0"]
+debug_move_diag_interval_ticks = 30
 onnx_model_path = "umbra.onnx"
+
+[node name="CollisionShape2D" parent="Umbra/AttackHitbox" index="0"]
+position = Vector2(0.5, 2.5)
 
 [node name="OrbeDeLuz" parent="." instance=ExtResource("14_g5mn7")]
 position = Vector2(4865, -285)
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("1_5ebei")]
-position = Vector2(6728, -770)
+position = Vector2(6742, -764)
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("15_ct6xk")
 control_mode = 2
+action_repeat = 5
 onnx_model_path = "umbra.onnx"
 
 [editable path="Entorno/ZonaViento"]

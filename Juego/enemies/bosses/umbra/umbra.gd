@@ -47,6 +47,7 @@ var is_active = false
 
 var _last_action_received_time := 0.0
 var _has_received_valid_action := false
+var _indexed_action_layout_warned := false
 var _encounter_reported := false
 var _darkness_cooldown_timer := 0.0
 var _power_active := false
@@ -119,6 +120,13 @@ const AUTO_ATTACK_DISTANCE_Y := 44.0
 @export_enum("auto", "cyan", "red", "yellow") var forced_power := "auto"
 @export var apply_level_balance := true
 @export var debug_model_indicator := true
+@export var use_runtime_finetuned_model := false
+@export var debug_policy_trace := false
+@export_range(1, 120, 1) var debug_policy_trace_every_frames := 12
+@export var auto_fix_move_mapping := false
+@export var invert_move_decode := false
+@export_range(5, 120, 1) var move_mapping_probe_samples := 25
+@export_range(0.5, 1.0, 0.01) var move_mapping_flip_threshold := 0.7
 
 # Variables de poder
 var current_power = "none"  # none, cyan, red, yellow
@@ -133,6 +141,15 @@ var current_power = "none"  # none, cyan, red, yellow
 
 var _model_indicator_layer: CanvasLayer
 var _model_indicator_label: Label
+var _last_normalized_action: Dictionary = {}
+var _last_action_used_heuristic := false
+var _policy_trace_tick := 0
+var _move_mapping_flipped := false
+var _move_mapping_probe_total := 0
+var _move_mapping_probe_away := 0
+var _move_collapse_active := false
+var _move_dominant_raw := 1
+var _recent_raw_moves: Array[int] = []
 
 func _ready():
 	add_to_group("umbra_boss")
@@ -145,7 +162,7 @@ func _ready():
 	_apply_level_balance()
 	_apply_persistent_difficulty()
 	_apply_player_profile_adaptation()
-	var player = get_tree().get_first_node_in_group("player")
+	var player = _resolve_player_target()
 	if player:
 		ai_controller.init(player)
 	print("Control mode: ", ai_controller.control_mode)
@@ -288,6 +305,7 @@ func _physics_process(delta):
 	_apply_pattern_overrides()
 	_handle_power()
 	_collect_runtime_player_metrics()
+	_debug_policy_trace_tick()
 	_update_animation()
 	_update_power_visuals()
 	
@@ -437,7 +455,17 @@ func _handle_dash(delta, dash_requested: bool):
 		dash_cooldown_timer = _dash_cooldown_runtime
 		if not is_on_floor():
 			air_dash_used = true
-		dash_direction = ai_move_direction if ai_move_direction != 0 else last_direction
+		if ai_move_direction != 0:
+			dash_direction = ai_move_direction
+		else:
+			var player := get_tree().get_first_node_in_group("player") as Node2D
+			if player != null:
+				var rel_x := player.global_position.x - global_position.x
+				dash_direction = signf(rel_x)
+				if dash_direction == 0.0:
+					dash_direction = float(last_direction)
+			else:
+				dash_direction = float(last_direction)
 		velocity.y = 0
 		if debug_mobility_logs:
 			print("Umbra DASH start dir=", dash_direction, " floor=", is_on_floor())
@@ -502,6 +530,8 @@ func take_damage(amount: int):
 func die():
 	# Guardar métricas para el siguiente encuentro
 	_report_encounter(false)
+	if use_runtime_finetuned_model:
+		GameState.start_finetuning(2000)
 	emit_signal("defeated", false)
 	is_active = false
 	if despawn_on_death:
@@ -516,6 +546,16 @@ func die():
 
 func activate():
 	is_active = true
+	var player := _resolve_player_target()
+	if player != null:
+		ai_controller.init(player)
+	if use_runtime_finetuned_model and GameState.check_finetuning_done():
+		var runtime_model_path := GameState.get_umbra_runtime_model_path()
+		if runtime_model_path != "":
+			var sync_node = get_tree().get_first_node_in_group("sync_node")
+			if sync_node != null and sync_node.has_method("reload_onnx_for_agents"):
+				sync_node.reload_onnx_for_agents(runtime_model_path)
+				ai_controller.onnx_model_path = runtime_model_path
 	_apply_level_balance()
 	_apply_player_profile_adaptation()
 	_encounter_reported = false
@@ -529,27 +569,174 @@ func activate():
 	_double_jump_cooldown_timer = 0.0
 	_darkness_try_timer = 0.0
 	_reset_runtime_metrics()
+	_reset_move_mapping_probe()
 	hurtbox.set_deferred("monitorable", true)
 	is_invincible = false
 	invincibility_timer = 0.0
 
 func set_ai_action(action):
 	var normalized := _normalize_ai_action(action)
-	print("Accion recibida: ", action, " | Normalizada: ", normalized, " | Heuristica: ", _should_use_heuristic())
+	# Primera accion valida: marcar recepcion inmediatamente para evitar bloqueo en timeout inicial.
+	if not normalized.is_empty():
+		_has_received_valid_action = true
+		_last_action_received_time = Time.get_ticks_msec() / 1000.0
+
+	var using_heuristic := _should_use_heuristic()
+	_last_normalized_action = normalized.duplicate(true)
+	_last_action_used_heuristic = using_heuristic
+	print("Accion recibida: ", action, " | Normalizada: ", normalized, " | Heuristica: ", using_heuristic)
 	# Si no hay acción válida o está en timeout, usar heurística
-	if normalized.is_empty() or _should_use_heuristic():
+	if normalized.is_empty() or using_heuristic:
 		_use_heuristic()
 		return
 	
 	# Procesar la acción del modelo
-	ai_move_direction = int(normalized.get("move", 1)) - 1  # 0,1,2 -> -1,0,1
+	var raw_move := int(normalized.get("move", 1))
+	_update_move_collapse_probe(raw_move)
+	var decoded_move := _decode_move_action(raw_move)
+	ai_move_direction = _apply_move_guardrail(decoded_move)
 	ai_should_jump = int(normalized.get("jump", 0)) == 1
 	ai_should_attack = int(normalized.get("attack", 0)) == 1
 	ai_should_dash = int(normalized.get("dash", 0)) == 1
 	ai_should_use_power = int(normalized.get("power", 0)) == 1
-	
-	_has_received_valid_action = true
-	_last_action_received_time = Time.get_ticks_msec() / 1000.0
+
+
+func _debug_policy_trace_tick() -> void:
+	if not debug_policy_trace:
+		return
+
+	_policy_trace_tick += 1
+	if _policy_trace_tick % maxi(1, debug_policy_trace_every_frames) != 0:
+		return
+
+	var player := _resolve_player_target()
+	if player == null:
+		print("TRACE Umbra | sin player | action=", _last_normalized_action, " heur=", _last_action_used_heuristic)
+		return
+
+	var rel := player.global_position - global_position
+	var side := "RIGHT" if rel.x > 0.0 else "LEFT"
+	if absf(rel.x) < 1.0:
+		side = "CENTER"
+
+	var obs_debug: Dictionary = {}
+	if ai_controller != null and ai_controller.has_method("get_last_obs_debug"):
+		obs_debug = ai_controller.get_last_obs_debug()
+
+	print(
+		"TRACE Umbra | rel_x=", snappedf(rel.x, 0.1),
+		" rel_y=", snappedf(rel.y, 0.1),
+		" dist=", snappedf(rel.length(), 0.1),
+		" side=", side,
+		" inv_decode=", invert_move_decode,
+		" map_flip=", _move_mapping_flipped,
+		" move_collapse=", _move_collapse_active,
+		" move_dom=", _move_dominant_raw,
+		" move_dir=", ai_move_direction,
+		" vel_x=", snappedf(velocity.x, 0.1),
+		" action=", _last_normalized_action,
+		" heur=", _last_action_used_heuristic,
+		" obs=", obs_debug
+	)
+
+
+func _decode_move_action(raw_move: int) -> int:
+	if invert_move_decode:
+		match raw_move:
+			0:
+				return 1
+			2:
+				return -1
+			_:
+				return 0
+	return raw_move - 1  # 0,1,2 -> -1,0,1
+
+
+func _update_move_collapse_probe(raw_move: int) -> void:
+	_recent_raw_moves.append(raw_move)
+	while _recent_raw_moves.size() > move_mapping_probe_samples:
+		_recent_raw_moves.pop_front()
+
+	var sample_size := _recent_raw_moves.size()
+	if sample_size < move_mapping_probe_samples:
+		return
+
+	var c0 := 0
+	var c1 := 0
+	var c2 := 0
+	for m in _recent_raw_moves:
+		if m == 0:
+			c0 += 1
+		elif m == 1:
+			c1 += 1
+		elif m == 2:
+			c2 += 1
+
+	var dominant := 0
+	var dominant_count := c0
+	if c1 > dominant_count:
+		dominant = 1
+		dominant_count = c1
+	if c2 > dominant_count:
+		dominant = 2
+		dominant_count = c2
+	var dominant_ratio := float(dominant_count) / float(maxi(1, sample_size))
+
+	_move_dominant_raw = dominant
+	_move_collapse_active = dominant_ratio >= move_mapping_flip_threshold
+
+
+func _apply_move_guardrail(decoded_move: int) -> int:
+	if not auto_fix_move_mapping or not _move_collapse_active:
+		return decoded_move
+
+	var player := _resolve_player_target()
+	if player == null:
+		return decoded_move
+
+	var rel_x := player.global_position.x - global_position.x
+	if absf(rel_x) < 24.0:
+		return 0
+
+	# En colapso de la cabeza de movimiento, priorizar cierre de distancia horizontal.
+	return signi(int(rel_x))
+
+
+func _reset_move_mapping_probe() -> void:
+	_move_mapping_flipped = false
+	_move_mapping_probe_total = 0
+	_move_mapping_probe_away = 0
+	_move_collapse_active = false
+	_move_dominant_raw = 1
+	_recent_raw_moves.clear()
+
+
+func _normalize_indexed_ai_action(v0: int, v1: int, v2: int, v3: int, v4: int) -> Dictionary:
+	# Layout esperado por SB3/ONNX: [attack,dash,jump,move,power]
+	# Layout legacy soportado: [move,jump,attack,dash,power]
+	var looks_like_legacy := (v0 == 2) and (v3 != 2)
+	var has_unexpected_two := (v1 == 2) or (v2 == 2) or (v4 == 2)
+
+	if has_unexpected_two and not _indexed_action_layout_warned:
+		_indexed_action_layout_warned = true
+		print("WARN Umbra | accion indexada con valor 2 fuera de 'move': ", [v0, v1, v2, v3, v4])
+
+	if looks_like_legacy:
+		return {
+			"move": clampi(v0, 0, 2),
+			"jump": clampi(v1, 0, 1),
+			"attack": clampi(v2, 0, 1),
+			"dash": clampi(v3, 0, 1),
+			"power": clampi(v4, 0, 1)
+		}
+
+	return {
+		"attack": clampi(v0, 0, 1),
+		"dash": clampi(v1, 0, 1),
+		"jump": clampi(v2, 0, 1),
+		"move": clampi(v3, 0, 2),
+		"power": clampi(v4, 0, 1)
+	}
 
 
 func _normalize_ai_action(action) -> Dictionary:
@@ -559,33 +746,34 @@ func _normalize_ai_action(action) -> Dictionary:
 	if typeof(action) == TYPE_DICTIONARY:
 		if action.has("move"):
 			return action
+		# Soporte para payloads indexados (p.ej. [attack,dash,jump,move,power] o legacy [move,jump,attack,dash,power]).
 		if action.has("0"):
-			return {
-				"move": int(action.get("0", 1)),
-				"jump": int(action.get("1", 0)),
-				"attack": int(action.get("2", 0)),
-				"dash": int(action.get("3", 0)),
-				"power": int(action.get("4", 0))
-			}
+			return _normalize_indexed_ai_action(
+				int(action.get("0", 0)),
+				int(action.get("1", 0)),
+				int(action.get("2", 0)),
+				int(action.get("3", 1)),
+				int(action.get("4", 0))
+			)
 		return {}
 
 	if typeof(action) == TYPE_ARRAY and action.size() >= 5:
-		return {
-			"move": int(action[0]),
-			"jump": int(action[1]),
-			"attack": int(action[2]),
-			"dash": int(action[3]),
-			"power": int(action[4])
-		}
+		return _normalize_indexed_ai_action(
+			int(action[0]),
+			int(action[1]),
+			int(action[2]),
+			int(action[3]),
+			int(action[4])
+		)
 
 	if typeof(action) == TYPE_PACKED_FLOAT32_ARRAY and action.size() >= 5:
-		return {
-			"move": int(action[0]),
-			"jump": int(action[1]),
-			"attack": int(action[2]),
-			"dash": int(action[3]),
-			"power": int(action[4])
-		}
+		return _normalize_indexed_ai_action(
+			int(action[0]),
+			int(action[1]),
+			int(action[2]),
+			int(action[3]),
+			int(action[4])
+		)
 
 	return {}
 
@@ -603,7 +791,7 @@ func _should_use_heuristic() -> bool:
 
 
 func _use_heuristic() -> void:
-	var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
+	var player: Node2D = _resolve_player_target()
 	if player == null:
 		return
 
@@ -674,7 +862,7 @@ func _collect_runtime_player_metrics() -> void:
 	if not _runtime_metrics_enabled:
 		return
 
-	var player := get_tree().get_first_node_in_group("player") as CharacterBody2D
+	var player := _resolve_player_target() as CharacterBody2D
 	if player == null:
 		return
 
@@ -694,7 +882,7 @@ func _collect_runtime_player_metrics() -> void:
 	if combat_node and bool(combat_node.get("is_attacking")):
 		_runtime_player_attack_ticks += 1
 
-	var current_on_floor := player.is_on_floor()
+	var current_on_floor: bool = player.is_on_floor()
 	if not current_on_floor:
 		_runtime_player_air_ticks += 1
 
@@ -713,6 +901,16 @@ func _collect_runtime_player_metrics() -> void:
 		_runtime_player_jump_events += 1
 
 	_runtime_prev_player_on_floor = current_on_floor
+
+
+func _resolve_player_target() -> Node2D:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player != null:
+		return player
+	var scene_root := get_tree().current_scene
+	if scene_root != null:
+		return scene_root.find_child("Player", true, false) as Node2D
+	return null
 
 
 func _build_runtime_snapshot(umbra_won: bool) -> Dictionary:

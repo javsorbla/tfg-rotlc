@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 # --fixed-fps 2000 --disable-render-loop
 
@@ -7,6 +7,8 @@ enum ControlModes { HUMAN, TRAINING, ONNX_INFERENCE }
 @export_range(1, 10, 1, "or_greater") var action_repeat := 8
 @export_range(0, 10, 0.1, "or_greater") var speed_up := 1.0
 @export var onnx_model_path := ""
+@export var debug_inference_logits := false
+@export_range(1, 240, 1) var debug_inference_every_frames := 20
 
 # Onnx model stored for each requested path
 var onnx_models: Dictionary
@@ -48,14 +50,56 @@ var n_action_steps = 0
 var _action_space_training: Array[Dictionary] = []
 var _action_space_inference: Array[Dictionary] = []
 var _obs_space_training: Array[Dictionary] = []
+var _debug_inference_tick := 0
+
+# Keep action head decode order aligned with SB3's flattened MultiDiscrete layout.
+# SB3/Godot wrappers flatten by key order used in Python (alphabetical for this dict).
+const ACTION_KEY_ORDER: Array[String] = ["attack", "dash", "jump", "move", "power"]
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	add_to_group("sync_node")
 	await get_tree().root.ready
 	get_tree().set_pause(true)
 	_initialize()
 	await get_tree().create_timer(1.0).timeout
 	get_tree().set_pause(false)
+
+
+func reload_onnx_for_agents(new_onnx_path := "") -> void:
+	var target_path := new_onnx_path
+	if target_path.is_empty():
+		target_path = onnx_model_path
+
+	if target_path.is_empty():
+		push_warning("reload_onnx_for_agents: onnx_model_path vacio")
+		return
+
+	if not FileAccess.file_exists(target_path):
+		push_warning("reload_onnx_for_agents: no existe ONNX en %s" % target_path)
+		return
+
+	onnx_model_path = target_path
+	onnx_models[target_path] = ONNXModel.new(target_path, 1)
+
+	for agent in agents_inference:
+		if not is_instance_valid(agent):
+			continue
+
+		var agent_path: String = agent.onnx_model_path
+		if agent_path.is_empty():
+			agent_path = target_path
+			agent.onnx_model_path = target_path
+
+		if not onnx_models.has(agent_path):
+			if not FileAccess.file_exists(agent_path):
+				continue
+			onnx_models[agent_path] = ONNXModel.new(agent_path, 1)
+
+		agent.onnx_model = onnx_models[agent_path]
+		if agent.onnx_model != null and not agent.onnx_model.action_means_only_set:
+			var action_space: Variant = agent.get_action_space()
+			agent.onnx_model.set_action_means_only(action_space)
 
 
 func _initialize():
@@ -224,15 +268,18 @@ func _inference_process():
 	if agents_inference.size() > 0:
 		var obs: Array = _get_obs_from_agents(agents_inference)
 		var actions = []
+		_debug_inference_tick += 1
 
 		for agent_id in range(0, agents_inference.size()):
 			var model: ONNXModel = agents_inference[agent_id].onnx_model
 			var action = model.run_inference(
 				obs[agent_id]["obs"], 1.0
 			)
+			var raw_output = action["output"]
 			var action_dict = _extract_action_dict(
-				action["output"], _action_space_inference[agent_id], model.action_means_only
+				raw_output, _action_space_inference[agent_id], model.action_means_only
 			)
+			_debug_log_inference_move(agents_inference[agent_id], raw_output, _action_space_inference[agent_id], action_dict)
 			actions.append(action_dict)
 
 		_set_agent_actions(actions, agents_inference)
@@ -288,17 +335,19 @@ func _heuristic_process():
 func _extract_action_dict(action_array: Array, action_space: Dictionary, action_means_only: bool):
 	var index = 0
 	var result = {}
-	for key in action_space.keys():	
+	for key in ACTION_KEY_ORDER:
+		if not action_space.has(key):
+			continue
 		var size = action_space[key]["size"]	
 		var action_type = action_space[key]["action_type"]
 		if action_type == "discrete":
-			var largest_logit: float # Value of the largest logit for this action in the actions array
-			var largest_logit_idx: int # Index of the largest logit for this action in the actions array
+			var largest_logit: float = -INF # Value of the largest logit for this action in the actions array
+			var largest_logit_idx: int = 0 # Index of the largest logit for this action in the actions array
 			for logit_idx in range(0, size):
 				var logit_value = action_array[index + logit_idx]
 				if logit_value > largest_logit:
 					largest_logit = logit_value
-					largest_logit_idx = logit_idx 
+					largest_logit_idx = logit_idx
 			result[key] = largest_logit_idx # Index of the largest logit is the discrete action value
 			index += size
 		elif action_type == "continuous":
@@ -312,8 +361,69 @@ func _extract_action_dict(action_array: Array, action_space: Dictionary, action_
 		else:
 			assert(false, 'Only "discrete" and "continuous" action types supported. Found: %s action type set.' % action_type)
 		
+	for key in action_space.keys():
+		if result.has(key):
+			continue
+		var size = action_space[key]["size"]
+		var action_type = action_space[key]["action_type"]
+		if action_type == "discrete":
+			var largest_logit: float = -INF
+			var largest_logit_idx: int = 0
+			for logit_idx in range(0, size):
+				var logit_value = action_array[index + logit_idx]
+				if logit_value > largest_logit:
+					largest_logit = logit_value
+					largest_logit_idx = logit_idx
+			result[key] = largest_logit_idx
+			index += size
+		elif action_type == "continuous":
+			result[key] = clamp_array(action_array.slice(index, index + size), -1.0, 1.0)
+			if action_means_only:
+				index += size
+			else:
+				index += size * 2
+
 
 	return result
+
+
+func _debug_log_inference_move(agent: Node, action_array: Array, action_space: Dictionary, action_dict: Dictionary) -> void:
+	if not debug_inference_logits:
+		return
+	if _debug_inference_tick % maxi(1, debug_inference_every_frames) != 0:
+		return
+	if not action_space.has("move"):
+		return
+
+	var move_size := int(action_space["move"].get("size", 0))
+	if move_size <= 0:
+		return
+
+	var move_offset := 0
+	for key in ACTION_KEY_ORDER:
+		if not action_space.has(key):
+			continue
+		if key == "move":
+			break
+		var key_type := String(action_space[key].get("action_type", ""))
+		var key_size := int(action_space[key].get("size", 0))
+		if key_type == "continuous":
+			move_offset += key_size
+		else:
+			move_offset += key_size
+
+	var logits: Array = []
+	for i in range(move_size):
+		var idx := move_offset + i
+		if idx >= 0 and idx < action_array.size():
+			logits.append(snappedf(float(action_array[idx]), 0.0001))
+
+	print(
+		"SYNC MOVE LOGITS | agent=", agent.get_path(),
+		" logits=", logits,
+		" move_idx=", action_dict.get("move", -1),
+		" action=", action_dict
+	)
 
 
 ## For AIControllers that inherit mode from sync, sets the correct mode.
@@ -585,3 +695,5 @@ func _notification(what):
 		file.store_line(json_string)
 		var error = file.get_error()
 		assert(not error, "There was an error after trying to write to the file: %d" % error)
+
+

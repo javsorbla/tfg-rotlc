@@ -34,12 +34,15 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player_hitbox"):
 		var attacker := area.get_parent()
 
-		if attacker and attacker.is_in_group("player") and attacker.get_node_or_null("Combat") != null:
-			return
-
 		var damage := 1
-		if attacker and attacker.has_method("get") and attacker.is_in_group("player"):
-			var attacker_multiplier = float(attacker.get("damage_multiplier"))
-			damage = maxi(1, int(round(attacker_multiplier)))
+		if attacker and attacker.is_in_group("player"):
+			var combat_node := attacker.get_node_or_null("Combat")
+			if combat_node != null and combat_node.has_method("get"):
+				# Ignore stray overlaps when the attack hitbox is not actively swinging.
+				if not bool(combat_node.get("is_attacking")):
+					return
+			if attacker.has_method("get"):
+				var attacker_multiplier = float(attacker.get("damage_multiplier"))
+				damage = maxi(1, int(round(attacker_multiplier)))
 
 		take_damage(damage)
