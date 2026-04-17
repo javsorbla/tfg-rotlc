@@ -271,6 +271,9 @@ position = Vector2(10640, -1702)
 [node name="Checkpoint6" type="Marker2D" parent="Checkpoints" groups=["checkpoint"]]
 position = Vector2(12667, -1722)
 
+[node name="Checkpoint7" type="Marker2D" parent="Checkpoints" groups=["checkpoint"]]
+position = Vector2(6762, -759)
+
 [node name="Entorno" type="Node2D" parent="."]
 
 [node name="PlataformaRompible" parent="Entorno" instance=ExtResource("5_u0h4b")]
@@ -442,6 +445,9 @@ position = Vector2(13635, -1838)
 [node name="Umbra" parent="." groups=["boss"] instance=ExtResource("14_3sfkm")]
 position = Vector2(7659, -759)
 max_health = 10
+jump_cooldown_seconds = 2.0
+dash_cooldown_seconds = 6.0
+darkness_cast_cooldown = 7.0
 
 [node name="AIController2D" parent="Umbra" index="0"]
 debug_move_diag_interval_ticks = 30
