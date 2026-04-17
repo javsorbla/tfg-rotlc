@@ -64,6 +64,8 @@ func process(delta):
 	if current_state:
 		current_state.process(delta)
 	_handle_input()
+	
+	Hud.update_cooldowns(cooldown_timers, active_power, unlocked, power_timer)
 
 func _start_cooldown(power: String):
 	cooldown_timers[power] = POWER_COOLDOWNS[power]
@@ -143,8 +145,12 @@ func change_state(new_state):
 			Color(0.925, 0.910, 0.910) # blanco secundario
 		)
 
+	Hud.update_powers(active_power, unlocked)
+	
+	
 func unlock_power(color: String):
 	unlocked[color] = true
+	Hud.update_powers(active_power, unlocked)
 
 
 func reset_for_respawn() -> void:

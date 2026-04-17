@@ -17,20 +17,31 @@ var death_callback: Callable
 @onready var sprite = get_parent().get_node("AnimatedSprite2D")
 @onready var camera = get_tree().get_first_node_in_group("camera")
 @onready var hud = get_tree().get_first_node_in_group("hud")
+@onready var heal_particles = get_parent().get_node("HealParticles")
+
 
 func _ready():
 	hurtbox.monitorable = true
 	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	call_deferred("_init_hud")
+
+
+func _init_hud():
+	current_health = MAX_HEALTH
+	Hud.update_hearts(current_health, MAX_HEALTH)
+
 
 func process(delta):
 	_handle_invincibility(delta)
 	_handle_flash(delta)
 
+
 func take_damage(amount: int, bypass_shield: bool = false):
 	if (player.is_shielding and not bypass_shield) or is_invincible:
 		return
 	current_health -= amount
+	Hud.update_hearts(current_health, MAX_HEALTH)
 	is_invincible = true
 	invincibility_timer = INVINCIBILITY_DURATION
 	flash_timer = FLASH_DURATION
@@ -46,11 +57,9 @@ func set_death_callback(callback: Callable) -> void:
 	death_callback = callback
 
 func die():
-	emit_signal("died", player)
-	if death_callback.is_valid():
-		call_deferred("_invoke_death_callback")
-		return
-	_reset_player()
+	current_health = MAX_HEALTH
+	Hud.update_hearts(current_health, MAX_HEALTH)
+	get_tree().reload_current_scene()
 
 func _reset_player():
 	current_health = MAX_HEALTH
@@ -106,3 +115,9 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 func _on_hurtbox_body_entered(body: Node2D) -> void:
 	if body.is_in_group("spikes"):
 		take_damage(1)
+		
+func heal(amount: int):
+	current_health = min(current_health + amount, MAX_HEALTH)
+	Hud.update_hearts(current_health, MAX_HEALTH)
+	if heal_particles:
+		heal_particles.restart()

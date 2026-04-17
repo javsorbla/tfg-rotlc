@@ -1,24 +1,233 @@
-[gd_scene load_steps=3 format=3 uid="uid://bce6576tqo4wu"]
+[gd_scene load_steps=10 format=3 uid="uid://bce6576tqo4wu"]
 
 [ext_resource type="Script" path="res://ui/hud.gd" id="1_7m301"]
 [ext_resource type="Texture2D" uid="uid://df656uykohch0" path="res://assets/ui/heart.png" id="2_uwfcu"]
+[ext_resource type="Texture2D" uid="uid://bg8ufqq315t5t" path="res://assets/ui/heal.png" id="3_uvxes"]
+[ext_resource type="Texture2D" uid="uid://ophibutx85ea" path="res://assets/ui/cristal_celeste.png" id="4_hfj0l"]
+[ext_resource type="Texture2D" uid="uid://c1j2hjhjuvimc" path="res://assets/ui/cristal_celeste_apagado.png" id="5_hh3xi"]
+[ext_resource type="Texture2D" uid="uid://c8a4cxthk8tjt" path="res://assets/ui/cristal_rojo.png" id="5_lgkob"]
+[ext_resource type="Texture2D" uid="uid://dn5s1g0fvihr6" path="res://assets/ui/cristal_amarillo.png" id="6_h1fjt"]
+[ext_resource type="Texture2D" uid="uid://3txec6ey08od" path="res://assets/ui/cristal_rojo_apagado.png" id="7_hrp81"]
+[ext_resource type="Texture2D" uid="uid://cix7pydwicyni" path="res://assets/ui/cristal_amarillo_apagado.png" id="9_0082l"]
 
 [node name="Hud" type="CanvasLayer"]
 scale = Vector2(0.5, 0.5)
 transform = Transform2D(0.5, 0, 0, 0.5, 0, 0)
 script = ExtResource("1_7m301")
 
-[node name="Hearts" type="HBoxContainer" parent="."]
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Heart1" type="TextureRect" parent="Hearts"]
+[node name="Hearts" type="HBoxContainer" parent="Control"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 64.0
+
+[node name="Heart1" type="TextureRect" parent="Control/Hearts"]
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 texture = ExtResource("2_uwfcu")
 
-[node name="Heart2" type="TextureRect" parent="Hearts"]
+[node name="ParticlesLose" type="CPUParticles2D" parent="Control/Hearts/Heart1"]
+position = Vector2(32, 32)
+emitting = false
+lifetime = 0.4
+one_shot = true
+explosiveness = 0.9
+direction = Vector2(0, 0)
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 40.0
+initial_velocity_max = 80.0
+scale_amount_min = 3.0
+scale_amount_max = 5.0
+color = Color(1, 0, 0, 1)
+
+[node name="ParticlesGain" type="CPUParticles2D" parent="Control/Hearts/Heart1"]
+position = Vector2(32, 32)
+emitting = false
+amount = 6
+lifetime = 0.8
+one_shot = true
+explosiveness = 0.5
+texture = ExtResource("3_uvxes")
+direction = Vector2(0, -1)
+spread = 75.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 10.0
+initial_velocity_max = 30.0
+scale_amount_min = 0.4
+scale_amount_max = 0.5
+
+[node name="Heart2" type="TextureRect" parent="Control/Hearts"]
 layout_mode = 2
 texture = ExtResource("2_uwfcu")
 
-[node name="Heart3" type="TextureRect" parent="Hearts"]
+[node name="ParticlesLose" type="CPUParticles2D" parent="Control/Hearts/Heart2"]
+position = Vector2(32, 32)
+emitting = false
+lifetime = 0.4
+one_shot = true
+explosiveness = 0.9
+direction = Vector2(0, 0)
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 40.0
+initial_velocity_max = 80.0
+scale_amount_min = 3.0
+scale_amount_max = 5.0
+color = Color(1, 0, 0, 1)
+
+[node name="ParticlesGain" type="CPUParticles2D" parent="Control/Hearts/Heart2"]
+position = Vector2(32, 32)
+emitting = false
+amount = 6
+lifetime = 0.8
+one_shot = true
+explosiveness = 0.5
+texture = ExtResource("3_uvxes")
+direction = Vector2(0, -1)
+spread = 75.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 10.0
+initial_velocity_max = 30.0
+scale_amount_min = 0.4
+scale_amount_max = 0.5
+
+[node name="Heart3" type="TextureRect" parent="Control/Hearts"]
 layout_mode = 2
 texture = ExtResource("2_uwfcu")
+
+[node name="ParticlesLose" type="CPUParticles2D" parent="Control/Hearts/Heart3"]
+position = Vector2(32, 32)
+emitting = false
+lifetime = 0.4
+one_shot = true
+explosiveness = 0.9
+direction = Vector2(0, 0)
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 40.0
+initial_velocity_max = 80.0
+scale_amount_min = 3.0
+scale_amount_max = 5.0
+color = Color(1, 0, 0, 1)
+
+[node name="ParticlesGain" type="CPUParticles2D" parent="Control/Hearts/Heart3"]
+position = Vector2(32, 32)
+emitting = false
+amount = 6
+lifetime = 0.8
+one_shot = true
+explosiveness = 0.5
+texture = ExtResource("3_uvxes")
+direction = Vector2(0, -1)
+spread = 75.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 10.0
+initial_velocity_max = 30.0
+scale_amount_min = 0.4
+scale_amount_max = 0.5
+
+[node name="Powers" type="HBoxContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 454.0
+offset_top = 190.0
+offset_right = 654.0
+offset_bottom = 254.0
+grow_horizontal = 0
+grow_vertical = 0
+scale = Vector2(0.75, 0.75)
+
+[node name="Cyan" type="Control" parent="Control/Powers"]
+layout_mode = 2
+
+[node name="RechargeBar" type="TextureProgressBar" parent="Control/Powers/Cyan"]
+modulate = Color(1, 1, 1, 0.588235)
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+offset_left = -204.0
+offset_right = -140.0
+offset_bottom = 64.0
+max_value = 1.0
+step = 0.01
+fill_mode = 3
+texture_under = ExtResource("5_hh3xi")
+texture_progress = ExtResource("4_hfj0l")
+tint_under = Color(1, 1, 1, 0.501961)
+
+[node name="DurationBar" type="TextureProgressBar" parent="Control/Powers/Cyan"]
+layout_mode = 0
+offset_left = -204.0
+offset_right = -140.0
+offset_bottom = 64.0
+max_value = 1.0
+step = 0.01
+fill_mode = 2
+texture_under = ExtResource("5_hh3xi")
+texture_progress = ExtResource("4_hfj0l")
+
+[node name="Red" type="Control" parent="Control/Powers"]
+layout_mode = 2
+
+[node name="RechargeBar" type="TextureProgressBar" parent="Control/Powers/Red"]
+modulate = Color(1, 1, 1, 0.588235)
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+offset_left = -140.0
+offset_right = -76.0
+offset_bottom = 64.0
+max_value = 1.0
+step = 0.01
+fill_mode = 3
+texture_under = ExtResource("7_hrp81")
+texture_progress = ExtResource("5_lgkob")
+tint_under = Color(1, 1, 1, 0.501961)
+
+[node name="DurationBar" type="TextureProgressBar" parent="Control/Powers/Red"]
+layout_mode = 0
+offset_left = -140.0
+offset_right = -76.0
+offset_bottom = 64.0
+max_value = 1.0
+step = 0.01
+texture_under = ExtResource("7_hrp81")
+texture_progress = ExtResource("5_lgkob")
+
+[node name="Yellow" type="Control" parent="Control/Powers"]
+layout_mode = 2
+
+[node name="RechargeBar" type="TextureProgressBar" parent="Control/Powers/Yellow"]
+modulate = Color(1, 1, 1, 0.588235)
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+offset_left = -76.0
+offset_right = -12.0
+offset_bottom = 64.0
+max_value = 1.0
+step = 0.01
+value = 0.5
+fill_mode = 3
+texture_under = ExtResource("9_0082l")
+texture_progress = ExtResource("6_h1fjt")
+tint_under = Color(1, 1, 1, 0.501961)
+
+[node name="DurationBar" type="TextureProgressBar" parent="Control/Powers/Yellow"]
+layout_mode = 0
+offset_left = -76.0
+offset_right = -12.0
+offset_bottom = 64.0
+max_value = 1.0
+step = 0.01
+texture_under = ExtResource("9_0082l")
+texture_progress = ExtResource("6_h1fjt")
