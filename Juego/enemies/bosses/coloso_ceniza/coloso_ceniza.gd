@@ -3,7 +3,7 @@ extends Node2D
 enum State { IDLE, HURT, DEAD, PUNCH }
 enum Phase { ONE, TWO }
 
-const MAX_HEALTH: int = 40
+const MAX_HEALTH: int = 16
 const BOSS_HALF_WIDTH: float = 60.0
 
 const TURN_DELAY_TIME: float = 0.5
@@ -169,10 +169,13 @@ func _check_phase():
 func _enter_phase_two():
 	phase_two = true
 	move_speed *= 1.75
-	sprite.play("rage") # pendiente de implementar
+	
+	_restore_boss_collisions()
 	
 	if current_state == State.HURT:
 		_recover_from_hurt()
+	
+	sprite.play("rage") # pendiente de implementar
 
 
 func _handle_state(delta):
@@ -248,6 +251,8 @@ func _recover_from_hurt():
 	current_state = State.IDLE
 	is_vulnerable = false
 	hurt_timer = 0.0
+	
+	_restore_boss_collisions()
 
 	if phase_two:
 		sprite.play("rage") # pendiente de implementar
@@ -269,6 +274,16 @@ func _recover_from_hurt():
 	if current_state == State.IDLE:
 		sprite.play("idle")
 
+func _restore_boss_collisions():
+	body_hitbox.monitoring = true
+	body_hitbox.monitorable = true
+
+	normal_hurtbox.monitoring = true
+	normal_hurtbox.monitorable = true
+
+	core_hurtbox.collision_layer = 0
+	core_hurtbox.monitoring = false
+	core_hurtbox.monitorable = false
 
 func _enter_punch():
 	current_state = State.PUNCH

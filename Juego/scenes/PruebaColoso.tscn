@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=4 uid="uid://bdyblmkw5v4ia"]
+[gd_scene load_steps=17 format=4 uid="uid://shyldwrlc5so"]
 
 [ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_oxa8h"]
 [ext_resource type="PackedScene" uid="uid://j3iq0wr4lk5y" path="res://enemies/bosses/coloso_ceniza/ColosoCeniza.tscn" id="2_4biun"]
@@ -73,6 +73,14 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("3_twgqw")
+}],
+"loop": true,
+"name": &"rage",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("6_yqpkc")
 }],
 "loop": true,
@@ -140,7 +148,7 @@ position = Vector2(690, -17)
 
 [node name="AnimatedSprite2D" parent="ColosoCeniza" index="0"]
 sprite_frames = SubResource("SpriteFrames_esgw8")
-animation = &"wave"
+animation = &"rage"
 
 [node name="Camera2D" parent="." instance=ExtResource("4_4g7u8")]
 
