@@ -6,6 +6,7 @@ extends Node
 # Contador de golpes para dropear orbes de luz
 var hits_until_orb := 3
 var hits_received := 0
+const MAX_ACTIVE_ORBS := 4
 
 const ORBE_LUZ_SCENE := preload("res://objects/OrbeDeLuz.tscn")
 
@@ -50,6 +51,11 @@ func take_damage(amount: int) -> void:
 func _spawn_healing_orb() -> void:
 	if ORBE_LUZ_SCENE == null:
 		return
+
+	# Limite de orbes simultaneos para evitar acumulacion excesiva.
+	var active_orbs := get_tree().get_nodes_in_group("light_orb")
+	if active_orbs.size() >= MAX_ACTIVE_ORBS:
+		return
 	
 	# Solo dropear orbes en niveles normales, no durante entrenamiento
 	var sync_node = get_tree().get_first_node_in_group("sync_node")
@@ -63,6 +69,7 @@ func _spawn_healing_orb() -> void:
 		return
 	
 	var orbe = ORBE_LUZ_SCENE.instantiate()
+	orbe.is_spawned = true
 	orbe.global_position = umbra.global_position + Vector2(randf_range(-40, 40), -40)
 	scene_root.add_child(orbe)
 
@@ -88,3 +95,12 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 func _on_level_reset() -> void:
 	# Resetear el contador de golpes cuando el jugador muere
 	hits_received = 0
+	# Garantizar que Umbra puede volver a recibir dano tras el reset.
+	umbra.is_invincible = false
+	umbra.invincibility_timer = 0.0
+	hurtbox.set_deferred("monitorable", true)
+
+	# Limpiar orbes que hayan quedado en escena al reiniciar.
+	for orb in get_tree().get_nodes_in_group("light_orb"):
+		if is_instance_valid(orb) and orb.has_method("get") and bool(orb.get("is_spawned")):
+			orb.queue_free()

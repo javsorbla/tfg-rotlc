@@ -2,10 +2,11 @@ extends Node
 
 signal died(owner: Node)
 
-const MAX_HEALTH = 3
+const BASE_MAX_HEALTH = 3
 const INVINCIBILITY_DURATION = 1.0
 const FLASH_DURATION = 0.1
 
+var MAX_HEALTH = BASE_MAX_HEALTH
 var current_health = MAX_HEALTH
 var is_invincible = false
 var invincibility_timer = 0.0
@@ -27,6 +28,7 @@ func _ready():
 
 
 func _init_hud():
+	_sync_max_health_from_progress()
 	current_health = MAX_HEALTH
 	Hud.update_hearts(current_health, MAX_HEALTH)
 
@@ -59,6 +61,7 @@ func die():
 	_reset_player()
 
 func _reset_player():
+	_sync_max_health_from_progress()
 	current_health = MAX_HEALTH
 	is_invincible = true
 	invincibility_timer = 0.6
@@ -117,3 +120,20 @@ func heal(amount: int):
 	Hud.update_hearts(current_health, MAX_HEALTH)
 	if heal_particles:
 		heal_particles.restart()
+
+
+func apply_prism_core_upgrade() -> bool:
+	var was_collected := GameState.collect_prism_core(GameState.current_level)
+	_sync_max_health_from_progress()
+	current_health = MAX_HEALTH
+	Hud.update_hearts(current_health, MAX_HEALTH)
+	if heal_particles:
+		heal_particles.restart()
+	return was_collected
+
+
+func _sync_max_health_from_progress() -> void:
+	if GameState.has_method("get_player_max_health"):
+		MAX_HEALTH = int(GameState.get_player_max_health())
+	else:
+		MAX_HEALTH = BASE_MAX_HEALTH

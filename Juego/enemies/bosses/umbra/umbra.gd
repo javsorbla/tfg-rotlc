@@ -85,6 +85,7 @@ const HEURISTIC_ATTACK_DISTANCE := 44.0
 const HEURISTIC_DASH_DISTANCE := 130.0
 const AUTO_ATTACK_DISTANCE_X := 72.0
 const AUTO_ATTACK_DISTANCE_Y := 44.0
+const PRISM_CORE_SCENE := preload("res://objects/NucleoDePrisma.tscn")
 
 @export var max_health = 3
 @export var force_heuristic_only := false
@@ -199,6 +200,8 @@ func _on_level_reset():
 	global_position = spawn_position
 	velocity = Vector2.ZERO
 	current_health = max_health
+	is_invincible = false
+	invincibility_timer = 0.0
 	is_active = false
 	is_dashing = false
 	is_attacking = false
@@ -556,6 +559,7 @@ func die():
 	if use_runtime_finetuned_model:
 		GameState.start_finetuning(2000)
 	emit_signal("defeated", false)
+	_spawn_prism_core_drop()
 	is_active = false
 	if despawn_on_death:
 		queue_free()
@@ -566,6 +570,28 @@ func die():
 	is_dashing = false
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
+
+
+func _spawn_prism_core_drop() -> void:
+	if PRISM_CORE_SCENE == null:
+		return
+	if GameState.has_method("has_prism_core_upgrade") and GameState.has_prism_core_upgrade(GameState.current_level):
+		return
+
+	var sync_node = get_tree().get_first_node_in_group("sync_node")
+	if sync_node != null and int(sync_node.control_mode) == 1:
+		return
+
+	if get_tree().get_nodes_in_group("prism_core").size() > 0:
+		return
+
+	var scene_root = get_tree().root.get_child(0)
+	if scene_root == null:
+		return
+
+	var prism_core = PRISM_CORE_SCENE.instantiate()
+	prism_core.global_position = global_position + Vector2(0, -34)
+	scene_root.add_child(prism_core)
 
 func activate():
 	is_active = true

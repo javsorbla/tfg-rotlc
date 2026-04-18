@@ -7,6 +7,7 @@ var checkpoint_activated = false
 var coming_from_transition: bool = false
 
 const UMBRA_SAVE_PATH := "user://umbra_progress.json"
+const PLAYER_PROGRESS_PATH := "user://player_progress.json"
 const UMBRA_TRAINING_LOG_PATH := "user://umbra_training_episodes.jsonl"
 const UMBRA_FINETUNE_METRICS_PATH := "user://umbra_metrics.json"
 const UMBRA_FINETUNE_ONNX_PATH := "user://models/umbra_finetuned.onnx"
@@ -15,6 +16,7 @@ const UMBRA_BASE_MODEL_ZIP_PATH := "user://models/umbra_final.zip"
 const UMBRA_FINETUNE_JOBS_LOG_PATH := "user://umbra_finetune_jobs.jsonl"
 const UMBRA_FINETUNE_MAX_DURATION_MSEC := 180000
 const UMBRA_HEADLESS_ENV_PATH := ""
+const EDITOR_DISABLE_PLAYER_PROGRESS_PERSISTENCE := true
 
 const DEFAULT_UMBRA_PLAYER_METRICS := {
 	"avg_distance": 200.0,
@@ -28,6 +30,8 @@ const DEFAULT_UMBRA_PLAYER_METRICS := {
 	"power_usage_frequency": 0.0
 }
 
+const BASE_PLAYER_MAX_HEALTH := 3
+
 var current_level: int = 1
 var cleared_boss_rooms: Dictionary = {}
 
@@ -37,6 +41,15 @@ var _finetune_job_started_msec: int = 0
 var _finetune_last_completed_model_path := ""
 
 var umbra_progress := _make_default_umbra_progress()
+var player_progress := _make_default_player_progress()
+
+
+func _make_default_player_progress() -> Dictionary:
+	return {
+		"max_health_bonus": 0,
+		"prism_core_collected": false,
+		"prism_core_collected_levels": {}
+	}
 
 
 func _make_default_umbra_progress() -> Dictionary:
@@ -51,8 +64,107 @@ func _make_default_umbra_progress() -> Dictionary:
 
 
 func _ready() -> void:
+	_load_player_progress()
 	_load_umbra_progress()
 	_load_finetune_state()
+
+
+func _load_player_progress() -> void:
+	if _is_editor_ephemeral_player_progress_enabled():
+		player_progress = _make_default_player_progress()
+		return
+
+	if not FileAccess.file_exists(PLAYER_PROGRESS_PATH):
+		_save_player_progress()
+		return
+
+	var file := FileAccess.open(PLAYER_PROGRESS_PATH, FileAccess.READ)
+	if file == null:
+		push_warning("No se pudo abrir el progreso del jugador para lectura")
+		return
+
+	var json_text := file.get_as_text()
+	file.close()
+
+	var parsed: Variant = JSON.parse_string(json_text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_warning("Progreso del jugador invalido, usando valores por defecto")
+		player_progress = _make_default_player_progress()
+		_save_player_progress()
+		return
+
+	for key in player_progress.keys():
+		if parsed.has(key):
+			player_progress[key] = parsed[key]
+
+	if typeof(player_progress.get("prism_core_collected_levels", {})) != TYPE_DICTIONARY:
+		player_progress["prism_core_collected_levels"] = {}
+
+	# Evita estados inconsistentes si el bonus existe pero la bandera no.
+	if int(player_progress.get("max_health_bonus", 0)) > 0:
+		player_progress["prism_core_collected"] = true
+
+	# Migracion desde progreso antiguo: convertir bonus acumulado a niveles desbloqueados.
+	var collected_levels: Dictionary = player_progress.get("prism_core_collected_levels", {})
+	if collected_levels.is_empty() and int(player_progress.get("max_health_bonus", 0)) > 0:
+		var legacy_bonus := int(player_progress.get("max_health_bonus", 0))
+		for level_idx in range(1, legacy_bonus + 1):
+			collected_levels[str(level_idx)] = true
+		player_progress["prism_core_collected_levels"] = collected_levels
+
+	_recompute_player_bonus_from_levels()
+
+
+func _save_player_progress() -> void:
+	if _is_editor_ephemeral_player_progress_enabled():
+		return
+
+	var file := FileAccess.open(PLAYER_PROGRESS_PATH, FileAccess.WRITE)
+	if file == null:
+		push_warning("No se pudo abrir el progreso del jugador para escritura")
+		return
+	file.store_string(JSON.stringify(player_progress, "\t"))
+	file.close()
+
+
+func _is_editor_ephemeral_player_progress_enabled() -> bool:
+	return EDITOR_DISABLE_PLAYER_PROGRESS_PERSISTENCE and OS.has_feature("editor")
+
+
+func get_player_max_health() -> int:
+	var bonus := int(player_progress.get("max_health_bonus", 0))
+	return max(BASE_PLAYER_MAX_HEALTH, BASE_PLAYER_MAX_HEALTH + bonus)
+
+
+func has_prism_core_upgrade(level_id: int = -1) -> bool:
+	var resolved_level := _resolve_prism_core_level(level_id)
+	var collected_levels: Dictionary = player_progress.get("prism_core_collected_levels", {})
+	return bool(collected_levels.get(str(resolved_level), false))
+
+
+func collect_prism_core(level_id: int = -1) -> bool:
+	var resolved_level := _resolve_prism_core_level(level_id)
+	if has_prism_core_upgrade(resolved_level):
+		return false
+
+	var collected_levels: Dictionary = player_progress.get("prism_core_collected_levels", {})
+	collected_levels[str(resolved_level)] = true
+	player_progress["prism_core_collected_levels"] = collected_levels
+	_recompute_player_bonus_from_levels()
+	_save_player_progress()
+	return true
+
+
+func _resolve_prism_core_level(level_id: int) -> int:
+	if level_id > 0:
+		return level_id
+	return maxi(1, current_level)
+
+
+func _recompute_player_bonus_from_levels() -> void:
+	var collected_levels: Dictionary = player_progress.get("prism_core_collected_levels", {})
+	player_progress["max_health_bonus"] = collected_levels.size()
+	player_progress["prism_core_collected"] = collected_levels.size() > 0
 
 
 func _load_umbra_progress() -> void:

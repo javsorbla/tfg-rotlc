@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://objects/nucleo_de_prisma.gd" id="1_hh8ff"]
+[ext_resource type="Texture2D" path="res://assets/objects/nucleo_prisma.png" id="2_w3n3a"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_vp7ag"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_w3n3a")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_3atj4"]
+radius = 8.0
+
+[node name="NucleoDePrisma" type="Area2D"]
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("1_hh8ff")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_3atj4")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -1)
+scale = Vector2(0.32, 0.32)
+sprite_frames = SubResource("SpriteFrames_vp7ag")
+animation = &"idle"
