@@ -448,6 +448,8 @@ max_health = 10
 jump_cooldown_seconds = 2.0
 dash_cooldown_seconds = 6.0
 darkness_cast_cooldown = 7.0
+debug_darkness_logs = false
+debug_model_indicator = false
 
 [node name="AIController2D" parent="Umbra" index="0"]
 debug_move_diag_interval_ticks = 30

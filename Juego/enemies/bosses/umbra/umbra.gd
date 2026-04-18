@@ -591,7 +591,7 @@ func _spawn_prism_core_drop() -> void:
 
 	var prism_core = PRISM_CORE_SCENE.instantiate()
 	prism_core.global_position = global_position + Vector2(0, -34)
-	scene_root.add_child(prism_core)
+	scene_root.call_deferred("add_child", prism_core)
 
 func activate():
 	is_active = true

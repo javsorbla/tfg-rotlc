@@ -52,7 +52,6 @@ func _on_trigger_entered(body):
 	if body.is_in_group("player"):
 		pared_izquierda_collision.set_deferred("disabled", false)
 		pared_derecha_collision.set_deferred("disabled", false)
-		trigger.monitoring = false
 		trigger.set_deferred("monitoring", false)
 		
 		var camera = get_tree().get_first_node_in_group("camera")

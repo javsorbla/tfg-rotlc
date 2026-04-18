@@ -88,13 +88,13 @@ func _on_level_reset():
 	visible = true
 	set_physics_process(true)
 	set_process(true)
-	$EnemyHurtbox.monitorable = true
-	$EnemyHitbox.monitoring = true
-	$EnemyHitbox.monitorable = true
-	$EnemyHitbox.collision_layer = 16
-	$EnemyHitbox.collision_mask = 4
-	$EnemyHurtbox.collision_layer = 16
-	$EnemyHurtbox.collision_mask = 4
+	$EnemyHurtbox.set_deferred("monitorable", true)
+	$EnemyHitbox.set_deferred("monitoring", true)
+	$EnemyHitbox.set_deferred("monitorable", true)
+	$EnemyHitbox.set_deferred("collision_layer", 16)
+	$EnemyHitbox.set_deferred("collision_mask", 4)
+	$EnemyHurtbox.set_deferred("collision_layer", 16)
+	$EnemyHurtbox.set_deferred("collision_mask", 4)
 	sprite.modulate.a = 1.0
 	sprite.play("idle")
 	vision.enabled = true

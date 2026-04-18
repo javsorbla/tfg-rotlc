@@ -16,7 +16,7 @@ func setup() -> void:
 	if not hurtbox.area_entered.is_connected(_on_hurtbox_area_entered):
 		hurtbox.area_entered.connect(_on_hurtbox_area_entered)
 	
-	# Resetear contador de golpes cuando el nivel se resetea (el jugador muere)
+	# Resetear contador de golpes cuando el jugador muere
 	if not GameState.level_reset.is_connected(_on_level_reset):
 		GameState.level_reset.connect(_on_level_reset)
 
@@ -61,7 +61,7 @@ func _spawn_healing_orb() -> void:
 	var sync_node = get_tree().get_first_node_in_group("sync_node")
 	if sync_node != null:
 		# control_mode: 0=HUMAN, 1=TRAINING, 2=ONNX_INFERENCE
-		if sync_node.control_mode == 1:  # TRAINING mode
+		if sync_node.control_mode == 1:
 			return
 	
 	var scene_root = get_tree().root.get_child(0)
@@ -71,7 +71,7 @@ func _spawn_healing_orb() -> void:
 	var orbe = ORBE_LUZ_SCENE.instantiate()
 	orbe.is_spawned = true
 	orbe.global_position = umbra.global_position + Vector2(randf_range(-40, 40), -40)
-	scene_root.add_child(orbe)
+	scene_root.call_deferred("add_child", orbe)
 
 
 func _on_hurtbox_area_entered(area: Area2D) -> void:
@@ -82,7 +82,6 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 		if attacker and attacker.is_in_group("player"):
 			var combat_node := attacker.get_node_or_null("Combat")
 			if combat_node != null and combat_node.has_method("get"):
-				# Ignore stray overlaps when the attack hitbox is not actively swinging.
 				if not bool(combat_node.get("is_attacking")):
 					return
 			if attacker.has_method("get"):
@@ -93,9 +92,7 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 
 
 func _on_level_reset() -> void:
-	# Resetear el contador de golpes cuando el jugador muere
 	hits_received = 0
-	# Garantizar que Umbra puede volver a recibir dano tras el reset.
 	umbra.is_invincible = false
 	umbra.invincibility_timer = 0.0
 	hurtbox.set_deferred("monitorable", true)
