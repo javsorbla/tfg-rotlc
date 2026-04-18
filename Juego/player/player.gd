@@ -19,6 +19,7 @@ var dash_cooldown_timer = 0.0
 var air_dash_used = false
 var last_direction = 1
 var speed_multiplier = 1.0
+var can_attack = true
 var damage_multiplier = 1.0
 var is_shielding = false
 

@@ -34,7 +34,7 @@ func _handle_attack(delta):
 			hitbox.visible = false
 		return
 
-	if Input.is_action_just_pressed("attack"):
+	if Input.is_action_just_pressed("attack") and player.can_attack:
 		is_attacking = true
 		attack_timer = ATTACK_DURATION
 		hitbox.monitoring = true

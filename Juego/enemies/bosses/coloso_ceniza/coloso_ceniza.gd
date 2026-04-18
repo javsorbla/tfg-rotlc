@@ -3,7 +3,7 @@ extends Node2D
 enum State { IDLE, HURT, DEAD, PUNCH }
 enum Phase { ONE, TWO }
 
-const MAX_HEALTH: int = 16
+const MAX_HEALTH: int = 40
 const BOSS_HALF_WIDTH: float = 60.0
 
 const TURN_DELAY_TIME: float = 0.5
