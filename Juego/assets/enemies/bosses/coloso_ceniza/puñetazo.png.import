@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b40vapp2ahrik"
-path="res://.godot/imported/boss2.png-3978d3e8d18b4d5603a4ae96d43a3646.ctex"
+uid="uid://bp73nfu16pj8n"
+path="res://.godot/imported/puñetazo.png-e41292031c21d59c8bda169412cb37cb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/boss2.png"
-dest_files=["res://.godot/imported/boss2.png-3978d3e8d18b4d5603a4ae96d43a3646.ctex"]
+source_file="res://assets/enemies/bosses/coloso_ceniza/puñetazo.png"
+dest_files=["res://.godot/imported/puñetazo.png-e41292031c21d59c8bda169412cb37cb.ctex"]
 
 [params]
 

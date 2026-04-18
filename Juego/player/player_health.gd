@@ -110,6 +110,11 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy_hitbox"):
 		var enemy = area.get_parent()
 		take_damage(enemy.DAMAGE)
+	if area.is_in_group("boss_hitbox"):
+		var boss = area.get_parent()
+		if boss.has_method("is_hurting") and boss.is_hurting():
+			return
+		take_damage(boss.DAMAGE, false)
 
 func _on_hurtbox_body_entered(body: Node2D) -> void:
 	if body.is_in_group("spikes"):

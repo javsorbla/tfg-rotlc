@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=3 uid="uid://dg0dx0p4ei711"]
+
+[ext_resource type="Texture2D" uid="uid://c5p40odrlmh0l" path="res://assets/enemies/bosses/coloso_ceniza/base_lava.png" id="1_6fy4h"]
+[ext_resource type="Script" path="res://enemies/bosses/coloso_ceniza/chorro_lava.gd" id="1_l1g2d"]
+[ext_resource type="Texture2D" uid="uid://wj0sleo1kar0" path="res://assets/enemies/bosses/coloso_ceniza/chorro_lava.png" id="2_2aabe"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_i1id6"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_6fy4h")
+}],
+"loop": true,
+"name": &"base",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_2aabe")
+}],
+"loop": true,
+"name": &"chorro",
+"speed": 5.0
+}]
+
+[node name="ChorroLava" type="Area2D"]
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_l1g2d")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -67)
+scale = Vector2(1.53125, 3.125)
+sprite_frames = SubResource("SpriteFrames_i1id6")
+animation = &"chorro"
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+position = Vector2(-1, -37)
+scale = Vector2(2.19118, 2.56019)
+polygon = PackedVector2Array(0.912752, -49.6058, -2.73826, -47.2622, -7.75839, 11.7179, -11.8658, 18.7486, 0.912752, 28.123, 12.3221, 18.358, 8.67114, 11.7179, 7.30201, -9.76492, 3.65101, -47.2622)

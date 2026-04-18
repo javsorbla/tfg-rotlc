@@ -1,0 +1,189 @@
+[gd_scene load_steps=17 format=4 uid="uid://shyldwrlc5so"]
+
+[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_oxa8h"]
+[ext_resource type="PackedScene" uid="uid://j3iq0wr4lk5y" path="res://enemies/bosses/coloso_ceniza/ColosoCeniza.tscn" id="2_4biun"]
+[ext_resource type="Texture2D" uid="uid://pykyxvncyfos" path="res://assets/enemies/bosses/coloso_ceniza/coloso_herido.png" id="3_0sjo0"]
+[ext_resource type="Texture2D" uid="uid://bp73nfu16pj8n" path="res://assets/enemies/bosses/coloso_ceniza/puñetazo.png" id="3_4ejeq"]
+[ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="3_m2ajk"]
+[ext_resource type="Texture2D" uid="uid://gqny0mm1jot1" path="res://assets/enemies/bosses/coloso_ceniza/coloso.png" id="3_twgqw"]
+[ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="4_4g7u8"]
+[ext_resource type="PackedScene" uid="uid://b4xv5brfpegl" path="res://scenes/enviroment/PlataformaRompible.tscn" id="4_wxn0d"]
+[ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="5_81j65"]
+[ext_resource type="Texture2D" uid="uid://xks3jx3sfl8r" path="res://assets/enemies/bosses/coloso_ceniza/grito.png" id="6_yqpkc"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_w1apf"]
+texture = ExtResource("1_oxa8h")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+2:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+3:1/0 = 0
+4:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+4:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+4:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_34jmr"]
+physics_layer_0/collision_layer = 1
+sources/1 = SubResource("TileSetAtlasSource_w1apf")
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_esgw8"]
+resource_local_to_scene = true
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_0sjo0")
+}],
+"loop": true,
+"name": &"hurt",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_twgqw")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_4ejeq")
+}],
+"loop": true,
+"name": &"punch",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_twgqw")
+}],
+"loop": true,
+"name": &"rage",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_yqpkc")
+}],
+"loop": true,
+"name": &"wave",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lxlvl"]
+size = Vector2(45, 279)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0k35i"]
+size = Vector2(46, 274)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wow74"]
+size = Vector2(43, 274)
+
+[node name="PruebaColoso" type="Node2D"]
+position = Vector2(21, -4)
+
+[node name="Nivel" type="TileMapLayer" parent="."]
+tile_map_data = PackedByteArray("AAD6/wIAAQACAAEAAAD7/wIAAQACAAEAAAD8/wIAAQACAAEAAAD9/wIAAQACAAEAAAD+/wIAAQACAAEAAAD//wIAAQACAAEAAAAAAAIAAQACAAEAAAABAAIAAQACAAEAAAACAAIAAQACAAEAAAADAAIAAQACAAEAAAAEAAIAAQACAAEAAAAFAAIAAQACAAEAAAAGAAIAAQACAAEAAAAHAAIAAQACAAEAAAAIAAIAAQACAAEAAAAJAAIAAQACAAEAAAAKAAIAAQACAAEAAAALAAIAAQACAAEAAAAMAAIAAQACAAEAAAANAAIAAQACAAEAAAAOAAIAAQACAAEAAAAPAAIAAQACAAEAAAAQAAIAAQACAAEAAAARAAIAAQACAAEAAAASAAIAAQACAAEAAAATAAIAAQACAAEAAAAUAAIAAQACAAEAAAAVAAIAAQACAAEAAAAWAAIAAQACAAEAAAAWAAMAAQACAAEAAAAVAAMAAQACAAEAAAAUAAMAAQACAAEAAAATAAMAAQACAAEAAAASAAMAAQACAAEAAAARAAMAAQACAAEAAAAQAAMAAQACAAEAAAAPAAMAAQACAAEAAAAOAAMAAQACAAEAAAANAAMAAQACAAEAAAAMAAMAAQACAAEAAAALAAMAAQACAAEAAAAKAAMAAQACAAEAAAAJAAMAAQACAAEAAAAIAAMAAQACAAEAAAD6/wMAAQACAAEAAAD7/wMAAQACAAEAAAD8/wMAAQACAAEAAAD9/wMAAQACAAEAAAD+/wMAAQACAAEAAAAGAAMAAQACAAEAAAAHAAMAAQACAAEAAAAGAAQAAQACAAEAAAAFAAQAAQACAAEAAAAEAAQAAQACAAEAAAADAAQAAQACAAEAAAACAAMAAQACAAEAAAABAAMAAQACAAEAAAAAAAMAAQACAAEAAAD//wMAAQACAAEAAAADAAMAAQACAAEAAAAEAAMAAQACAAEAAAAFAAMAAQACAAEAAAACAAQAAQACAAEAAAABAAQAAQACAAEAAAAAAAQAAQACAAEAAAD//wQAAQACAAEAAAD+/wQAAQACAAEAAAD9/wQAAQACAAEAAAD8/wQAAQACAAEAAAD7/wQAAQACAAEAAAD6/wQAAQACAAEAAAAHAAQAAQACAAEAAAAIAAQAAQACAAEAAAAJAAQAAQACAAEAAAAKAAQAAQACAAEAAAALAAQAAQACAAEAAAAMAAQAAQACAAEAAAANAAQAAQACAAEAAAAOAAQAAQACAAEAAAAPAAQAAQACAAEAAAAQAAQAAQACAAEAAAARAAQAAQACAAEAAAASAAQAAQACAAEAAAATAAQAAQACAAEAAAAUAAQAAQACAAEAAAAVAAQAAQACAAEAAAAWAAQAAQACAAEAAAAXAAIAAQACAAEAAAAXAAMAAQACAAEAAAAXAAQAAQACAAEAAAAYAAIAAQACAAEAAAAYAAMAAQACAAEAAAAYAAQAAQACAAEAAAAZAAIAAQACAAEAAAAZAAMAAQACAAEAAAAZAAQAAQACAAEAAAAaAAIAAQACAAEAAAAaAAMAAQACAAEAAAAaAAQAAQACAAEAAAAbAAIAAQACAAEAAAAbAAMAAQACAAEAAAAbAAQAAQACAAEAAAAcAAIAAQACAAEAAAAcAAMAAQACAAEAAAAcAAQAAQACAAEAAAAdAAIAAQACAAEAAAAdAAMAAQACAAEAAAAdAAQAAQACAAEAAAAeAAIAAQACAAEAAAAeAAMAAQACAAEAAAAeAAQAAQACAAEAAAAfAAIAAQACAAEAAAAfAAMAAQACAAEAAAAfAAQAAQACAAEAAAAgAAIAAQACAAEAAAAgAAMAAQACAAEAAAAgAAQAAQACAAEAAAAhAAIAAQACAAEAAAAhAAMAAQACAAEAAAAhAAQAAQACAAEAAAAiAAIAAQACAAEAAAAiAAMAAQACAAEAAAAiAAQAAQACAAEAAAAjAAIAAQACAAEAAAAjAAMAAQACAAEAAAAjAAQAAQACAAEAAAAkAAIAAQACAAEAAAAkAAMAAQACAAEAAAAkAAQAAQACAAEAAAAlAAIAAQACAAEAAAAlAAMAAQACAAEAAAAlAAQAAQACAAEAAAAmAAIAAQACAAEAAAAmAAMAAQACAAEAAAAmAAQAAQACAAEAAAAnAAIAAQACAAEAAAAnAAMAAQACAAEAAAAnAAQAAQACAAEAAAAoAAIAAQACAAEAAAAoAAMAAQACAAEAAAAoAAQAAQACAAEAAAApAAIAAQACAAEAAAApAAMAAQACAAEAAAApAAQAAQACAAEAAAAqAAIAAQACAAEAAAAqAAMAAQACAAEAAAAqAAQAAQACAAEAAAArAAIAAQACAAEAAAArAAMAAQACAAEAAAArAAQAAQACAAEAAAAsAAIAAQACAAEAAAAsAAMAAQACAAEAAAAsAAQAAQACAAEAAAAtAAIAAQACAAEAAAAtAAMAAQACAAEAAAAtAAQAAQACAAEAAAAuAAIAAQACAAEAAAAuAAMAAQACAAEAAAAuAAQAAQACAAEAAAAvAAIAAQACAAEAAAAvAAMAAQACAAEAAAAvAAQAAQACAAEAAAAwAAIAAQACAAEAAAAwAAMAAQACAAEAAAAwAAQAAQACAAEAAAD5/wIAAQACAAEAAAD4/wIAAQACAAEAAAD3/wIAAQACAAEAAAD2/wIAAQACAAEAAAD1/wIAAQACAAEAAAD0/wIAAQACAAEAAADz/wIAAQACAAEAAADy/wIAAQACAAEAAADx/wIAAQACAAEAAADw/wIAAQACAAEAAADv/wIAAQACAAEAAADu/wIAAQACAAEAAADt/wIAAQACAAEAAADs/wIAAQACAAEAAADs/wMAAQACAAEAAADs/wQAAQACAAEAAADt/wQAAQACAAEAAAD0/wQAAQACAAEAAAD1/wQAAQACAAEAAAD2/wQAAQACAAEAAAD3/wQAAQACAAEAAAD4/wQAAQACAAEAAAD5/wQAAQACAAEAAAD5/wMAAQACAAEAAAD4/wMAAQACAAEAAAD3/wMAAQACAAEAAAD2/wMAAQACAAEAAAD1/wMAAQACAAEAAAD0/wMAAQACAAEAAADz/wMAAQACAAEAAADy/wMAAQACAAEAAADx/wMAAQACAAEAAADw/wMAAQACAAEAAADv/wMAAQACAAEAAADu/wMAAQACAAEAAADt/wMAAQACAAEAAADv/wQAAQACAAEAAADu/wQAAQACAAEAAADw/wQAAQACAAEAAADx/wQAAQACAAEAAADy/wQAAQACAAEAAADz/wQAAQACAAEAAADr/wIAAQACAAEAAADq/wEAAQACAAEAAADq/wAAAQACAAEAAADq////AQACAAEAAADq//7/AQACAAEAAADq//3/AQACAAEAAADq//z/AQACAAEAAADq//v/AQACAAEAAADq//r/AQACAAEAAADq//n/AQACAAEAAADq//j/AQACAAEAAADr//j/AQACAAEAAADr//f/AQACAAEAAAA=")
+tile_set = SubResource("TileSet_34jmr")
+
+[node name="PlataformaRompible1" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(433, -143)
+
+[node name="PlataformaRompible2" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(-40, -23)
+
+[node name="PlataformaRompible3" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(-88, -104)
+
+[node name="PlataformaRompible4" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(73, -88)
+
+[node name="PlataformaRompible5" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(53, -175)
+
+[node name="PlataformaRompible6" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(245, -162)
+
+[node name="PlataformaRompible7" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(622, -170)
+
+[node name="PlataformaRompible8" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(168, -41)
+
+[node name="PlataformaRompible9" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(295, -87)
+
+[node name="PlataformaRompible10" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(424, -24)
+
+[node name="PlataformaRompible11" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(520, -105)
+
+[node name="PlataformaRompible12" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(585, -24)
+
+[node name="PlataformaRompible13" parent="." instance=ExtResource("4_wxn0d")]
+position = Vector2(681, -88)
+
+[node name="ColosoCeniza" parent="." instance=ExtResource("2_4biun")]
+position = Vector2(690, -17)
+
+[node name="AnimatedSprite2D" parent="ColosoCeniza" index="0"]
+sprite_frames = SubResource("SpriteFrames_esgw8")
+animation = &"rage"
+
+[node name="Camera2D" parent="." instance=ExtResource("4_4g7u8")]
+
+[node name="Player" parent="." instance=ExtResource("3_m2ajk")]
+position = Vector2(-279, 19)
+
+[node name="ZonaJefe" parent="." instance=ExtResource("5_81j65")]
+position = Vector2(-68, -141)
+
+[node name="CollisionShape2D" parent="ZonaJefe/Trigger" index="0"]
+position = Vector2(12.5, 38.5)
+shape = SubResource("RectangleShape2D_lxlvl")
+
+[node name="CollisionShape2D" parent="ZonaJefe/ParedIzquierda" index="0"]
+position = Vector2(-61, 38)
+shape = SubResource("RectangleShape2D_0k35i")
+
+[node name="CollisionShape2D" parent="ZonaJefe/ParedDerecha" index="0"]
+position = Vector2(829, 37)
+shape = SubResource("RectangleShape2D_wow74")
+
+[node name="Centro" parent="ZonaJefe" index="3"]
+position = Vector2(395, 43)
+
+[node name="LimiteIzquierda" parent="ZonaJefe" index="4"]
+position = Vector2(-83, 57)
+
+[node name="LimiteDerecha" parent="ZonaJefe" index="5"]
+position = Vector2(852, 43)
+
+[node name="LimiteArriba" parent="ZonaJefe" index="6"]
+position = Vector2(389, -106)
+
+[node name="LimiteAbajo" parent="ZonaJefe" index="7"]
+position = Vector2(397, 173)
+
+[editable path="ColosoCeniza"]
+[editable path="ZonaJefe"]
