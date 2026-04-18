@@ -55,7 +55,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--save_checkpoint_frequency",
-    default=None,
+    default=5000,
     type=int,
     help=(
         "If set, will save checkpoints every 'frequency' environment steps. "
@@ -85,6 +85,12 @@ parser.add_argument(
     "Requires --resume_model_path to be set.",
 )
 parser.add_argument(
+    "--export_only",
+    default=False,
+    action="store_true",
+    help="Load --resume_model_path and only export/save artifacts without running learn/inference.",
+)
+parser.add_argument(
     "--linear_lr_schedule",
     default=False,
     action="store_true",
@@ -105,6 +111,54 @@ parser.add_argument(
     default=1,
     type=int,
     help="How many instances of the environment executable to " "launch - requires --env_path to be set if > 1.",
+)
+parser.add_argument(
+    "--learning_rate",
+    default=3e-4,
+    type=float,
+    help="Base learning rate used when --linear_lr_schedule is disabled.",
+)
+parser.add_argument(
+    "--ent_coef",
+    default=0.02,
+    type=float,
+    help="Entropy coefficient for exploration.",
+)
+parser.add_argument(
+    "--n_steps",
+    default=512,
+    type=int,
+    help="PPO rollout length per environment.",
+)
+parser.add_argument(
+    "--batch_size",
+    default=256,
+    type=int,
+    help="PPO minibatch size.",
+)
+parser.add_argument(
+    "--n_epochs",
+    default=10,
+    type=int,
+    help="Number of PPO epochs per rollout.",
+)
+parser.add_argument(
+    "--gamma",
+    default=0.995,
+    type=float,
+    help="Discount factor.",
+)
+parser.add_argument(
+    "--gae_lambda",
+    default=0.95,
+    type=float,
+    help="GAE lambda value.",
+)
+parser.add_argument(
+    "--target_kl",
+    default=0.03,
+    type=float,
+    help="Early stopping KL target for PPO updates.",
 )
 args, extras = parser.parse_known_args()
 
@@ -143,7 +197,7 @@ path_checkpoint = os.path.join(args.experiment_dir, args.experiment_name + "_che
 abs_path_checkpoint = os.path.abspath(path_checkpoint)
 
 # Prevent overwriting existing checkpoints when starting a new experiment if checkpoint saving is enabled
-if args.save_checkpoint_frequency is not None and os.path.isdir(path_checkpoint):
+if args.save_checkpoint_frequency is not None and os.path.isdir(path_checkpoint) and args.resume_model_path is None:
     raise RuntimeError(
         abs_path_checkpoint + " folder already exists. "
         "Use a different --experiment_dir, or --experiment_name,"
@@ -153,6 +207,9 @@ if args.save_checkpoint_frequency is not None and os.path.isdir(path_checkpoint)
 
 if args.inference and args.resume_model_path is None:
     raise parser.error("Using --inference requires --resume_model_path to be set.")
+
+if args.export_only and args.resume_model_path is None:
+    raise parser.error("Using --export_only requires --resume_model_path to be set.")
 
 if args.env_path is None and args.viz:
     print("Info: Using --viz without --env_path set has no effect, in-editor training will always render.")
@@ -187,15 +244,22 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 
 
 if args.resume_model_path is None:
-    learning_rate = 0.0003 if not args.linear_lr_schedule else linear_schedule(0.0003)
+    if args.ent_coef < 0.008:
+        print("WARNING: Very low --ent_coef can trigger premature policy collapse in multi-discrete control.")
+    learning_rate = args.learning_rate if not args.linear_lr_schedule else linear_schedule(args.learning_rate)
     model: PPO = PPO(
         "MultiInputPolicy",
         env,
-        ent_coef=0.0001,
         verbose=2,
-        n_steps=32,
+        n_steps=args.n_steps,
+        batch_size=args.batch_size,
+        n_epochs=args.n_epochs,
         tensorboard_log=args.experiment_dir,
         learning_rate=learning_rate,
+        gamma=args.gamma,
+        gae_lambda=args.gae_lambda,
+        ent_coef=args.ent_coef,
+        target_kl=args.target_kl,
     )
 else:
     path_zip = pathlib.Path(args.resume_model_path)
@@ -203,12 +267,23 @@ else:
     model = PPO.load(path_zip, env=env, tensorboard_log=args.experiment_dir)
 
 if args.inference:
-    obs = env.reset()
-    for i in range(args.timesteps):
-        action, _state = model.predict(obs, deterministic=True)
-        obs, reward, done, info = env.step(action)
+    try:
+        obs = env.reset()
+        for i in range(args.timesteps):
+            action, _state = model.predict(obs, deterministic=True)
+            obs, reward, done, info = env.step(action)
+    finally:
+        cleanup()
+elif args.export_only:
+    cleanup()
 else:
     learn_arguments = dict(total_timesteps=args.timesteps, tb_log_name=args.experiment_name)
+    if args.resume_model_path is not None:
+        # Keep cumulative step counter when resuming so checkpoint names continue
+        # (e.g. 5000 -> 10000 -> 15000) instead of being overwritten at 5000.
+        learn_arguments["reset_num_timesteps"] = False
+    if not args.save_checkpoint_frequency:
+        print("Checkpoint saving disabled. For block training, set --save_checkpoint_frequency.")
     if args.save_checkpoint_frequency:
         print("Checkpoint saving enabled. Checkpoints will be saved to: " + abs_path_checkpoint)
         checkpoint_callback = CheckpointCallback(

@@ -12,7 +12,7 @@ radius = 12.0
 height = 40.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3di5o"]
-size = Vector2(35, 50)
+size = Vector2(38, 47)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1digt"]
 radius = 12.0
@@ -27,6 +27,7 @@ debug_darkness_logs = true
 
 [node name="AIController2D" type="Node2D" parent="."]
 script = ExtResource("2_u7ihi")
+player_velocity_obs_scale = 0.25
 
 [node name="Health" type="Node" parent="."]
 script = ExtResource("4_8dco9")
@@ -51,7 +52,7 @@ collision_layer = 16
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
-position = Vector2(0.5, 0)
+position = Vector2(1, -0.5)
 shape = SubResource("RectangleShape2D_3di5o")
 debug_color = Color(0.905808, 0.272961, 0.350986, 0.42)
 

@@ -3,7 +3,7 @@ extends Node2D
 enum State { IDLE, CHARGE, PROJECTILE, JUMP, HURT, DEAD }
 enum Phase { ONE, TWO }
 
-const MAX_HEALTH = 40
+const MAX_HEALTH = 30
 const PHASE_TWO_THRESHOLD = 0.35
 const BOSS_HALF_WIDTH = 40.0
 const FLOAT_AMPLITUDE = 18.0
@@ -362,8 +362,8 @@ func _reset_for_encounter(make_active: bool) -> void:
 	jump_velocity = Vector2.ZERO
 	charge_direction = Vector2.ZERO
 	has_summoned_fury_walkers = false
-	attack_hitbox.monitoring = false
-	attack_hitbox.monitorable = false
+	attack_hitbox.set_deferred("monitoring", false)
+	attack_hitbox.set_deferred("monitorable", false)
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	_update_flip(false)
 	is_active = make_active

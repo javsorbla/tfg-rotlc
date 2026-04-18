@@ -12,6 +12,67 @@ Esta guia explica el flujo actual de entrenamiento de Umbra con `stable_baseline
 Comando base (desde la raiz del repo):
 - `python stable_baselines3_example.py --onnx_export_path=umbra.onnx`
 
+## Comandos recomendados
+Usar estos comandos como flujo por defecto para evitar colapso temprano de politica.
+
+Precondicion recomendada (nuevo experimento desde cero):
+
+```powershell
+Remove-Item -Recurse -Force logs/sb3/umbra_realign_checkpoints -ErrorAction SilentlyContinue
+Remove-Item -Force logs/sb3/umbra_realign.zip -ErrorAction SilentlyContinue
+Remove-Item -Force Juego/umbra.onnx -ErrorAction SilentlyContinue
+```
+
+1. Entrenamiento principal (genera checkpoints y modelo .zip):
+
+```powershell
+.venv/Scripts/python.exe stable_baselines3_example.py --experiment_name=umbra_realign --timesteps=200000 --save_checkpoint_frequency=5000 --save_model_path=logs/sb3/umbra_realign --learning_rate=1e-4 --ent_coef=0.08 --n_steps=1024 --batch_size=256 --n_epochs=10 --gamma=0.995 --gae_lambda=0.95 --target_kl=0.015
+```
+
+2. Exportar ONNX desde un checkpoint concreto (sin entrenar):
+
+```powershell
+.venv/Scripts/python.exe stable_baselines3_example.py --resume_model_path=logs/sb3/umbra_realign_checkpoints/umbra_realign_20000_steps.zip --export_only --onnx_export_path=Juego/umbra.onnx
+```
+
+3. Inferencia rapida desde un .zip (opcional, para validacion en bucle RL):
+
+```powershell
+.venv/Scripts/python.exe stable_baselines3_example.py --resume_model_path=logs/sb3/umbra_realign.zip --inference --timesteps=20000
+```
+
+Nota: Ajusta el nombre de checkpoint en `--resume_model_path` al ultimo archivo realmente generado en `logs/sb3/umbra_realign_checkpoints/`.
+Para Umbra se recomienda `--save_checkpoint_frequency=5000` para detectar colapso antes y descartar checkpoints malos sin perder tiempo.
+
+4. Validar checkpoints y exportar solo uno sano (recomendado):
+
+```powershell
+.venv/Scripts/python.exe umbra_checkpoint_gate.py --checkpoint_dir=logs/sb3/umbra_realign_checkpoints --max-dominant=0.85 --min-lr-acc=0.55 --lr-deadzone=0.07 --export-onnx=Juego/umbra.onnx
+```
+
+Que valida este comando:
+- Dominancia maxima de una clase de `move` (por defecto <= 0.85).
+- Coherencia izquierda/derecha con barrido de `rel_x` (por defecto >= 55% por lado).
+- Si encuentra uno valido, exporta ONNX automaticamente.
+
+5. Flujo completo en una sola orden (entrena por bloques + gate + export):
+
+```powershell
+./run_umbra_autogate.ps1 -ExperimentName umbra_realign -TotalSteps 150000 -BlockSteps 5000 -LearningRate 1e-4 -EntCoef 0.08 -NSteps 1024 -BatchSize 256 -NEpochs 10 -TargetKl 0.015 -GateMaxDominant 0.85 -GateMinLrAcc 0.55 -GateLrDeadzone 0.07 -OnnxOut Juego/umbra.onnx
+```
+
+Notas:
+- El script reanuda automaticamente desde el ultimo checkpoint del bloque anterior.
+- Si Godot se cierra al terminar un bloque, el script se detiene de forma limpia y al volver a lanzarlo reanuda desde el ultimo checkpoint disponible.
+- Tras cada bloque ejecuta `umbra_checkpoint_gate.py`.
+- Si encuentra un checkpoint sano, exporta ONNX y termina.
+
+Comando rapido para listar checkpoints disponibles:
+
+```powershell
+Get-ChildItem logs/sb3/umbra_realign_checkpoints/*.zip | Sort-Object LastWriteTime -Descending
+```
+
 Resultado esperado:
 - Se genera `Juego/umbra.onnx`.
 - Umbra puede inferir directamente desde ese modelo en la escena real.

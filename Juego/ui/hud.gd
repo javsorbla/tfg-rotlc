@@ -1,6 +1,8 @@
 extends CanvasLayer
 
 var hearts = []
+var heart_container: HBoxContainer
+var heart_template: TextureRect
 var power_nodes = {}
 var power_overlays = {}
 var heart_full: Texture2D = preload("res://assets/ui/heart.png")
@@ -21,7 +23,13 @@ const MAX_COOLDOWNS = {
 
 
 func _ready():
-	hearts = [$Control/Hearts/Heart1, $Control/Hearts/Heart2, $Control/Hearts/Heart3]
+	heart_container = $Control/Hearts
+	heart_template = $Control/Hearts/Heart1
+	hearts = [heart_template]
+	for i in range(2, 4):
+		var existing_heart := heart_container.get_node_or_null("Heart%d" % i)
+		if existing_heart != null:
+			hearts.append(existing_heart)
 	for heart in hearts:
 		if heart != null:
 			heart.texture = heart_full
@@ -32,7 +40,7 @@ func _ready():
 	}
 	power_overlays = power_nodes  
 	show()
-	update_hearts(3, 3)
+	update_hearts(GameState.get_player_max_health(), GameState.get_player_max_health())
 	for power in power_overlays:
 		power_overlays[power].visible = false
 		
@@ -54,18 +62,51 @@ func hide_hud():
 
 
 func update_hearts(current: int, maximum: int):
+	_ensure_heart_slots(maximum)
 	for i in hearts.size():
 		if hearts[i] != null:
 			var was_full = hearts[i].texture == heart_full
 			var is_full = i < current
 			if was_full and not is_full:
-				hearts[i].get_node("ParticlesLose").restart()
+				var lose_particles = hearts[i].get_node_or_null("ParticlesLose")
+				if lose_particles != null:
+					lose_particles.restart()
 			elif not was_full and is_full:
-				hearts[i].get_node("ParticlesGain").restart()
+				var gain_particles = hearts[i].get_node_or_null("ParticlesGain")
+				if gain_particles != null:
+					gain_particles.restart()
 			if is_full:
 				hearts[i].texture = heart_full
 			else:
 				hearts[i].texture = heart_empty
+
+
+func reset_for_respawn() -> void:
+	var max_health := GameState.get_player_max_health()
+	update_hearts(max_health, max_health)
+	for power in power_overlays:
+		if power_overlays[power] != null:
+			power_overlays[power].visible = false
+	for power in duration_bars:
+		if duration_bars[power] != null:
+			duration_bars[power].visible = false
+
+
+func _ensure_heart_slots(maximum: int) -> void:
+	if heart_container == null or heart_template == null:
+		return
+
+	var target := maxi(1, maximum)
+	while hearts.size() < target:
+		var new_heart := heart_template.duplicate(DUPLICATE_SIGNALS | DUPLICATE_GROUPS | DUPLICATE_SCRIPTS)
+		new_heart.name = "Heart%d" % (hearts.size() + 1)
+		heart_container.add_child(new_heart)
+		hearts.append(new_heart)
+
+	while hearts.size() > target:
+		var removed_heart = hearts.pop_back()
+		if removed_heart != null:
+			removed_heart.queue_free()
 
 
 func update_powers(active_power: String, unlocked: Dictionary):
