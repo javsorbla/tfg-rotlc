@@ -226,8 +226,6 @@ default_font = ExtResource("3_q2tak")
 
 [sub_resource type="LabelSettings" id="LabelSettings_de41u"]
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_k2hqp"]
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u2a58"]
 size = Vector2(146, 46)
 

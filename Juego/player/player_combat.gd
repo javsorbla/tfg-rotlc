@@ -34,7 +34,7 @@ func _handle_attack(delta):
 			hitbox.visible = false
 		return
 
-	if Input.is_action_just_pressed("attack"):
+	if Input.is_action_just_pressed("attack") and player.can_attack:
 		is_attacking = true
 		attack_timer = ATTACK_DURATION
 		hitbox.monitoring = true
@@ -71,5 +71,9 @@ func _on_attack_hitbox_area_entered(area: Area2D) -> void:
 		spawn_hit_particles(area.global_position)
 		hitstop_timer = HITSTOP_DURATION
 	elif area.is_in_group("enemy_hurtbox"):
+		var target := area.get_parent()
+		if target != null and target.is_in_group("umbra_boss") and target.has_method("take_damage"):
+			var umbra_damage := maxi(1, int(round(float(player.damage_multiplier))))
+			target.take_damage(umbra_damage)
 		spawn_hit_particles(area.global_position)
 		hitstop_timer = HITSTOP_DURATION

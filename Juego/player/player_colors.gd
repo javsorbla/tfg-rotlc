@@ -170,3 +170,5 @@ func reset_for_respawn() -> void:
 		Color(1.0, 1.0, 1.0),
 		Color(0.925, 0.910, 0.910)
 	)
+	Hud.update_powers(active_power, unlocked)
+	Hud.update_cooldowns(cooldown_timers, active_power, unlocked, power_timer)

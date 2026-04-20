@@ -20,6 +20,8 @@ enum TrainingPreset {
 @export var target_win_rate_high := 0.65
 @export var debug_overlay_enabled := true
 @export var debug_overlay_refresh_interval := 0.2
+@export var randomize_spawn_mirroring := true
+@export var spawn_jitter_x := 24.0
 
 @onready var umbra = $Umbra
 @onready var player_dummy = $Player
@@ -368,18 +370,32 @@ func _reset():
 
 	_pending_reset = false
 	_episode_start_msec = Time.get_ticks_msec()
-	umbra.global_position = spawn_umbra.global_position
+	var umbra_spawn_pos: Vector2 = spawn_umbra.global_position
+	var player_spawn_pos: Vector2 = spawn_player.global_position
+
+	if randomize_spawn_mirroring:
+		var center_x: float = (spawn_umbra.global_position.x + spawn_player.global_position.x) * 0.5
+		if randf() < 0.5:
+			umbra_spawn_pos.x = center_x - (umbra_spawn_pos.x - center_x)
+			player_spawn_pos.x = center_x - (player_spawn_pos.x - center_x)
+
+	if spawn_jitter_x > 0.0:
+		var jitter_x := randf_range(-spawn_jitter_x, spawn_jitter_x)
+		umbra_spawn_pos.x += jitter_x
+		player_spawn_pos.x += jitter_x
+
+	umbra.global_position = umbra_spawn_pos
 	umbra.current_health = umbra.max_health
 	umbra.activate()
 	if umbra.ai_controller and umbra.ai_controller.has_method("reset"):
 		umbra.ai_controller.reset()
 
 	if human_training_mode and _human_player != null:
-		_reset_human_player()
+		_reset_human_player(player_spawn_pos)
 	elif player_dummy.has_method("reset_for_training"):
-		player_dummy.reset_for_training(spawn_player.global_position)
+		player_dummy.reset_for_training(player_spawn_pos)
 	else:
-		player_dummy.global_position = spawn_player.global_position
+		player_dummy.global_position = player_spawn_pos
 		player_dummy.get_node("Health").current_health = player_dummy.get_node("Health").MAX_HEALTH
 
 
@@ -396,10 +412,10 @@ func _check_target_reached() -> bool:
 	return win_rate >= target_win_rate_low and win_rate <= target_win_rate_high
 
 
-func _reset_human_player() -> void:
+func _reset_human_player(spawn_pos: Vector2) -> void:
 	if _human_player == null:
 		return
-	_human_player.global_position = spawn_player.global_position
+	_human_player.global_position = spawn_pos
 	_human_player.velocity = Vector2.ZERO
 	var health = _human_player.get_node_or_null("Health")
 	if health:

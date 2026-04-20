@@ -2,10 +2,11 @@ extends Node
 
 signal died(owner: Node)
 
-const MAX_HEALTH = 3
+const BASE_MAX_HEALTH = 3
 const INVINCIBILITY_DURATION = 1.0
 const FLASH_DURATION = 0.1
 
+var MAX_HEALTH = BASE_MAX_HEALTH
 var current_health = MAX_HEALTH
 var is_invincible = false
 var invincibility_timer = 0.0
@@ -16,7 +17,6 @@ var death_callback: Callable
 @onready var hurtbox = get_parent().get_node("Hurtbox")
 @onready var sprite = get_parent().get_node("AnimatedSprite2D")
 @onready var camera = get_tree().get_first_node_in_group("camera")
-@onready var hud = get_tree().get_first_node_in_group("hud")
 @onready var heal_particles = get_parent().get_node("HealParticles")
 
 
@@ -28,6 +28,7 @@ func _ready():
 
 
 func _init_hud():
+	_sync_max_health_from_progress()
 	current_health = MAX_HEALTH
 	Hud.update_hearts(current_health, MAX_HEALTH)
 
@@ -47,8 +48,7 @@ func take_damage(amount: int, bypass_shield: bool = false):
 	flash_timer = FLASH_DURATION
 	if camera:
 		camera.shake()
-	if hud:
-		hud.update_hearts(current_health, MAX_HEALTH)
+	Hud.update_hearts(current_health, MAX_HEALTH)
 	if current_health <= 0:
 		die()
 
@@ -57,11 +57,11 @@ func set_death_callback(callback: Callable) -> void:
 	death_callback = callback
 
 func die():
-	current_health = MAX_HEALTH
-	Hud.update_hearts(current_health, MAX_HEALTH)
-	get_tree().reload_current_scene()
+	_invoke_death_callback()
+	_reset_player()
 
 func _reset_player():
+	_sync_max_health_from_progress()
 	current_health = MAX_HEALTH
 	is_invincible = true
 	invincibility_timer = 0.6
@@ -79,8 +79,7 @@ func _reset_player():
 	var color_manager = player.get_node_or_null("ColorManager")
 	if color_manager and color_manager.has_method("reset_for_respawn"):
 		color_manager.reset_for_respawn()
-	if hud:
-		hud.update_hearts(current_health, MAX_HEALTH)
+	Hud.reset_for_respawn()
 	GameState.level_reset.emit()
 
 
@@ -111,6 +110,11 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy_hitbox"):
 		var enemy = area.get_parent()
 		take_damage(enemy.DAMAGE)
+	if area.is_in_group("boss_hitbox"):
+		var boss = area.get_parent()
+		if boss.has_method("is_hurting") and boss.is_hurting():
+			return
+		take_damage(boss.DAMAGE, false)
 
 func _on_hurtbox_body_entered(body: Node2D) -> void:
 	if body.is_in_group("spikes"):
@@ -121,3 +125,20 @@ func heal(amount: int):
 	Hud.update_hearts(current_health, MAX_HEALTH)
 	if heal_particles:
 		heal_particles.restart()
+
+
+func apply_prism_core_upgrade() -> bool:
+	var was_collected := GameState.collect_prism_core(GameState.current_level)
+	_sync_max_health_from_progress()
+	current_health = MAX_HEALTH
+	Hud.update_hearts(current_health, MAX_HEALTH)
+	if heal_particles:
+		heal_particles.restart()
+	return was_collected
+
+
+func _sync_max_health_from_progress() -> void:
+	if GameState.has_method("get_player_max_health"):
+		MAX_HEALTH = int(GameState.get_player_max_health())
+	else:
+		MAX_HEALTH = BASE_MAX_HEALTH
