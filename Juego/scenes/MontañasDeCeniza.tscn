@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=4 uid="uid://bu3kl4nm1dulx"]
+[gd_scene load_steps=27 format=4 uid="uid://bu3kl4nm1dulx"]
 
 [ext_resource type="Script" path="res://scenes/montañas_de_ceniza.gd" id="1_fhvl8"]
 [ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_wxf8w"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enviroment/ZonaJefe.tscn" id="7_blvxg"]
 [ext_resource type="PackedScene" uid="uid://behbmfc1i8f6b" path="res://scenes/enviroment/ZonaMuerte.tscn" id="7_h3s0m"]
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="10_6ltyf"]
+[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="12_k6ew8"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lom2h"]
 texture = ExtResource("1_wxf8w")
@@ -241,7 +242,7 @@ position = Vector2(7610, 993)
 
 [node name="Entorno" type="Node2D" parent="."]
 
-[node name="ZonaJefe" parent="Entorno" instance=ExtResource("7_blvxg")]
+[node name="ZonaJefe" parent="Entorno" groups=["boss_room"] instance=ExtResource("7_blvxg")]
 position = Vector2(7669, 964)
 
 [node name="Trigger" parent="Entorno/ZonaJefe" index="0"]
@@ -250,7 +251,6 @@ scale = Vector2(0.984914, 1.00923)
 
 [node name="CollisionShape2D" parent="Entorno/ZonaJefe/Trigger" index="0"]
 position = Vector2(-12.1465, -36.6616)
-scale = Vector2(1, 1)
 shape = SubResource("RectangleShape2D_ojf1f")
 
 [node name="CollisionShape2D" parent="Entorno/ZonaJefe/ParedIzquierda" index="0"]
@@ -336,8 +336,17 @@ collision_mask = 5
 position = Vector2(4591, 588)
 shape = SubResource("RectangleShape2D_2f4qr")
 
-[node name="Umbra" parent="." instance=ExtResource("10_6ltyf")]
+[node name="Umbra" parent="." groups=["boss"] instance=ExtResource("10_6ltyf")]
 position = Vector2(8340, 981)
+
+[node name="AIController2D" parent="Umbra" index="0"]
+onnx_model_path = "res://umbra.onnx"
+
+[node name="Sync" type="Node" parent="."]
+script = ExtResource("12_k6ew8")
+control_mode = 2
+action_repeat = 5
+onnx_model_path = "res://umbra.onnx"
 
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
 [connection signal="body_entered" from="TriggerSupervivencia" to="." method="_on_trigger_supervivencia_body_entered"]
@@ -349,3 +358,4 @@ position = Vector2(8340, 981)
 [editable path="Killzones/ZonaMuerte4"]
 [editable path="Killzones/ZonaMuerte5"]
 [editable path="Killzones/ZonaMuerte6"]
+[editable path="Umbra"]
