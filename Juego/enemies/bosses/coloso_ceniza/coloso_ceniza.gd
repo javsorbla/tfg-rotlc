@@ -121,12 +121,19 @@ func _physics_process(delta):
 		return
 
 	if room_right_limit == 0.0:
-		var boss_room = get_tree().get_first_node_in_group("boss_room")
-		if boss_room:
-			room_left_limit = boss_room.get_node("LimiteIzquierda").global_position.x
-			room_right_limit = boss_room.get_node("LimiteDerecha").global_position.x
-			room_top_limit = boss_room.get_node("LimiteArriba").global_position.y
-			room_bottom_limit = boss_room.get_node("LimiteAbajo").global_position.y
+		var boss_rooms = get_tree().get_nodes_in_group("boss_room")
+		var closest_room = null
+		var closest_dist = INF
+		for room in boss_rooms:
+			var d = global_position.distance_to(room.global_position)
+			if d < closest_dist:
+				closest_dist = d
+				closest_room = room
+		if closest_room:
+			room_left_limit = closest_room.get_node("LimiteIzquierda").global_position.x
+			room_right_limit = closest_room.get_node("LimiteDerecha").global_position.x
+			room_top_limit = closest_room.get_node("LimiteArriba").global_position.y
+			room_bottom_limit = closest_room.get_node("LimiteAbajo").global_position.y
 
 	if current_state == State.DEAD:
 		return
