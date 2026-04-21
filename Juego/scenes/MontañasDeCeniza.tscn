@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=4 uid="uid://bu3kl4nm1dulx"]
+[gd_scene load_steps=38 format=4 uid="uid://bu3kl4nm1dulx"]
 
 [ext_resource type="Script" path="res://scenes/montañas_de_ceniza.gd" id="1_fhvl8"]
 [ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_wxf8w"]
@@ -169,24 +169,6 @@ size = Vector2(20, 283)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_86iv7"]
 size = Vector2(20, 294)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_44nao"]
-size = Vector2(129, 106)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_b7ko3"]
-size = Vector2(299.5, 106)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ytpa3"]
-size = Vector2(196.875, 52.5)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_h5hdx"]
-size = Vector2(234.438, 52.5)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_3yh0t"]
-size = Vector2(100, 52.5)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_r8dvf"]
-size = Vector2(387, 52.5)
-
 [sub_resource type="SpriteFrames" id="SpriteFrames_g5afo"]
 resource_local_to_scene = true
 animations = [{
@@ -230,6 +212,27 @@ animations = [{
 "name": &"wave",
 "speed": 5.0
 }]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_44nao"]
+size = Vector2(129, 106)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_b7ko3"]
+size = Vector2(299.5, 106)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ytpa3"]
+size = Vector2(196.875, 52.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_h5hdx"]
+size = Vector2(234.438, 52.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3yh0t"]
+size = Vector2(100, 52.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_r8dvf"]
+size = Vector2(387, 52.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ss4jm"]
+size = Vector2(423.5, 20)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2f4qr"]
 size = Vector2(39, 37)
@@ -300,7 +303,7 @@ position = Vector2(6707, 390)
 position = Vector2(7610, 993)
 
 [node name="Checkpoint 7" type="Marker2D" parent="Checkpoints" groups=["checkpoint"]]
-position = Vector2(9733, 795)
+position = Vector2(9714, 787)
 
 [node name="Entorno" type="Node2D" parent="."]
 
@@ -339,6 +342,9 @@ position = Vector2(10104, 582)
 
 [node name="PlataformaRompible12" parent="Entorno" instance=ExtResource("7_gnk2d")]
 position = Vector2(10676, 738)
+
+[node name="PlataformaRompible13" parent="Entorno" instance=ExtResource("7_gnk2d")]
+position = Vector2(10495, 737)
 
 [node name="ZonaJefe" parent="Entorno" groups=["boss_room"] instance=ExtResource("7_blvxg")]
 position = Vector2(7669, 964)
@@ -382,7 +388,7 @@ position = Vector2(-228, 20)
 shape = SubResource("RectangleShape2D_rqixa")
 
 [node name="CollisionShape2D" parent="Entorno/ZonaJefe2/ParedIzquierda" index="0"]
-position = Vector2(-249, 20)
+position = Vector2(-251, 20)
 shape = SubResource("RectangleShape2D_12k1r")
 
 [node name="CollisionShape2D" parent="Entorno/ZonaJefe2/ParedDerecha" index="0"]
@@ -403,6 +409,12 @@ position = Vector2(154, -159)
 
 [node name="LimiteAbajo" parent="Entorno/ZonaJefe2" index="7"]
 position = Vector2(151, 167)
+
+[node name="ColosoCeniza" parent="." instance=ExtResource("14_38xxh")]
+position = Vector2(10644, 747)
+
+[node name="AnimatedSprite2D" parent="ColosoCeniza" index="0"]
+sprite_frames = SubResource("SpriteFrames_g5afo")
 
 [node name="Killzones" type="Node2D" parent="."]
 
@@ -448,16 +460,17 @@ position = Vector2(147, -43)
 position = Vector2(5480.5, 698)
 shape = SubResource("RectangleShape2D_r8dvf")
 
+[node name="ZonaMuerte7" parent="Killzones" instance=ExtResource("7_h3s0m")]
+position = Vector2(9540, 1016)
+
+[node name="CollisionShape2D" parent="Killzones/ZonaMuerte7" index="0"]
+position = Vector2(-102.25, 91)
+shape = SubResource("RectangleShape2D_ss4jm")
+
 [node name="Camera2D" parent="." instance=ExtResource("1_y5bao")]
 
-[node name="ColosoCeniza" parent="." instance=ExtResource("14_38xxh")]
-position = Vector2(10644, 747)
-
-[node name="AnimatedSprite2D" parent="ColosoCeniza" index="0"]
-sprite_frames = SubResource("SpriteFrames_g5afo")
-
 [node name="Player" parent="." instance=ExtResource("2_qyv1n")]
-position = Vector2(9695, 782)
+position = Vector2(-78, 18)
 
 [node name="Timer" type="Timer" parent="."]
 wait_time = 15.0
@@ -482,19 +495,17 @@ control_mode = 2
 action_repeat = 5
 onnx_model_path = "res://umbra.onnx"
 
-[node name="PlataformaRompible" parent="." instance=ExtResource("7_gnk2d")]
-position = Vector2(10495, 737)
-
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
 [connection signal="body_entered" from="TriggerSupervivencia" to="." method="_on_trigger_supervivencia_body_entered"]
 
 [editable path="Entorno/ZonaJefe"]
 [editable path="Entorno/ZonaJefe2"]
+[editable path="ColosoCeniza"]
 [editable path="Killzones/ZonaMuerte"]
 [editable path="Killzones/ZonaMuerte2"]
 [editable path="Killzones/ZonaMuerte3"]
 [editable path="Killzones/ZonaMuerte4"]
 [editable path="Killzones/ZonaMuerte5"]
 [editable path="Killzones/ZonaMuerte6"]
-[editable path="ColosoCeniza"]
+[editable path="Killzones/ZonaMuerte7"]
 [editable path="Umbra"]
