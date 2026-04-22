@@ -19,6 +19,10 @@ shader_parameter/flash_amount = 0.0
 shader_parameter/flash_color = Color(1, 1, 1, 1)
 shader_parameter/color_primary = Color(1, 1, 1, 1)
 shader_parameter/color_secondary = Color(0.925, 0.91, 0.91, 1)
+shader_parameter/glow_speed = 3.0
+shader_parameter/glow_intensity = 0.4
+shader_parameter/low_power = false
+shader_parameter/low_health = false
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_1o3aa"]
 animations = [{

@@ -1,10 +1,19 @@
-[gd_scene load_steps=4 format=3 uid="uid://bf18w08n218xn"]
+[gd_scene load_steps=6 format=3 uid="uid://bf18w08n218xn"]
 
 [ext_resource type="Script" path="res://objects/orbe_de_luz.gd" id="1_4rgyt"]
 [ext_resource type="Texture2D" uid="uid://daklo3s4cbdxv" path="res://assets/objects/orbeluz.png" id="2_vskx4"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_oqbjr"]
 radius = 7.0
+
+[sub_resource type="Gradient" id="Gradient_mqrjc"]
+offsets = PackedFloat32Array(0, 0.448052)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_htgq2"]
+gradient = SubResource("Gradient_mqrjc")
+fill = 1
+fill_from = Vector2(0.495413, 0.477064)
 
 [node name="OrbeDeLuz" type="Area2D"]
 collision_layer = 8
@@ -19,3 +28,8 @@ shape = SubResource("CircleShape2D_oqbjr")
 position = Vector2(-1, 0)
 scale = Vector2(0.296875, 0.28125)
 texture = ExtResource("2_vskx4")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.703149, 0.856702, 0.983565, 1)
+energy = 0.7
+texture = SubResource("GradientTexture2D_htgq2")

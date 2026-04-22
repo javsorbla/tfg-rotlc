@@ -66,6 +66,21 @@ func process(delta):
 	_handle_input()
 	
 	Hud.update_cooldowns(cooldown_timers, active_power, unlocked, power_timer)
+	_update_shader_states()
+
+
+func _update_shader_states() -> void:
+	var mat = player.get_node("AnimatedSprite2D").material
+	if not mat:
+		return
+	
+	# Parpadeo cuando queden menos de 2 segundos de poder
+	var low_power = power_active and power_timer < 2.0
+	mat.set_shader_parameter("low_power", low_power)
+	
+	var health = player.get_node("Health")
+	var low_health = health.current_health <= 1
+	mat.set_shader_parameter("low_health", low_health)
 
 func _start_cooldown(power: String):
 	cooldown_timers[power] = POWER_COOLDOWNS[power]
