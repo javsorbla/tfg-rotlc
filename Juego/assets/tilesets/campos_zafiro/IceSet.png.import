@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcp8hn3glstjl"
-path="res://.godot/imported/FireSet.png-5931ad1f157364d18d8bd0c3e6f3eb58.ctex"
+uid="uid://cgbjd234ny1kh"
+path="res://.godot/imported/IceSet.png-7973ee2e0e75a5a509e427f476d0e5cc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/FireSet.png"
-dest_files=["res://.godot/imported/FireSet.png-5931ad1f157364d18d8bd0c3e6f3eb58.ctex"]
+source_file="res://assets/tilesets/campos_zafiro/IceSet.png"
+dest_files=["res://.godot/imported/IceSet.png-7973ee2e0e75a5a509e427f476d0e5cc.ctex"]
 
 [params]
 

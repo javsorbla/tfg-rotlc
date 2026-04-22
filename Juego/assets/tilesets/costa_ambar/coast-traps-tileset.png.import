@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cgbjd234ny1kh"
-path="res://.godot/imported/IceSet.png-cf0b565be3fcf047aceae0585bbc30b9.ctex"
+uid="uid://0imdevw8o63r"
+path="res://.godot/imported/coast-traps-tileset.png-06be254aa31f2514db2d20ba6793c5c9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/IceSet.png"
-dest_files=["res://.godot/imported/IceSet.png-cf0b565be3fcf047aceae0585bbc30b9.ctex"]
+source_file="res://assets/tilesets/costa_ambar/coast-traps-tileset.png"
+dest_files=["res://.godot/imported/coast-traps-tileset.png-06be254aa31f2514db2d20ba6793c5c9.ctex"]
 
 [params]
 

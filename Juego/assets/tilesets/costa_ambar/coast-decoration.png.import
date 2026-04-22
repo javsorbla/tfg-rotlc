@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dfevusenu4qc8"
-path="res://.godot/imported/Gray_Tile_Terrain (16 x 16).png-1cb182cf57417ad194e5d8e9b147a762.ctex"
+uid="uid://dtql36tvdiwm1"
+path="res://.godot/imported/coast-decoration.png-10d8ef9ff2b63472a60d3b6577789760.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/Gray_Tile_Terrain (16 x 16).png"
-dest_files=["res://.godot/imported/Gray_Tile_Terrain (16 x 16).png-1cb182cf57417ad194e5d8e9b147a762.ctex"]
+source_file="res://assets/tilesets/costa_ambar/coast-decoration.png"
+dest_files=["res://.godot/imported/coast-decoration.png-10d8ef9ff2b63472a60d3b6577789760.ctex"]
 
 [params]
 
@@ -21,7 +21,7 @@ compress/lossy_quality=0.7
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

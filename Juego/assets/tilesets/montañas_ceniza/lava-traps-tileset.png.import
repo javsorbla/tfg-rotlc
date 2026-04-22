@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bqby384r5lm15"
-path="res://.godot/imported/DarkCastle.png-5e7feba3049bfd8c2ad1c6cc99e469a8.ctex"
+uid="uid://bxsqr2dva75bo"
+path="res://.godot/imported/lava-traps-tileset.png-8a2bfb7dba212c74b49ca0ae43bdae4a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/DarkCastle.png"
-dest_files=["res://.godot/imported/DarkCastle.png-5e7feba3049bfd8c2ad1c6cc99e469a8.ctex"]
+source_file="res://assets/tilesets/montañas_ceniza/lava-traps-tileset.png"
+dest_files=["res://.godot/imported/lava-traps-tileset.png-8a2bfb7dba212c74b49ca0ae43bdae4a.ctex"]
 
 [params]
 

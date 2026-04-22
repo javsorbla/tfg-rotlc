@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bxsqr2dva75bo"
-path="res://.godot/imported/lava-traps-tileset.png-add9907ad6eb36b79a437ce67fd0715d.ctex"
+uid="uid://bcp8hn3glstjl"
+path="res://.godot/imported/FireSet.png-afeb84ad2fdb360398c2c98718353033.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/lava-traps-tileset.png"
-dest_files=["res://.godot/imported/lava-traps-tileset.png-add9907ad6eb36b79a437ce67fd0715d.ctex"]
+source_file="res://assets/tilesets/montañas_ceniza/FireSet.png"
+dest_files=["res://.godot/imported/FireSet.png-afeb84ad2fdb360398c2c98718353033.ctex"]
 
 [params]
 
