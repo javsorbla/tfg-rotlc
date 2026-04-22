@@ -1,6 +1,6 @@
 [gd_scene load_steps=17 format=4 uid="uid://shyldwrlc5so"]
 
-[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_oxa8h"]
+[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_oxa8h"]
 [ext_resource type="PackedScene" uid="uid://j3iq0wr4lk5y" path="res://enemies/bosses/coloso_ceniza/ColosoCeniza.tscn" id="2_4biun"]
 [ext_resource type="Texture2D" uid="uid://pykyxvncyfos" path="res://assets/enemies/bosses/coloso_ceniza/coloso_herido.png" id="3_0sjo0"]
 [ext_resource type="Texture2D" uid="uid://bp73nfu16pj8n" path="res://assets/enemies/bosses/coloso_ceniza/puñetazo.png" id="3_4ejeq"]
