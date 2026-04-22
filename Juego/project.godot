@@ -19,6 +19,10 @@ config/icon="res://icon.svg"
 
 GameState="*res://scripts/GameState.gd"
 Hud="*res://ui/HUD.tscn"
+AppConfig="*res://addons/maaacks_menus_template/base/nodes/autoloads/app_config/app_config.tscn"
+SceneLoader="*res://addons/maaacks_menus_template/base/nodes/autoloads/scene_loader/scene_loader.tscn"
+ProjectMusicController="*res://addons/maaacks_menus_template/base/nodes/autoloads/music_controller/project_music_controller.tscn"
+ProjectUISoundController="*res://addons/maaacks_menus_template/base/nodes/autoloads/ui_sound_controller/project_ui_sound_controller.tscn"
 
 [display]
 
@@ -27,6 +31,7 @@ window/size/viewport_height=260
 window/size/window_width_override=920
 window/size/window_height_override=520
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [dotnet]
 
@@ -34,7 +39,11 @@ project/assembly_name="Rise Of The Lost Colors"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_rl_agents/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_rl_agents/plugin.cfg", "res://addons/maaacks_menus_template/plugin.cfg")
+
+[gui]
+
+theme/custom="res://addons/maaacks_menus_template/examples/resources/themes/expedition.tres"
 
 [input]
 
@@ -129,6 +138,10 @@ aim_left={
 ]
 }
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://addons/maaacks_menus_template/base/translations/menus_translations.en.translation", "res://addons/maaacks_menus_template/base/translations/menus_translations.fr.translation")
+
 [layer_names]
 
 2d_physics/layer_1="Sólido"
@@ -137,6 +150,12 @@ aim_left={
 2d_physics/layer_4="Recolectables"
 2d_physics/layer_5="Enemigos"
 2d_physics/layer_6="Entorno"
+
+[maaacks_menus_template]
+
+disable_install_audio_busses=true
+disable_update_check=false
+disable_install_wizard=true
 
 [rendering]
 
