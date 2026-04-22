@@ -25,13 +25,27 @@ func _ready() -> void:
 	Hud.show_hud()
 	GameState.current_level = 2
 	call_deferred("_mover_player")
+
+	GameState.level_reset.connect(reiniciar_trampa)
 	
+	reiniciar_trampa()
+
+
+func reiniciar_trampa():
+	$Timer.stop()
+
 	for enemigo in enemigos_emboscada:
 		enemigo.visible = false
 		enemigo.process_mode = Node.PROCESS_MODE_DISABLED
 
 	for posicion in bloques_a_crear:
 		tilemap.erase_cell(posicion)
+
+		
+	for posicion in bloques_a_destruir:
+		tilemap.set_cell(posicion, id_tileset, coordenadas_imagen)
+
+	$TriggerSupervivencia.set_deferred("monitoring", true)
 
 
 func _process(delta: float) -> void:
@@ -54,8 +68,8 @@ func _on_trigger_supervivencia_body_entered(body):
 			enemigo.visible = true
 			enemigo.process_mode = Node.PROCESS_MODE_INHERIT
 			
-		
-		$TriggerSupervivencia.queue_free()
+
+		$TriggerSupervivencia.set_deferred("monitoring", false)
 
 
 func _on_timer_timeout():

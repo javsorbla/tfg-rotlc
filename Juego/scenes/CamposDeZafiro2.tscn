@@ -160,7 +160,7 @@ size = Vector2(1993.5, 30)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qltvg"]
 size = Vector2(147, 57)
 
-[node name="CamposDeZafiro" type="Node2D"]
+[node name="CamposDeZafiro2" type="Node2D"]
 script = ExtResource("1_nmowy")
 
 [node name="Nivel" type="TileMapLayer" parent="." groups=["spikes"]]
