@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://msgn8vkyft75"]
+[gd_scene load_steps=15 format=3 uid="uid://msgn8vkyft75"]
 
 [ext_resource type="Script" path="res://player/player.gd" id="1_por4q"]
 [ext_resource type="Shader" path="res://player/Player.gdshader" id="2_4gpna"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://player/player_combat.gd" id="6_2pkhy"]
 [ext_resource type="Script" path="res://player/player_health.gd" id="6_68mua"]
 [ext_resource type="Script" path="res://player/player_colors.gd" id="8_pu8ge"]
+[ext_resource type="Texture2D" uid="uid://bg8ufqq315t5t" path="res://assets/ui/heal.png" id="9_q57fq"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sgw7u"]
 radius = 7.0
@@ -86,7 +87,7 @@ shape = SubResource("RectangleShape2D_qxcp4")
 
 [node name="Hurtbox" type="Area2D" parent="." groups=["player_hurtbox"]]
 collision_layer = 4
-collision_mask = 18
+collision_mask = 26
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
 position = Vector2(0, 1)
@@ -101,6 +102,19 @@ script = ExtResource("6_68mua")
 
 [node name="ColorManager" type="Node" parent="."]
 script = ExtResource("8_pu8ge")
+
+[node name="HealParticles" type="CPUParticles2D" parent="."]
+emitting = false
+amount = 6
+lifetime = 0.4
+one_shot = true
+texture = ExtResource("9_q57fq")
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 30.0
+initial_velocity_max = 60.0
+scale_amount_min = 0.25
+scale_amount_max = 0.25
 
 [connection signal="area_entered" from="AttackHitbox" to="." method="_on_attack_hitbox_area_entered"]
 [connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]

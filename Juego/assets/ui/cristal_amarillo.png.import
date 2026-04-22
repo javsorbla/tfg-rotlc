@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b40vapp2ahrik"
-path="res://.godot/imported/boss2.png-3978d3e8d18b4d5603a4ae96d43a3646.ctex"
+uid="uid://dn5s1g0fvihr6"
+path="res://.godot/imported/cristal_amarillo.png-6c645b86e0c99c8fec83b5384bbd0d6f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/boss2.png"
-dest_files=["res://.godot/imported/boss2.png-3978d3e8d18b4d5603a4ae96d43a3646.ctex"]
+source_file="res://assets/ui/cristal_amarillo.png"
+dest_files=["res://.godot/imported/cristal_amarillo.png-6c645b86e0c99c8fec83b5384bbd0d6f.ctex"]
 
 [params]
 

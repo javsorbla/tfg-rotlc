@@ -1,8 +1,9 @@
 extends CharacterBody2D
 
+const MAX_HEALTH: int = 3
 const DAMAGE: int = 1
 
-const STUN_DURATION: float  = 1.0
+const STUN_DURATION: float  = 0.8
 const IDLE_DISTANCE: float = 250.0
 const LOSE_DISTANCE: float = 275.0
 const GRAVITY: float = 700.0
@@ -15,23 +16,31 @@ const TELEPORT_HALF_WIDTH: float = 14.0
 const TELEPORT_SAFETY_MARGIN: float = 40.0
 const SHOOT_COOLDOWN: float = 2.0
 
-enum State { IDLE, ATTACK, STUNNED }
+enum State { IDLE, ATTACK, STUNNED, DEAD }
 
 var current_state: State = State.IDLE
+var current_health: int = MAX_HEALTH
 var player: Node2D = null
 var stun_timer: float = 0.0
 var shoot_timer: float = 0.0
+var death_timer: float = -1.0
+var spawn_position = Vector2.ZERO
+var _combat_reset_state: Dictionary = {}
 
 @onready var attack_scene = preload("res://enemies/common/inquisidor_tenebroso/AtaqueInquisidor.tscn")
 
 
 func _ready() -> void:
+	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
-
+	spawn_position = global_position
+	GameState.level_reset.connect(_on_level_reset)
+	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	_enter_state(State.IDLE)
 
@@ -53,9 +62,29 @@ func _physics_process(delta: float) -> void:
 			_state_attack()
 		State.STUNNED:
 			_state_stunned(delta)
+		State.DEAD:
+			if death_timer > 0:
+				death_timer -= delta
+				if death_timer <= 0.0:
+					_despawn_dead_instance()
 
 	move_and_slide()
 
+func _on_level_reset():
+	set_physics_process(true)
+	visible = true
+	current_health = MAX_HEALTH
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	death_timer = -1.0
+	shoot_timer = 0.0
+	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	_enter_state(State.IDLE)
+
+
+func _despawn_dead_instance() -> void:
+	velocity = Vector2.ZERO
+	EnemyResetUtils.despawn(self)
 
 func _enter_state(new_state: State) -> void:
 	current_state = new_state
@@ -66,7 +95,25 @@ func _enter_state(new_state: State) -> void:
 
 		State.ATTACK:
 			$AnimatedSprite2D.play("idle")
+		
+		State.STUNNED:
+			$AnimatedSprite2D.play("stunned")
 
+		State.DEAD:
+			$AnimatedSprite2D.play("dead")
+			if $EnemyHitbox:
+				$EnemyHitbox.set_deferred("monitoring", false)
+				$EnemyHitbox.set_deferred("monitorable", false)
+				$EnemyHitbox.set_deferred("collision_layer", 0)
+				$EnemyHitbox.set_deferred("collision_mask", 0)
+			if $EnemyHurtbox:
+				$EnemyHurtbox.set_deferred("monitoring", false)
+				$EnemyHurtbox.set_deferred("monitorable", false)
+				$EnemyHurtbox.set_deferred("collision_layer", 0)
+				$EnemyHurtbox.set_deferred("collision_mask", 0)
+			velocity = Vector2.ZERO
+			
+			death_timer = 0.7
 
 func _state_idle() -> void:
 	velocity.x = 0
@@ -103,6 +150,7 @@ func _state_attack() -> void:
 
 func _shoot() -> void:
 	var attack = attack_scene.instantiate()
+	attack.source_enemy = self
 	get_tree().current_scene.add_child(attack)
 	attack.global_position = global_position
 	attack.direction = global_position.direction_to(player.global_position)
@@ -205,11 +253,17 @@ func _on_enemy_hitbox_area_entered(area: Area2D):
 
 func _on_enemy_hurtbox_area_entered(area: Area2D):
 	if area.is_in_group("player_hitbox"): 
-		take_damage(0) # Vida infinita temporalmente
+		take_damage(1)
 
 
-func take_damage(amount: int) -> void: 
-	# Vida infinita
+func take_damage(amount: int) -> void:
+	if current_state == State.DEAD:
+		return
+
+	current_health -= amount
+	if current_health <= 0:
+		_enter_state(State.DEAD)
+		return
+
 	stun_timer = STUN_DURATION
-	_enter_state(State.STUNNED) 
-	$AnimatedSprite2D.play("stunned")
+	_enter_state(State.STUNNED)

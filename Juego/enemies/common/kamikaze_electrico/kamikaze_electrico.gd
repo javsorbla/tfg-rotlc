@@ -14,16 +14,20 @@ var attack_direction: Vector2 = Vector2.ZERO
 var explode_timer: float = 0.0
 var explode_from_death: bool = false
 var dead_timer: float = 0.0
-
+var spawn_position = Vector2.ZERO
+var _combat_reset_state: Dictionary = {}
 
 func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
-
+	spawn_position = global_position
+	GameState.level_reset.connect(_on_level_reset)
+	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	_enter_state(State.SLEEP)
 
@@ -41,6 +45,23 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+func _on_level_reset():
+	set_physics_process(true)
+	visible = true
+	current_health = MAX_HEALTH
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	attack_direction = Vector2.ZERO
+	explode_timer = 0.0
+	explode_from_death = false
+	dead_timer = 0.0
+	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	_enter_state(State.SLEEP)
+
+
+func _despawn_dead_instance() -> void:
+	velocity = Vector2.ZERO
+	EnemyResetUtils.despawn(self)
 
 func _enter_state(new_state: State) -> void:
 	current_state = new_state
@@ -71,7 +92,7 @@ func _enter_state(new_state: State) -> void:
 			add_child(timer)
 			timer.wait_time = 0.75
 			timer.one_shot = true
-			timer.timeout.connect(queue_free)
+			timer.timeout.connect(_despawn_dead_instance)
 			timer.start()
 	
 		State.DEAD:
@@ -135,8 +156,10 @@ func _on_enemy_hitbox_area_entered(area: Area2D):
 
 
 func _on_enemy_hurtbox_area_entered(area: Area2D):
-	if area.is_in_group("player_hitbox"): 
-		take_damage(1) 
+	if area.is_in_group("player_hitbox"):
+		var player_node = get_tree().get_first_node_in_group("player")
+		var multiplier = player_node.damage_multiplier if player_node else 1.0
+		take_damage(int(1 * multiplier))
 
 
 func take_damage(amount: int) -> void:

@@ -1,9 +1,9 @@
-﻿extends Node2D
+extends Node2D
 
 enum State { IDLE, CHARGE, PROJECTILE, JUMP, HURT, DEAD }
 enum Phase { ONE, TWO }
 
-const MAX_HEALTH = 40
+const MAX_HEALTH = 30
 const PHASE_TWO_THRESHOLD = 0.35
 const BOSS_HALF_WIDTH = 40.0
 const FLOAT_AMPLITUDE = 18.0
@@ -40,6 +40,7 @@ var current_phase = Phase.ONE
 var DAMAGE = 1
 var player = null
 var is_active = false
+var spawn_position = Vector2.ZERO
 
 var charge_timer = 0.0
 var projectile_timer = 0.0
@@ -72,12 +73,19 @@ func _ready():
 	player = get_tree().get_first_node_in_group("player")
 	charge_timer = CHARGE_COOLDOWN
 	projectile_timer = PROJECTILE_COOLDOWN
+	spawn_position = global_position
+	GameState.level_reset.connect(_on_level_reset)
 	original_y = position.y
 	core_hurtbox_base_x = abs(core_hurtbox_shape.position.x)
 	if not core_hurtbox.is_in_group("boss_core"):
 		core_hurtbox.add_to_group("boss_core")
 	if not attack_hitbox.is_in_group("enemy_hitbox"):
 		attack_hitbox.add_to_group("enemy_hitbox")
+	if not $NormalHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
+		$NormalHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	if not is_in_group("boss"):
+		add_to_group("boss")
+
 	attack_hitbox.monitoring = false
 	attack_hitbox.monitorable = false
 
@@ -330,16 +338,42 @@ func _update_flip(flipped: bool):
 	core_hurtbox_shape.position.x = -core_hurtbox_base_x if flipped else core_hurtbox_base_x
 
 func activate():
-	is_active = true
+	_reset_for_encounter(true)
+
+
+func _on_level_reset() -> void:
+	_reset_for_encounter(false)
+
+
+func _reset_for_encounter(make_active: bool) -> void:
+	if damage_flash_tween:
+		damage_flash_tween.kill()
+		damage_flash_tween = null
+
+	global_position = spawn_position
+	current_health = MAX_HEALTH
+	current_state = State.IDLE
+	current_phase = Phase.ONE
 	charge_timer = CHARGE_COOLDOWN
 	projectile_timer = PROJECTILE_COOLDOWN
+	jump_timer = 0.0
+	action_timer = 0.0
+	post_jump_recover_timer = 0.0
+	jump_velocity = Vector2.ZERO
+	charge_direction = Vector2.ZERO
+	has_summoned_fury_walkers = false
+	attack_hitbox.set_deferred("monitoring", false)
+	attack_hitbox.set_deferred("monitorable", false)
+	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	_update_flip(false)
+	is_active = make_active
 
 func take_damage(amount: int):
 	current_health -= amount
 	_play_damage_flash()
 	if current_health <= 0:
 		die()
-
+	
 func _play_damage_flash():
 	if not sprite:
 		return
@@ -362,6 +396,7 @@ func _summon_fury_walkers_async():
 
 func _spawn_single_walker(spawn_x: float):
 	var walker = caminante_helado_scene.instantiate()
+	walker.is_spawned = true
 	get_parent().add_child(walker)
 	var ground_y: float = _resolve_ground_y_at_x(spawn_x)
 	var feet_offset: float = _get_walker_feet_offset(walker)
@@ -403,6 +438,12 @@ func _resolve_ground_y_at_x(x: float) -> float:
 		if hit_y >= room_bottom_limit - FLOOR_NEAR_BOTTOM_THRESHOLD:
 			return hit_y
 	return room_bottom_limit
+
+func _on_enemy_hurtbox_area_entered(area: Area2D):
+	if area.is_in_group("player_hitbox"):
+		var player_node = get_tree().get_first_node_in_group("player")
+		var multiplier = player_node.damage_multiplier if player_node else 1.0
+		take_damage(int(1 * multiplier))
 
 func die():
 	current_state = State.DEAD
