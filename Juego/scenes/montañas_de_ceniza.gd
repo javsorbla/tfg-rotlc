@@ -26,24 +26,40 @@ var coordenadas_imagen = Vector2i(2, 1)
 
 
 func _ready() -> void:
-	# Congelamos a los enemigos
+	# ¡NUEVO! El nivel escucha la señal de tu jugador.
+	# Cuando el jugador muera, ejecutará la función 'reiniciar_trampa'
+	GameState.level_reset.connect(reiniciar_trampa)
+	
+	# Llamamos a la función también al empezar el nivel para prepararlo todo
+	reiniciar_trampa()
+
+
+# --- ¡NUEVO! FUNCIÓN QUE RESETEA SOLO LA TRAMPA ---
+func reiniciar_trampa():
+	$Timer.stop() # Paramos el reloj por si te moriste mientras contaba
+
+	# 1. Volvemos a congelar a los enemigos
 	for enemigo in enemigos_emboscada:
 		enemigo.visible = false
 		enemigo.process_mode = Node.PROCESS_MODE_DISABLED
-		
-	# --- ¡NUEVO! ---
-	# Borramos los bloques de la entrada que dibujaste en el editor 
-	# para que el camino esté abierto al empezar a jugar.
+
+	# 2. Borramos la puerta de entrada para dejarte pasar
 	for posicion in bloques_a_crear:
 		tilemap.erase_cell(posicion)
-	# ---------------
+		
+	# 3. Volvemos a CREAR la puerta de salida (por si moriste después de que se abriera)
+	for posicion in bloques_a_destruir:
+		tilemap.set_cell(posicion, id_tileset, coordenadas_imagen)
+
+	# 4. Volvemos a encender el Trigger (usamos set_deferred por seguridad en Godot)
+	$TriggerSupervivencia.set_deferred("monitoring", true)
+# --------------------------------------------------
 
 
 func _process(delta: float) -> void:
 	pass
 
 
-# --- CÓDIGO PARA REINICIAR LA ESCENA ---
 func _unhandled_input(event):
 	if event.is_action_pressed("reiniciar_escena"):
 		get_tree().reload_current_scene()
@@ -66,7 +82,9 @@ func _on_trigger_supervivencia_body_entered(body):
 			
 		print("😈 ¡Emboscada! Enemigos específicos activados.")
 		
-		$TriggerSupervivencia.queue_free()
+		# ¡CAMBIO IMPORTANTE! Ya no borramos el trigger con queue_free().
+		# Lo apagamos temporalmente para poder volver a encenderlo si mueres.
+		$TriggerSupervivencia.set_deferred("monitoring", false)
 
 
 # --- CÓDIGO PARA DESTRUIR MÚLTIPLES BLOQUES ---
