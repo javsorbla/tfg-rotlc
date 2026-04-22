@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://bxsqr2dva75bo" path="res://assets/tilesets/lava-traps-tileset.png" id="4_3e04u"]
 [ext_resource type="PackedScene" uid="uid://brsnap3ngcjrq" path="res://enemies/common/corredor_magma/CorredorMagma.tscn" id="4_wh6vt"]
 [ext_resource type="PackedScene" uid="uid://bav0n7c513nk1" path="res://enemies/common/acechador_aereo/AcechadorAereo.tscn" id="7_2t6ad"]
-[ext_resource type="PackedScene" path="res://scenes/enviroment/ZonaJefe.tscn" id="7_blvxg"]
+[ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="7_blvxg"]
 [ext_resource type="PackedScene" uid="uid://b4xv5brfpegl" path="res://scenes/enviroment/PlataformaRompible.tscn" id="7_gnk2d"]
 [ext_resource type="PackedScene" uid="uid://behbmfc1i8f6b" path="res://scenes/enviroment/ZonaMuerte.tscn" id="7_h3s0m"]
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="10_6ltyf"]
