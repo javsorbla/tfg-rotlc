@@ -1,7 +1,7 @@
 [gd_scene load_steps=37 format=4 uid="uid://cedama6tnao4f"]
 
 [ext_resource type="Script" path="res://scenes/campos_de_zafiro_2.gd" id="1_nmowy"]
-[ext_resource type="Texture2D" uid="uid://cgbjd234ny1kh" path="res://assets/tilesets/IceSet.png" id="2_imeiq"]
+[ext_resource type="Texture2D" uid="uid://cgbjd234ny1kh" path="res://assets/tilesets/campos_zafiro/IceSet.png" id="2_imeiq"]
 [ext_resource type="Texture2D" uid="uid://b0ge27g4bx1xb" path="res://assets/traps/pincho_hielo.png" id="3_ejanj"]
 [ext_resource type="PackedScene" uid="uid://bav0n7c513nk1" path="res://enemies/common/acechador_aereo/AcechadorAereo.tscn" id="4_7816f"]
 [ext_resource type="PackedScene" uid="uid://b7kj5rrupn1ou" path="res://enemies/common/caminante_helado/CaminanteHelado.tscn" id="5_arf0p"]

@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=4 uid="uid://cfibgiyfniv1n"]
 
-[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_quqbp"]
+[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_quqbp"]
 [ext_resource type="PackedScene" uid="uid://ct22yo10swc1v" path="res://enemies/common/kamikaze_electrico/KamikazeElectrico.tscn" id="3_0rswq"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="3_atc88"]
 

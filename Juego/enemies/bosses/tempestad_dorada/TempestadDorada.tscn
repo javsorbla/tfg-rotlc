@@ -1,0 +1,95 @@
+[gd_scene load_steps=10 format=3 uid="uid://btspr1ib0d52y"]
+
+[ext_resource type="Script" path="res://enemies/bosses/tempestad_dorada/tempestad_dorada.gd" id="1_h0175"]
+[ext_resource type="Texture2D" uid="uid://dgm1xjh34qyb0" path="res://assets/enemies/bosses/tempestad_dorada/attack.png" id="2_nd1q5"]
+[ext_resource type="Texture2D" uid="uid://bxqwmdsgdk8dj" path="res://assets/enemies/bosses/tempestad_dorada/charging.png" id="3_yoo5d"]
+[ext_resource type="Texture2D" uid="uid://da8ydomgn18mu" path="res://assets/enemies/bosses/tempestad_dorada/idle.png" id="4_8kejl"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_4oaa8"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_nd1q5")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_yoo5d")
+}],
+"loop": true,
+"name": &"charging",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_8kejl")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1vspu"]
+radius = 14.841
+height = 103.276
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fvn32"]
+radius = 15.5555
+height = 104.705
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cm5n4"]
+radius = 10.5986
+height = 60.8227
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_j61d8"]
+radius = 10.5986
+height = 60.793
+
+[node name="TempestadDorada" type="Node2D" groups=["boss"]]
+script = ExtResource("1_h0175")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 9.53674e-07)
+scale = Vector2(0.828125, 0.851563)
+sprite_frames = SubResource("SpriteFrames_4oaa8")
+animation = &"attack"
+
+[node name="NormalHurtbox" type="Area2D" parent="." groups=["boss_hurtbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NormalHurtbox"]
+position = Vector2(8, -12)
+rotation = 0.774926
+shape = SubResource("CapsuleShape2D_1vspu")
+
+[node name="AttackHitbox" type="Area2D" parent="." groups=["boss_hitbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
+position = Vector2(8, -12)
+rotation = 0.774926
+shape = SubResource("CapsuleShape2D_fvn32")
+debug_color = Color(1, 0, 0, 0.419608)
+
+[node name="CoreHurtbox1" type="Area2D" parent="." groups=["boss_core"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CoreHurtbox1"]
+position = Vector2(20, 14)
+rotation = 0.774926
+shape = SubResource("CapsuleShape2D_cm5n4")
+debug_color = Color(0, 1, 0, 0.419608)
+
+[node name="CoreHurtbox2" type="Area2D" parent="." groups=["boss_core"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CoreHurtbox2"]
+position = Vector2(-23, -18)
+rotation = 0.774926
+shape = SubResource("CapsuleShape2D_j61d8")
+debug_color = Color(0, 1, 0, 0.419608)

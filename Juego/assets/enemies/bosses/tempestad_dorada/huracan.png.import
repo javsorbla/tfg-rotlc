@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cgbjd234ny1kh"
-path="res://.godot/imported/IceSet.png-cf0b565be3fcf047aceae0585bbc30b9.ctex"
+uid="uid://bllwptk6g3pkl"
+path="res://.godot/imported/huracan.png-b5457626b43287502eaf02aa270e0bfb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/IceSet.png"
-dest_files=["res://.godot/imported/IceSet.png-cf0b565be3fcf047aceae0585bbc30b9.ctex"]
+source_file="res://assets/enemies/bosses/tempestad_dorada/huracan.png"
+dest_files=["res://.godot/imported/huracan.png-b5457626b43287502eaf02aa270e0bfb.ctex"]
 
 [params]
 

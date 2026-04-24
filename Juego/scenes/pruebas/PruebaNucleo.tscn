@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=4 uid="uid://bomc74iu02po3"]
 
-[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_1sfx7"]
+[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_1sfx7"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="2_hv4vr"]
 [ext_resource type="PackedScene" uid="uid://t1ew0cy7jw7m" path="res://enemies/common/nucleo_inestable/NucleoInestable.tscn" id="3_glu4o"]
 

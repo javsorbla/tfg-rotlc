@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="1_2ac4d"]
 [ext_resource type="Script" path="res://enemies/bosses/umbra/entrenamiento_umbra.gd" id="1_xhvoh"]
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="2_y4o4n"]
-[ext_resource type="Texture2D" uid="uid://dfevusenu4qc8" path="res://assets/tilesets/Gray_Tile_Terrain (16 x 16).png" id="3_1rq4w"]
+[ext_resource type="Texture2D" uid="uid://dfevusenu4qc8" path="res://assets/tilesets/tutorial/Gray_Tile_Terrain (16 x 16).png" id="3_1rq4w"]
 [ext_resource type="PackedScene" uid="uid://cumc5ifv66xjv" path="res://enemies/bosses/umbra/PlayerDummy.tscn" id="4_n1die"]
 [ext_resource type="Script" path="res://enemies/bosses/umbra/killzone.gd" id="6_2hfra"]
 

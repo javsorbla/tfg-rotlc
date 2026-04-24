@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bqby384r5lm15"
-path="res://.godot/imported/DarkCastle.png-5e7feba3049bfd8c2ad1c6cc99e469a8.ctex"
+uid="uid://56dmqc0ep8bt"
+path="res://.godot/imported/coast-decoration.png-10d8ef9ff2b63472a60d3b6577789760.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/DarkCastle.png"
-dest_files=["res://.godot/imported/DarkCastle.png-5e7feba3049bfd8c2ad1c6cc99e469a8.ctex"]
+source_file="res://assets/tilesets/costa_ambar/coast-decoration.png"
+dest_files=["res://.godot/imported/coast-decoration.png-10d8ef9ff2b63472a60d3b6577789760.ctex"]
 
 [params]
 

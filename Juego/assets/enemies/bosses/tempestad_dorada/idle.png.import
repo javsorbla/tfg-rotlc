@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://3u5l1yf58pvk"
-path="res://.godot/imported/lava-tileset.png-e1db090abf4fa53f2a8418760d63ec6e.ctex"
+uid="uid://da8ydomgn18mu"
+path="res://.godot/imported/idle.png-5cb48e95af70cecaa71113e64af55680.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/lava-tileset.png"
-dest_files=["res://.godot/imported/lava-tileset.png-e1db090abf4fa53f2a8418760d63ec6e.ctex"]
+source_file="res://assets/enemies/bosses/tempestad_dorada/idle.png"
+dest_files=["res://.godot/imported/idle.png-5cb48e95af70cecaa71113e64af55680.ctex"]
 
 [params]
 
