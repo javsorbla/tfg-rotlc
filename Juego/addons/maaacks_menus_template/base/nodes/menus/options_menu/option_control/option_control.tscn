@@ -3,9 +3,9 @@
 [ext_resource type="Script" uid="uid://cafqki2b08kwu" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/option_control/option_control.gd" id="1_jvl5q"]
 
 [node name="OptionControl" type="HBoxContainer" unique_id=364203356]
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 32)
 offset_right = 400.0
-offset_bottom = 40.0
+offset_bottom = 32.0
 script = ExtResource("1_jvl5q")
 default_value = false
 

@@ -107,7 +107,7 @@ func _on_exit_button_pressed() -> void:
 	_show_window(exit_confirmation)
 
 func _on_restart_confirmation_confirmed() -> void:
-	SceneLoader.reload_current_scene()
+	SceneLoader.load_scene(GameState.current_level_path)
 	close()
 
 func _on_main_menu_confirmation_confirmed():

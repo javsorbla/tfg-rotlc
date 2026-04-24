@@ -20,6 +20,11 @@ func shake():
 	shake_timer = SHAKE_DURATION
 	shake_intensity = SHAKE_INTENSITY
 
+func _ready():
+	position_smoothing_enabled = true
+	position_smoothing_speed = 8.0
+	zoom = Vector2(2.25, 2.25)
+
 func _process(delta):
 	if boss_room_mode:
 		global_position = lerp(global_position, boss_room_target, 0.02)

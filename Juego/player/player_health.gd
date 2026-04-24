@@ -12,6 +12,7 @@ var is_invincible = false
 var invincibility_timer = 0.0
 var flash_timer = 0.0
 var death_callback: Callable
+@export var auto_reset: bool = true
 
 @onready var player = get_parent()
 @onready var hurtbox = get_parent().get_node("Hurtbox")
@@ -57,7 +58,12 @@ func set_death_callback(callback: Callable) -> void:
 	death_callback = callback
 
 func die():
+	emit_signal("died", get_parent())
 	_invoke_death_callback()
+	if auto_reset:
+		_reset_player()
+
+func respawn() -> void:
 	_reset_player()
 
 func _reset_player():

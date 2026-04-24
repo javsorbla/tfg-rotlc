@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://byvydukidk6i2"]
+[gd_scene load_steps=9 format=3 uid="uid://byvydukidk6i2"]
 
 [ext_resource type="Script" path="res://ui/menus/main_menu/main_menu.gd" id="2_lk0wa"]
 [ext_resource type="PackedScene" uid="uid://dum2pujhh1w4g" path="res://ui/menus/windows/main_menu_options_window.tscn" id="3_qhsni"]
@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" uid="uid://c5pfkjxskjc60" path="res://ui/menus/windows/main_menu_credits_window.tscn" id="4_qhsni"]
 [ext_resource type="PackedScene" uid="uid://bkcsjsk2ciff" path="res://addons/maaacks_menus_template/base/nodes/music_players/background_music_player.tscn" id="5_1s4l0"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/labels/config_name_label.gd" id="6_7b6ws"]
-[ext_resource type="Theme" uid="uid://cc7juu78cpxfb" path="res://addons/maaacks_menus_template/examples/resources/themes/expedition.tres" id="6_tiqsa"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/capture_focus.gd" id="7_alags"]
 [ext_resource type="PackedScene" uid="uid://cwt4p3bufkke5" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="8_cs2jt"]
 
@@ -17,7 +16,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("6_tiqsa")
 script = ExtResource("2_lk0wa")
 options_packed_scene = ExtResource("3_qhsni")
 credits_packed_scene = ExtResource("4_qhsni")

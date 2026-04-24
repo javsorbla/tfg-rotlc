@@ -34,6 +34,7 @@ const BASE_PLAYER_MAX_HEALTH := 3
 
 var current_level: int = 1
 var cleared_boss_rooms: Dictionary = {}
+var current_level_path: String = ""
 
 var _finetuning_process_id: int = -1
 var is_finetuning := false

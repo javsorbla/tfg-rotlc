@@ -1,67 +1,127 @@
-[gd_scene load_steps=0 format=3 uid="uid://bpphyypwqyoyl"]
+[gd_scene load_steps=5 format=3 uid="uid://bpphyypwqyoyl"]
 
-[ext_resource type="PackedScene" uid="uid://6gdbfi0172ji" path="res://addons/maaacks_menus_template/base/nodes/windows/overlaid_window.tscn" id="1_gm3uv"]
 [ext_resource type="Script" path="res://ui/menus/windows/pause_menu.gd" id="2_0ln3r"]
+[ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/capture_focus.gd" id="3_v0q8a"]
 [ext_resource type="PackedScene" uid="uid://xvu2k02xdqi6" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="3_wiw3s"]
 [ext_resource type="PackedScene" uid="uid://cwt4p3bufkke5" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="4_e5wrg"]
 
-[node name="PauseMenu" unique_id=156357199 instance=ExtResource("1_gm3uv")]
+[node name="PauseMenu" type="PanelContainer"]
 process_mode = 3
-custom_minimum_size = Vector2(256, 312)
-offset_left = -128.0
-offset_top = -155.0
-offset_right = 128.0
-offset_bottom = 157.0
-size_flags_horizontal = 1
-size_flags_vertical = 1
+custom_minimum_size = Vector2(240, 240)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -120.0
+offset_right = 120.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.9, 0.9)
 script = ExtResource("2_0ln3r")
 options_menu_scene = ExtResource("3_wiw3s")
-main_menu_scene_path = ""
 restart_confirmation_node_path = NodePath("RestartConfirmation")
 main_menu_confirmation_node_path = NodePath("MainMenuConfirmation")
 exit_confirmation_node_path = NodePath("ExitConfirmation")
-menu_container_node_path = NodePath("..")
 pauses_game = true
+exclusive_background_color = Color(0, 0, 0, 0.5)
 
-[node name="TitleLabel" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer" parent_id_path=PackedInt32Array(1788474031) index="0" unique_id=1049966061]
+[node name="ContentContainer" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="BoxContainer" type="BoxContainer" parent="ContentContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="TitleMargin" type="MarginContainer" parent="ContentContainer/BoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 8
+
+[node name="BoxContainer" type="BoxContainer" parent="ContentContainer/BoxContainer/TitleMargin"]
+layout_mode = 2
+theme_override_constants/separation = 0
+vertical = true
+
+[node name="TitleLabel" type="Label" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
 text = "Pausa"
+horizontal_alignment = 1
 
-[node name="BodyMargin" parent="ContentContainer/BoxContainer" parent_id_path=PackedInt32Array(394030069) index="1" unique_id=590613964]
+[node name="HSeparator" type="HSeparator" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer"]
+layout_mode = 2
+
+[node name="BodyMargin" type="MarginContainer" parent="ContentContainer/BoxContainer"]
+unique_name_in_owner = true
 visible = false
-
-[node name="MenuButtonsMargin" parent="ContentContainer/BoxContainer" parent_id_path=PackedInt32Array(394030069) index="2" unique_id=1413292752]
+layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CloseButton" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" parent_id_path=PackedInt32Array(1371114575) index="0" unique_id=314526102]
+[node name="DescriptionLabel" type="RichTextLabel" parent="ContentContainer/BoxContainer/BodyMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+
+[node name="MenuButtonsMargin" type="MarginContainer" parent="ContentContainer/BoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 8
+
+[node name="MenuButtons" type="BoxContainer" parent="ContentContainer/BoxContainer/MenuButtonsMargin"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+alignment = 1
+vertical = true
+script = ExtResource("3_v0q8a")
+
+[node name="CloseButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
+unique_name_in_owner = true
+layout_mode = 2
 text = "Reanudar"
 
-[node name="RestartButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" parent_id_path=PackedInt32Array(1371114575) index="1" unique_id=1371657172]
+[node name="RestartButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
 layout_mode = 2
 text = "Reiniciar"
 
-[node name="OptionsButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" parent_id_path=PackedInt32Array(1371114575) index="2" unique_id=1126383675]
+[node name="OptionsButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Opciones"
 
-[node name="MainMenuButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" parent_id_path=PackedInt32Array(1371114575) index="3" unique_id=928043706]
+[node name="MainMenuButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Menú Principal"
 
-[node name="ExitButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" parent_id_path=PackedInt32Array(1371114575) index="4" unique_id=1398257582]
+[node name="ExitButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Salir del Juego"
 
-[node name="RestartConfirmation" parent="." index="1" unique_id=1405814931 instance=ExtResource("4_e5wrg")]
+[node name="RestartConfirmation" parent="." instance=ExtResource("4_e5wrg")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "¿Reiniciar la partida?"
 title = "Confirmar Reinicio"
 
-[node name="MainMenuConfirmation" parent="." index="2" unique_id=1770307648 instance=ExtResource("4_e5wrg")]
+[node name="MainMenuConfirmation" parent="." instance=ExtResource("4_e5wrg")]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(220, 0)
@@ -69,13 +129,14 @@ layout_mode = 2
 text = "¿Volver al menú principal?"
 title = "Confirmar Salida"
 
-[node name="ExitConfirmation" parent="." index="3" unique_id=1587469343 instance=ExtResource("4_e5wrg")]
+[node name="ExitConfirmation" parent="." instance=ExtResource("4_e5wrg")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "¿Salir del juego?"
 title = "Confirmar Salida"
 
+[connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/CloseButton" to="." method="_on_close_button_pressed"]
 [connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/RestartButton" to="." method="_on_restart_button_pressed"]
 [connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/OptionsButton" to="." method="_on_options_button_pressed"]
 [connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
