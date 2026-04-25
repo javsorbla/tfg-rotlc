@@ -136,6 +136,10 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.666667, 0.666667, 0.666667, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 text = "Opciones"
 script = ExtResource("9_ekh3p")
 
@@ -153,6 +157,10 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.666667, 0.666667, 0.666667, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 text = "Créditos"
 script = ExtResource("9_ekh3p")
 
@@ -170,6 +178,10 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.666667, 0.666667, 0.666667, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 text = "Salir"
 script = ExtResource("9_ekh3p")
 
