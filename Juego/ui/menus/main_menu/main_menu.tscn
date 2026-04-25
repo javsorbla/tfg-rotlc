@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://byvydukidk6i2"]
+[gd_scene load_steps=12 format=3 uid="uid://byvydukidk6i2"]
 
 [ext_resource type="Script" path="res://ui/menus/main_menu/main_menu.gd" id="2_lk0wa"]
 [ext_resource type="PackedScene" uid="uid://dum2pujhh1w4g" path="res://ui/menus/windows/main_menu_options_window.tscn" id="3_qhsni"]
@@ -6,8 +6,11 @@
 [ext_resource type="PackedScene" uid="uid://c5pfkjxskjc60" path="res://ui/menus/windows/main_menu_credits_window.tscn" id="4_qhsni"]
 [ext_resource type="PackedScene" uid="uid://bkcsjsk2ciff" path="res://addons/maaacks_menus_template/base/nodes/music_players/background_music_player.tscn" id="5_1s4l0"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/labels/config_name_label.gd" id="6_7b6ws"]
+[ext_resource type="Texture2D" uid="uid://pls0s6t2vmxl" path="res://themes/titulo_upscaled.png" id="6_cwkwh"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/capture_focus.gd" id="7_alags"]
 [ext_resource type="PackedScene" uid="uid://cwt4p3bufkke5" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="8_cs2jt"]
+[ext_resource type="Script" path="res://ui/menus/main_menu/main_menu_button.gd" id="9_ekh3p"]
+[ext_resource type="Texture2D" uid="uid://t783xna2ghd3" path="res://assets/ui/arrow.png" id="10_72cm0"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -26,14 +29,22 @@ script = ExtResource("4_egdge")
 [node name="BackgroundMusicPlayer" parent="." instance=ExtResource("5_1s4l0")]
 
 [node name="BackgroundTextureRect" type="TextureRect" parent="."]
+z_index = -1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+texture = ExtResource("6_cwkwh")
 expand_mode = 1
-stretch_mode = 5
+
+[node name="ColorOverlay" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 1277.0
+offset_bottom = 720.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.117647)
 
 [node name="MenuContainer" type="MarginContainer" parent="."]
 unique_name_in_owner = true
@@ -45,6 +56,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="TitleMargin" type="MarginContainer" parent="MenuContainer"]
+visible = false
 layout_mode = 2
 theme_override_constants/margin_top = 24
 
@@ -82,17 +94,16 @@ mouse_filter = 2
 [node name="MenuButtonsBoxContainer" type="BoxContainer" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer"]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 7
 anchor_left = 0.5
-anchor_top = 0.5
+anchor_top = 1.0
 anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -114.0
-offset_top = -118.0
-offset_right = 106.0
-offset_bottom = 90.0
+anchor_bottom = 1.0
+offset_left = -110.0
+offset_top = -208.0
+offset_right = 110.0
 grow_horizontal = 2
-grow_vertical = 2
+grow_vertical = 0
 size_flags_horizontal = 4
 theme_override_constants/separation = 16
 alignment = 1
@@ -104,7 +115,21 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.666667, 0.666667, 0.666667, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 0.8)
 text = "Nueva Partida"
+script = ExtResource("9_ekh3p")
+
+[node name="Arrow" type="TextureRect" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/NewGameButton"]
+visible = false
+layout_mode = 0
+offset_left = -36.0
+offset_top = -8.0
+offset_right = 4.0
+offset_bottom = 32.0
+texture = ExtResource("10_72cm0")
 
 [node name="OptionsButton" type="Button" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
 unique_name_in_owner = true
@@ -112,6 +137,16 @@ custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Opciones"
+script = ExtResource("9_ekh3p")
+
+[node name="Arrow" type="TextureRect" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/OptionsButton"]
+visible = false
+layout_mode = 0
+offset_left = -36.0
+offset_top = -8.0
+offset_right = 4.0
+offset_bottom = 32.0
+texture = ExtResource("10_72cm0")
 
 [node name="CreditsButton" type="Button" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
 unique_name_in_owner = true
@@ -119,6 +154,16 @@ custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Créditos"
+script = ExtResource("9_ekh3p")
+
+[node name="Arrow" type="TextureRect" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/CreditsButton"]
+visible = false
+layout_mode = 0
+offset_left = -36.0
+offset_top = -8.0
+offset_right = 4.0
+offset_bottom = 32.0
+texture = ExtResource("10_72cm0")
 
 [node name="ExitButton" type="Button" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
 unique_name_in_owner = true
@@ -126,6 +171,16 @@ custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Salir"
+script = ExtResource("9_ekh3p")
+
+[node name="Arrow" type="TextureRect" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/ExitButton"]
+visible = false
+layout_mode = 0
+offset_left = -36.0
+offset_top = -8.0
+offset_right = 4.0
+offset_bottom = 32.0
+texture = ExtResource("10_72cm0")
 
 [node name="ExitConfirmation" parent="." instance=ExtResource("8_cs2jt")]
 unique_name_in_owner = true
