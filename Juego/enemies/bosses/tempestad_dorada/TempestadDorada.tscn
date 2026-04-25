@@ -55,7 +55,7 @@ script = ExtResource("1_h0175")
 position = Vector2(0, 9.53674e-07)
 scale = Vector2(0.828125, 0.851563)
 sprite_frames = SubResource("SpriteFrames_4oaa8")
-animation = &"attack"
+animation = &"idle"
 
 [node name="NormalHurtbox" type="Area2D" parent="." groups=["boss_hurtbox"]]
 collision_layer = 16
@@ -93,3 +93,6 @@ position = Vector2(-23, -18)
 rotation = 0.774926
 shape = SubResource("CapsuleShape2D_j61d8")
 debug_color = Color(0, 1, 0, 0.419608)
+
+[node name="SpawnRayo" type="Marker2D" parent="."]
+position = Vector2(-19, -2)

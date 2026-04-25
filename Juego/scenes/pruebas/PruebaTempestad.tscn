@@ -107,13 +107,13 @@ physics_layer_0/collision_layer = 1
 sources/0 = SubResource("TileSetAtlasSource_uy8jb")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bdlmn"]
-size = Vector2(35.75, 383.75)
+size = Vector2(35.75, 522.75)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_f8as6"]
-size = Vector2(33, 383.5)
+size = Vector2(33, 522.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_44h2j"]
-size = Vector2(33, 384.25)
+size = Vector2(33, 495.25)
 
 [node name="PruebaTempestad" type="Node2D"]
 
@@ -133,15 +133,15 @@ position = Vector2(-237, 0)
 position = Vector2(-305, -141)
 
 [node name="CollisionShape2D" parent="ZonaJefe/Trigger" index="0"]
-position = Vector2(198, -32.125)
+position = Vector2(198, -101.625)
 shape = SubResource("RectangleShape2D_bdlmn")
 
 [node name="CollisionShape2D" parent="ZonaJefe/ParedIzquierda" index="0"]
-position = Vector2(146, -32.25)
+position = Vector2(146, -101.75)
 shape = SubResource("RectangleShape2D_f8as6")
 
 [node name="CollisionShape2D" parent="ZonaJefe/ParedDerecha" index="0"]
-position = Vector2(1012, -32.875)
+position = Vector2(1012, -88.375)
 shape = SubResource("RectangleShape2D_44h2j")
 
 [node name="Centro" parent="ZonaJefe" index="3"]

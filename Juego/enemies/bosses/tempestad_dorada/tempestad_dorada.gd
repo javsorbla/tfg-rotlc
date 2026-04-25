@@ -19,6 +19,10 @@ const DIVE_SLIDE_SPEED = 200.0
 const DIVE_COOLDOWN = 10.0
 const RETURN_SPEED = 250.0
 
+const RAY_COOLDOWN = 15.0
+const RAY_WINDUP_TIME = 1.0
+const RAY_DURATION = 1.5
+
 var current_health = MAX_HEALTH
 var current_state = State.PATROL
 var patrol_direction = 1.0
@@ -36,6 +40,14 @@ var dive_winding_up = false
 var windup_timer = 0.0
 var slide_timer = 0.0
 
+var ray_cooldown_timer = 0.0
+var ray_winding_up = false
+var ray_windup_timer = 0.0
+var ray_duration_timer = 0.0
+var ray_instance = null
+var ray_target = Vector2.ZERO
+var ray_end = Vector2.ZERO
+
 var returning = false
 var original_y: float = 0.0
 
@@ -51,6 +63,9 @@ var player = null
 @onready var core_hurtbox_2 = $CoreHurtbox2
 @onready var attack_hitbox = $AttackHitbox
 @onready var normal_hurtbox = $NormalHurtbox
+
+@onready var ray_spawn = $SpawnRayo
+@onready var ray_scene = preload("res://enemies/bosses/tempestad_dorada/Rayo.tscn")
 
 func _ready():
 	spawn_position = global_position
@@ -85,6 +100,9 @@ func _physics_process(delta):
 
 	if dive_cooldown_timer > 0.0:
 		dive_cooldown_timer -= delta
+		
+	if ray_cooldown_timer > 0.0:
+		ray_cooldown_timer -= delta
 
 	_handle_state(delta)
 
@@ -117,6 +135,8 @@ func _patrol_state(delta):
 	var at_wall = (patrol_direction > 0.0 and position.x >= room_right_limit - BOSS_HALF_WIDTH) \
 			   or (patrol_direction < 0.0 and position.x <= room_left_limit + BOSS_HALF_WIDTH)
 	if at_wall:
+		patrol_direction *= -1.0
+		_update_flip(patrol_direction > 0.0)
 		pause_timer = SIDE_PAUSE_DURATION
 		current_state = State.PAUSE
 
@@ -125,9 +145,31 @@ func _pause_state(delta):
 	position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 	pause_timer -= delta
 
+	if ray_winding_up:
+		ray_windup_timer -= delta
+		if ray_windup_timer <= 0.0:
+			ray_winding_up = false
+			_shoot_ray()
+		return
+
+	if ray_instance:
+		ray_duration_timer -= delta
+		_update_ray()
+		if ray_duration_timer <= 0.0:
+			ray_instance.queue_free()
+			ray_instance = null
+			sprite.play("idle")
+			current_state = State.PATROL
+		return
+
 	if pause_timer <= 0.0:
-		patrol_direction *= -1.0
-		current_state = State.PATROL
+		if ray_cooldown_timer <= 0.0:
+			ray_winding_up = true
+			ray_windup_timer = RAY_WINDUP_TIME
+			ray_cooldown_timer = RAY_COOLDOWN
+			sprite.play("charging")
+		else:
+			current_state = State.PATROL
 
 func _dive_state(delta):
 	if dive_winding_up:
@@ -192,6 +234,61 @@ func _start_dive():
 	_update_flip((player.global_position - global_position).normalized().x > 0.0)
 	sprite.play("attack")
 
+func _shoot_ray():
+	if not player:
+		return
+	ray_end = player.global_position  
+	ray_instance = ray_scene.instantiate()
+	get_parent().add_child(ray_instance)
+	ray_instance.scale = Vector2.ONE
+
+	# Corrige el origen del inicio al borde izquierdo
+	var inicio = ray_instance.get_node_or_null("Inicio")
+	if inicio and inicio.sprite_frames:
+		var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+		if tex:
+			inicio.offset.x = tex.get_width() / 2.0
+
+	ray_duration_timer = RAY_DURATION
+	_update_ray()
+
+func _update_ray():
+	if not ray_instance or not player:
+		return
+
+	var start = ray_spawn.global_position
+	var end = player.global_position
+	var diff = end - start
+	var angle = diff.angle()
+
+	ray_instance.global_position = Vector2.ZERO
+	ray_instance.rotation = 0.0
+	ray_instance.scale = Vector2.ONE
+
+	var inicio = ray_instance.get_node_or_null("Inicio")
+	if inicio:
+		inicio.global_position = start
+		inicio.rotation = angle
+		inicio.scale = Vector2.ONE
+
+	var haz = ray_instance.get_node_or_null("Haz")
+	if haz and haz.texture:
+		var inicio_width = 0.0
+		if inicio and inicio.sprite_frames:
+			var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+			if tex:
+				inicio_width = float(tex.get_width())
+
+		var haz_start = start + diff.normalized() * (inicio_width + 180.0) + Vector2(-diff.y, diff.x).normalized() * 63.0
+		var haz_distance = max(diff.length() - inicio_width, 0.0)
+		var tex_height = float(haz.texture.get_height())
+
+		haz.global_position = haz_start + Vector2(0, -tex_height / 2.0).rotated(angle)
+		haz.rotation = angle
+		haz.scale = Vector2.ONE
+		haz.region_enabled = true
+		haz.region_rect = Rect2(0, 0, haz_distance, tex_height)
+
 func _update_flip(flipped: bool):
 	sprite.flip_h = flipped
 
@@ -213,10 +310,18 @@ func _reset_for_encounter(make_active: bool) -> void:
 	dive_sliding = false
 	slide_timer = 0.0
 	returning = false
+	ray_cooldown_timer = 0.0
+	ray_winding_up = false
+	ray_windup_timer = 0.0
+	if ray_instance:
+		ray_instance.queue_free()
+		ray_instance = null
+	ray_duration_timer = 0.0
 	DAMAGE = 1
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
 	room_right_limit = 0.0
+	
 	_update_flip(false)
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	if sprite:
