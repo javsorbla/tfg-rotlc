@@ -95,4 +95,3 @@ shape = SubResource("CapsuleShape2D_j61d8")
 debug_color = Color(0, 1, 0, 0.419608)
 
 [node name="SpawnRayo" type="Marker2D" parent="."]
-position = Vector2(-19, -2)

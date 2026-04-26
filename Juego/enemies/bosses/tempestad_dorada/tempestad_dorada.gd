@@ -141,11 +141,11 @@ func _patrol_state(delta):
 		current_state = State.PAUSE
 
 func _pause_state(delta):
-	position.y += sin(Time.get_ticks_msec() * 0.002) * FLOAT_AMPLITUDE * delta
-	position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 	pause_timer -= delta
 
 	if ray_winding_up:
+		position.y += sin(Time.get_ticks_msec() * 0.002) * FLOAT_AMPLITUDE * delta
+		position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 		ray_windup_timer -= delta
 		if ray_windup_timer <= 0.0:
 			ray_winding_up = false
@@ -162,8 +162,12 @@ func _pause_state(delta):
 			current_state = State.PATROL
 		return
 
+	position.y += sin(Time.get_ticks_msec() * 0.002) * FLOAT_AMPLITUDE * delta
+	position.y = clamp(position.y, room_top_limit, room_bottom_limit)
+
 	if pause_timer <= 0.0:
 		if ray_cooldown_timer <= 0.0:
+			ray_end = player.global_position  # guarda posicion aqui
 			ray_winding_up = true
 			ray_windup_timer = RAY_WINDUP_TIME
 			ray_cooldown_timer = RAY_COOLDOWN
@@ -237,17 +241,17 @@ func _start_dive():
 func _shoot_ray():
 	if not player:
 		return
-	ray_end = player.global_position  
 	ray_instance = ray_scene.instantiate()
 	get_parent().add_child(ray_instance)
 	ray_instance.scale = Vector2.ONE
 
-	# Corrige el origen del inicio al borde izquierdo
 	var inicio = ray_instance.get_node_or_null("Inicio")
-	if inicio and inicio.sprite_frames:
-		var tex = inicio.sprite_frames.get_frame_texture("default", 0)
-		if tex:
-			inicio.offset.x = tex.get_width() / 2.0
+	if inicio:
+		inicio.visible = false
+		if inicio.sprite_frames:
+			var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+			if tex:
+				inicio.offset.x = tex.get_width() / 2.0
 
 	ray_duration_timer = RAY_DURATION
 	_update_ray()
@@ -257,41 +261,51 @@ func _update_ray():
 		return
 
 	var start = ray_spawn.global_position
-	var end = player.global_position
+	var end = ray_end
 	var diff = end - start
 	var angle = diff.angle()
 
 	ray_instance.global_position = Vector2.ZERO
 	ray_instance.rotation = 0.0
-	ray_instance.scale = Vector2.ONE
 
+	# Borrar tiles anteriores
+	for child in ray_instance.get_children():
+		if child.name.begins_with("RayTile"):
+			child.free()
+
+	# Obtener ancho del sprite de inicio
 	var inicio = ray_instance.get_node_or_null("Inicio")
-	if inicio:
-		inicio.global_position = start
-		inicio.rotation = angle
-		inicio.scale = Vector2.ONE
+	if not inicio or not inicio.sprite_frames:
+		return
+	var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+	if not tex:
+		return
+	var tile_width = float(tex.get_width())
 
-	var haz = ray_instance.get_node_or_null("Haz")
-	if haz and haz.texture:
-		var inicio_width = 0.0
-		if inicio and inicio.sprite_frames:
-			var tex = inicio.sprite_frames.get_frame_texture("default", 0)
-			if tex:
-				inicio_width = float(tex.get_width())
+	# Calcular cuantos tiles hacen falta
+	var distance = diff.length()
+	var num_tiles = int(ceil(distance / tile_width)) + 7
 
-		var haz_start = start + diff.normalized() * (inicio_width + 180.0) + Vector2(-diff.y, diff.x).normalized() * 63.0
-		var haz_distance = max(diff.length() - inicio_width, 0.0)
-		var tex_height = float(haz.texture.get_height())
-
-		haz.global_position = haz_start + Vector2(0, -tex_height / 2.0).rotated(angle)
-		haz.rotation = angle
-		haz.scale = Vector2.ONE
-		haz.region_enabled = true
-		haz.region_rect = Rect2(0, 0, haz_distance, tex_height)
+	for i in range(num_tiles):
+		var tile = AnimatedSprite2D.new()
+		tile.name = "RayTile" + str(i)
+		tile.sprite_frames = inicio.sprite_frames
+		tile.animation = "default"
+		tile.play("default")
+		tile.offset = inicio.offset
+		tile.scale = Vector2(1.0, 0.8)
+		tile.global_position = start + diff.normalized() * (tile_width * i + tile_width * 0.2)
+		tile.rotation = angle
+		ray_instance.add_child(tile)
+	
+	if ray_instance.has_method("update_hitbox"):
+		ray_instance.update_hitbox(ray_spawn.global_position, ray_end)
 
 func _update_flip(flipped: bool):
 	sprite.flip_h = flipped
-
+	if ray_spawn:
+		ray_spawn.position.x = -abs(ray_spawn.position.x) if flipped else abs(ray_spawn.position.x)
+		
 func activate():
 	_reset_for_encounter(true)
 
