@@ -15,7 +15,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_a0rgo"]
-size = Vector2(128, 38)
+size = Vector2(141, 48)
 
 [node name="Rayo" type="Node2D"]
 script = ExtResource("1_chxs3")
@@ -28,5 +28,5 @@ collision_layer = 16
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RayoHitbox"]
-position = Vector2(0, -1)
+position = Vector2(-0.5, -1)
 shape = SubResource("RectangleShape2D_a0rgo")

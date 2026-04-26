@@ -33,8 +33,8 @@ animations = [{
 }]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1vspu"]
-radius = 14.841
-height = 103.276
+radius = 15.5555
+height = 104.646
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fvn32"]
 radius = 15.5555

@@ -1,10 +1,11 @@
-[gd_scene load_steps=11 format=4 uid="uid://bfsrt3ngt1yiy"]
+[gd_scene load_steps=12 format=4 uid="uid://bfsrt3ngt1yiy"]
 
 [ext_resource type="Texture2D" uid="uid://b81m3ahfsjjqg" path="res://assets/tilesets/costa_ambar/coast-tileset.png" id="1_x4sr8"]
 [ext_resource type="PackedScene" uid="uid://btspr1ib0d52y" path="res://enemies/bosses/tempestad_dorada/TempestadDorada.tscn" id="2_aay0i"]
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="2_tbsn1"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="3_vu31f"]
 [ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="4_emt4k"]
+[ext_resource type="PackedScene" path="res://objects/NucleoDePrisma.tscn" id="6_oiyu2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uy8jb"]
 texture = ExtResource("1_x4sr8")
@@ -70,8 +71,10 @@ texture = ExtResource("1_x4sr8")
 14:6/0 = 0
 0:9/0 = 0
 0:9/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+1:9/next_alternative_id = 2
 1:9/0 = 0
-1:9/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, 8, 8, 8, 8, -8, -8, -8)
+1:9/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -4.375, -8, -8, 8, -8, 8, -4.375)
+1:9/0/physics_layer_0/polygon_0/one_way = true
 2:9/0 = 0
 2:9/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 4:9/0 = 0
@@ -158,5 +161,8 @@ position = Vector2(580, -229)
 
 [node name="LimiteAbajo" parent="ZonaJefe" index="7"]
 position = Vector2(580, 166)
+
+[node name="NucleoDePrisma" parent="." instance=ExtResource("6_oiyu2")]
+position = Vector2(-216, 0)
 
 [editable path="ZonaJefe"]

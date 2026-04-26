@@ -23,6 +23,11 @@ const RAY_COOLDOWN = 15.0
 const RAY_WINDUP_TIME = 1.0
 const RAY_DURATION = 1.5
 
+const HURRICANE_COOLDOWN: float = 14.0
+const HURRICANE_WARNING_TIME: float = 0.8
+const HURRICANE_DAMAGE: int = 2
+const HURRICANE_DURATION = 6.5
+
 var current_health = MAX_HEALTH
 var current_state = State.PATROL
 var patrol_direction = 1.0
@@ -48,6 +53,10 @@ var ray_instance = null
 var ray_target = Vector2.ZERO
 var ray_end = Vector2.ZERO
 
+var hurricane_timer: float = HURRICANE_COOLDOWN
+var hurricane_active = false
+var hurricane_duration_timer = 0.0
+
 var returning = false
 var original_y: float = 0.0
 
@@ -66,6 +75,8 @@ var player = null
 
 @onready var ray_spawn = $SpawnRayo
 @onready var ray_scene = preload("res://enemies/bosses/tempestad_dorada/Rayo.tscn")
+@onready var hurricane_scene = preload("res://enemies/bosses/tempestad_dorada/Huracan.tscn")
+
 
 func _ready():
 	spawn_position = global_position
@@ -103,6 +114,9 @@ func _physics_process(delta):
 		
 	if ray_cooldown_timer > 0.0:
 		ray_cooldown_timer -= delta
+		
+	if hurricane_timer > 0.0:
+		hurricane_timer -= delta
 
 	_handle_state(delta)
 
@@ -161,13 +175,29 @@ func _pause_state(delta):
 			sprite.play("idle")
 			current_state = State.PATROL
 		return
+		
+	if hurricane_active:
+		hurricane_duration_timer -= delta
+		# Solo se mueve arriba y abajo mientras dura el huracan
+		position.y += sin(Time.get_ticks_msec() * 0.002) * FLOAT_AMPLITUDE * delta
+		position.y = clamp(position.y, room_top_limit, room_bottom_limit)
+		if hurricane_duration_timer <= 0.0:
+			hurricane_active = false
+			sprite.play("idle")
+			current_state = State.PATROL
+		return
 
 	position.y += sin(Time.get_ticks_msec() * 0.002) * FLOAT_AMPLITUDE * delta
 	position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 
 	if pause_timer <= 0.0:
-		if ray_cooldown_timer <= 0.0:
-			ray_end = player.global_position  # guarda posicion aqui
+		if hurricane_timer <= 0.0:
+			hurricane_active = true
+			hurricane_duration_timer = HURRICANE_DURATION
+			hurricane_timer = HURRICANE_COOLDOWN
+			_start_hurricane()
+		elif ray_cooldown_timer <= 0.0:
+			ray_end = player.global_position
 			ray_winding_up = true
 			ray_windup_timer = RAY_WINDUP_TIME
 			ray_cooldown_timer = RAY_COOLDOWN
@@ -183,7 +213,7 @@ func _dive_state(delta):
 		if windup_timer <= 0.0:
 			dive_winding_up = false
 			var dir = (player.global_position - global_position).normalized()
-			dir.y = max(dir.y, 0.1)  # fuerza siempre hacia abajo
+			dir.y = max(dir.y, 0.1)
 			dive_velocity = dir.normalized() * DIVE_SPEED
 			_update_flip(dive_velocity.x > 0.0)
 			attack_hitbox.monitoring = true
@@ -268,12 +298,10 @@ func _update_ray():
 	ray_instance.global_position = Vector2.ZERO
 	ray_instance.rotation = 0.0
 
-	# Borrar tiles anteriores
 	for child in ray_instance.get_children():
 		if child.name.begins_with("RayTile"):
 			child.free()
 
-	# Obtener ancho del sprite de inicio
 	var inicio = ray_instance.get_node_or_null("Inicio")
 	if not inicio or not inicio.sprite_frames:
 		return
@@ -282,7 +310,6 @@ func _update_ray():
 		return
 	var tile_width = float(tex.get_width())
 
-	# Calcular cuantos tiles hacen falta
 	var distance = diff.length()
 	var num_tiles = int(ceil(distance / tile_width)) + 7
 
@@ -300,6 +327,22 @@ func _update_ray():
 	
 	if ray_instance.has_method("update_hitbox"):
 		ray_instance.update_hitbox(ray_spawn.global_position, ray_end)
+
+func _start_hurricane():
+	var p = get_tree().get_first_node_in_group("player")
+	if not p:
+		return
+	if global_position.distance_to(p.global_position) > 900.0:
+		return
+	_spawn_hurricane(Vector2(p.global_position.x, room_bottom_limit - 8.0))
+
+func _spawn_hurricane(pos: Vector2):
+	var hurricane = hurricane_scene.instantiate()
+	get_parent().add_child(hurricane)
+	hurricane.global_position = pos
+	hurricane.room_bottom_limit = room_bottom_limit
+	hurricane.room_left_limit = room_left_limit
+	hurricane.room_right_limit = room_right_limit
 
 func _update_flip(flipped: bool):
 	sprite.flip_h = flipped
@@ -331,6 +374,11 @@ func _reset_for_encounter(make_active: bool) -> void:
 		ray_instance.queue_free()
 		ray_instance = null
 	ray_duration_timer = 0.0
+	hurricane_active = false
+	hurricane_duration_timer = 0.0
+	hurricane_timer = HURRICANE_COOLDOWN
+	for node in get_tree().get_nodes_in_group("hurricane"):
+		node.queue_free()
 	DAMAGE = 1
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
