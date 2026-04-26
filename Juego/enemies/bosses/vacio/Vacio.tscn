@@ -1,0 +1,45 @@
+[gd_scene load_steps=6 format=3 uid="uid://c0ogqogypgm2j"]
+
+[ext_resource type="Script" path="res://enemies/bosses/vacio/vacio.gd" id="1_et7wl"]
+[ext_resource type="Texture2D" uid="uid://carbscgs8x4q7" path="res://assets/enemies/bosses/vacio/vacio2-limpio-reducido.png" id="2_i0uov"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ovn4g"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_i0uov")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cktqs"]
+size = Vector2(38, 96.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bs8gs"]
+size = Vector2(38, 97)
+
+[node name="Vacio" type="Node2D" groups=["boss"]]
+script = ExtResource("1_et7wl")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_ovn4g")
+
+[node name="AttactHitBox" type="Area2D" parent="." groups=["boss_hitbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttactHitBox"]
+position = Vector2(-1, 8.75)
+shape = SubResource("RectangleShape2D_cktqs")
+debug_color = Color(0.969172, 0.154044, 0.220914, 0.42)
+
+[node name="NormalHurtBox" type="Area2D" parent="." groups=["boss_hurtbox"]]
+position = Vector2(-29, -14)
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NormalHurtBox"]
+position = Vector2(28, 22.5)
+shape = SubResource("RectangleShape2D_bs8gs")
