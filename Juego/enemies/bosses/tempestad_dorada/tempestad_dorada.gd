@@ -1,11 +1,14 @@
 extends Node2D
 
 enum State { PATROL, PAUSE, DIVE }
+enum Phase { ONE, TWO }
 
-const MAX_HEALTH = 50
+const MAX_HEALTH = 22
+const PHASE_TWO_THRESHOLD = 20
 const BOSS_HALF_WIDTH = 40.0
 const FLOAT_AMPLITUDE = 100.0
 const FLOAT_SPEED = 160.0
+const FLOAT_SPEED_P2 = 200.0
 const SIDE_PAUSE_DURATION = 1.5
 
 const DAMAGE_FLASH_TIME = 0.08
@@ -33,6 +36,7 @@ const STORM_COUNT: int = 5
 const STORM_INTERVAL: float = 0.5
 
 var current_health = MAX_HEALTH
+var current_phase = Phase.ONE
 var current_state = State.PATROL
 var patrol_direction = 1.0
 var is_active = false
@@ -78,15 +82,32 @@ var player = null
 
 @onready var sprite = $AnimatedSprite2D
 @onready var core_hurtbox_1 = $CoreHurtbox1
+@onready var core_patrol_1 = $CoreHurtbox1/PatrolShape
+@onready var core_dive_1 = $CoreHurtbox1/DiveShape
 @onready var core_hurtbox_2 = $CoreHurtbox2
-@onready var attack_hitbox = $AttackHitbox
+@onready var core_patrol_2 = $CoreHurtbox2/PatrolShape
+@onready var core_dive_2 = $CoreHurtbox2/DiveShape
+@onready var body_hitbox = $AttackHitbox
+@onready var body_patrol = $AttackHitbox/PatrolShape
+@onready var body_dive = $AttackHitbox/DiveShape
 @onready var normal_hurtbox = $NormalHurtbox
+@onready var hurtbox_patrol = $NormalHurtbox/PatrolShape
+@onready var hurtbox_dive = $NormalHurtbox/DiveShape
 
 @onready var ray_spawn = $SpawnRayo
 @onready var ray_scene = preload("res://enemies/bosses/tempestad_dorada/Rayo.tscn")
 @onready var hurricane_scene = preload("res://enemies/bosses/tempestad_dorada/Huracan.tscn")
 @onready var storm_scene = preload("res://enemies/bosses/tempestad_dorada/Tormenta.tscn")
 
+func _set_dive_shapes(diving: bool):
+	body_patrol.disabled = diving
+	body_dive.disabled = not diving
+	hurtbox_patrol.disabled = diving
+	hurtbox_dive.disabled = not diving
+	core_patrol_1.disabled = diving
+	core_dive_1.disabled = not diving
+	core_patrol_1.disabled = diving
+	core_dive_2.disabled = not diving
 
 func _ready():
 	spawn_position = global_position
@@ -100,12 +121,11 @@ func _ready():
 		core_hurtbox_1.add_to_group("boss_core")
 	if not core_hurtbox_2.is_in_group("boss_core"):
 		core_hurtbox_2.add_to_group("boss_core")
-	if not attack_hitbox.is_in_group("enemy_hitbox"):
-		attack_hitbox.add_to_group("enemy_hitbox")
+	if not body_hitbox.is_in_group("enemy_hitbox"):
+		body_hitbox.add_to_group("enemy_hitbox")
 		
 	normal_hurtbox.area_entered.connect(_on_hurtbox_area_entered)
-	attack_hitbox.monitoring = false
-	attack_hitbox.monitorable = false
+	_set_dive_shapes(false)
 
 func _physics_process(delta):
 	if not is_active:
@@ -151,7 +171,12 @@ func _physics_process(delta):
 			if storm_count >= STORM_COUNT:
 				storm_active = false
 	
+	_check_phase()
 	_handle_state(delta)
+
+func _check_phase():
+	if current_phase == Phase.ONE and current_health <= PHASE_TWO_THRESHOLD:
+		current_phase = Phase.TWO
 
 func _handle_state(delta):
 	match current_state:
@@ -169,7 +194,8 @@ func _patrol_state(delta):
 			position.y = original_y
 			returning = false
 
-	position.x += patrol_direction * FLOAT_SPEED * delta
+	var speed = FLOAT_SPEED if current_phase == Phase.ONE else FLOAT_SPEED_P2
+	position.x += patrol_direction * speed * delta
 	position.y += sin(Time.get_ticks_msec() * 0.002) * FLOAT_AMPLITUDE * delta
 	position.x = clamp(position.x, room_left_limit + BOSS_HALF_WIDTH, room_right_limit - BOSS_HALF_WIDTH)
 	position.y = clamp(position.y, room_top_limit, room_bottom_limit)
@@ -224,7 +250,8 @@ func _pause_state(delta):
 	position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 
 	if pause_timer <= 0.0:
-		if hurricane_timer <= 0.0:
+		# Huracan solo en fase 2
+		if hurricane_timer <= 0.0 and current_phase == Phase.TWO:
 			hurricane_active = true
 			hurricane_duration_timer = HURRICANE_DURATION
 			hurricane_timer = HURRICANE_COOLDOWN
@@ -249,8 +276,8 @@ func _dive_state(delta):
 			dir.y = max(dir.y, 0.1)
 			dive_velocity = dir.normalized() * DIVE_SPEED
 			_update_flip(dive_velocity.x > 0.0)
-			attack_hitbox.monitoring = true
-			attack_hitbox.monitorable = true
+			body_hitbox.monitoring = true
+			body_hitbox.monitorable = true
 			DAMAGE = 2
 		return
 
@@ -262,11 +289,12 @@ func _dive_state(delta):
 		if slide_timer <= 0.0:
 			dive_sliding = false
 			dive_velocity = Vector2.ZERO
-			attack_hitbox.monitoring = false
-			attack_hitbox.monitorable = false
+			body_hitbox.monitoring = true
+			body_hitbox.monitorable = true
 			DAMAGE = 1
 			returning = true
 			sprite.play("idle")
+			_set_dive_shapes(false)
 			current_state = State.PATROL
 		return
 
@@ -277,6 +305,7 @@ func _dive_state(delta):
 		position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 		dive_sliding = true
 		slide_timer = DIVE_SLIDE_TIME
+		
 
 func _can_dive() -> bool:
 	if dive_cooldown_timer > 0.0 or player == null:
@@ -294,17 +323,20 @@ func _can_dive() -> bool:
 	return true
 
 func _start_dive():
+
 	current_state = State.DIVE
 	dive_winding_up = true
 	windup_timer = DIVE_WINDUP_TIME
 	dive_cooldown_timer = DIVE_COOLDOWN
 	_update_flip((player.global_position - global_position).normalized().x > 0.0)
 	sprite.play("attack")
+	_set_dive_shapes(true)
 
 func _shoot_ray():
 	if not player:
 		return
 	ray_instance = ray_scene.instantiate()
+	ray_instance.active = true
 	get_parent().add_child(ray_instance)
 	ray_instance.scale = Vector2.ONE
 
@@ -389,8 +421,15 @@ func _on_level_reset() -> void:
 	_reset_for_encounter(false)
 
 func _reset_for_encounter(make_active: bool) -> void:
+	if damage_flash_tween:
+		damage_flash_tween.kill()
+		damage_flash_tween = null
+
 	global_position = spawn_position
+	current_health = MAX_HEALTH
+	current_phase = Phase.ONE
 	current_state = State.PATROL
+	_set_dive_shapes(false)
 	patrol_direction = 1.0
 	pause_timer = 0.0
 	dive_cooldown_timer = 0.0
@@ -417,10 +456,10 @@ func _reset_for_encounter(make_active: bool) -> void:
 	storm_count = 0
 	storm_interval_timer = 0.0
 	for node in get_tree().get_nodes_in_group("storm"):
-		node.queue_free()	
+		node.queue_free()
 	DAMAGE = 1
-	attack_hitbox.set_deferred("monitoring", false)
-	attack_hitbox.set_deferred("monitorable", false)
+	body_hitbox.set_deferred("monitoring", true)
+	body_hitbox.set_deferred("monitorable", true)
 	room_right_limit = 0.0
 	
 	_update_flip(false)
@@ -449,6 +488,9 @@ func _play_damage_flash():
 	damage_flash_tween = create_tween()
 	sprite.modulate = Color(2.2, 2.2, 2.2, 1.0)
 	damage_flash_tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), DAMAGE_FLASH_TIME)
+
+func is_hurting() -> bool:
+	return false
 
 func die():
 	current_state = State.PATROL

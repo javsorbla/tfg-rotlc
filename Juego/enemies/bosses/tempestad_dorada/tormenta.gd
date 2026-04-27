@@ -11,7 +11,7 @@ var damage_done: bool = false
 @onready var collision = $CollisionShape2D
 
 func _ready():
-	add_to_group("rayo_cielo")
+	add_to_group("storm")
 	sprite.play("inicio")
 	if collision:
 		collision.disabled = true
