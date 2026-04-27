@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://ui/menus/windows/death_screen.gd" id="1_death"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/capture_focus.gd" id="3_capture"]
+[ext_resource type="Theme" path="res://ui/menus/main_menu/main_menu_shell_theme.tres" id="4_shell"]
 
 [node name="DeathScreen" type="PanelContainer"]
 process_mode = 3
@@ -18,9 +19,18 @@ offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_death")
+theme = ExtResource("4_shell")
 pauses_game = true
 exclusive_background_color = Color(0, 0, 0, 0.7)
 ui_cancel_closes = false
+
+[node name="GemCanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="GemParticles" type="GPUParticles2D" parent="GemCanvasLayer"]
+position = Vector2(150, 100)
+amount = 92
+lifetime = 2.2
+fixed_fps = 0
 
 [node name="ContentContainer" type="MarginContainer" parent="."]
 unique_name_in_owner = true
@@ -50,7 +60,8 @@ vertical = true
 [node name="TitleLabel" type="Label" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.95, 0.96, 0.99, 1)
 text = "Has muerto"
 horizontal_alignment = 1
 

@@ -1,6 +1,6 @@
 extends MainMenu
 
-@export_range(2, 50, 1) var max_level := 5
+@export_range(0, 50, 1) var max_level := 5
 @export var grayscale_background_color := Color(0.42, 0.44, 0.5, 1.0)
 @export var overlay_base_alpha := 0.55
 @export var overlay_min_alpha := 0.12
@@ -9,11 +9,12 @@ extends MainMenu
 @export_range(1.0, 3.0, 0.1) var breathing_amplitude := 2.0
 
 const BUTTON_LEVEL_NORMAL_COLORS := {
-	1: Color(0.72, 0.72, 0.76, 0.95),
-	2: Color(0.72, 0.88, 1.0, 0.98),
-	3: Color(0.95, 0.36, 0.36, 0.99),
-	4: Color(1.0, 0.76, 0.28, 1.0),
-	5: Color(0.72, 0.52, 1.0, 1.0),
+	0: Color(0.74, 0.78, 0.88, 0.95),
+	1: Color(0.72, 0.88, 1.0, 0.98),
+	2: Color(0.95, 0.36, 0.36, 0.99),
+	3: Color(1.0, 0.76, 0.28, 1.0),
+	4: Color(0.72, 0.52, 1.0, 1.0),
+	5: Color(0.95, 0.96, 0.99, 1.0),
 }
 
 @onready var background_texture_rect: TextureRect = $BackgroundTextureRect
@@ -52,27 +53,8 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# Debug: Cambiar nivel con teclas numéricas para testear progresión
-	# 1=Tutorial, 2=Nivel 1, 3=Nivel 2, 4=Nivel 3, 5=Nivel 4 (Final)
-	if event is InputEventKey and event.pressed:
-		var game_state := _get_game_state()
-		if game_state != null:
-			match event.keycode:
-				KEY_1: 
-					game_state.current_level = 1
-					_on_level_changed()
-				KEY_2: 
-					game_state.current_level = 2
-					_on_level_changed()
-				KEY_3: 
-					game_state.current_level = 3
-					_on_level_changed()
-				KEY_4: 
-					game_state.current_level = 4
-					_on_level_changed()
-				KEY_5: 
-					game_state.current_level = 5
-					_on_level_changed()
+	# Debug input is disabled - levels are set directly by scene load
+	pass
 
 
 func _on_level_changed() -> void:
@@ -85,8 +67,8 @@ func _resolve_progress() -> float:
 	if game_state == null:
 		return 0.0
 
-	var denominator := float(max(1, max_level - 1))
-	return clamp((float(game_state.current_level) - 1.0) / denominator, 0.0, 1.0)
+	var denominator := float(max(1, max_level))
+	return clamp(float(game_state.current_level) / denominator, 0.0, 1.0)
 
 
 func _apply_color_progression(progress: float) -> void:
@@ -131,8 +113,8 @@ func _apply_button_color_progression() -> void:
 func _resolve_current_level() -> int:
 	var game_state := _get_game_state()
 	if game_state == null:
-		return 1
-	return clampi(int(game_state.current_level), 1, max_level)
+		return 0
+	return clampi(int(game_state.current_level), 0, max_level)
 
 
 func _configure_gem_sparkle_particles() -> void:

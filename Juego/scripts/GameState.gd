@@ -32,7 +32,7 @@ const DEFAULT_UMBRA_PLAYER_METRICS := {
 
 const BASE_PLAYER_MAX_HEALTH := 3
 
-var current_level: int = 1
+var current_level: int = 0
 var cleared_boss_rooms: Dictionary = {}
 var current_level_path: String = ""
 

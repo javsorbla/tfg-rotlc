@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://byvydukidk6i2"]
+[gd_scene load_steps=13 format=3 uid="uid://byvydukidk6i2"]
 
 [ext_resource type="Script" path="res://ui/menus/main_menu/main_menu.gd" id="2_lk0wa"]
 [ext_resource type="PackedScene" uid="uid://dum2pujhh1w4g" path="res://ui/menus/windows/main_menu_options_window.tscn" id="3_qhsni"]
@@ -8,7 +8,7 @@
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/labels/config_name_label.gd" id="6_7b6ws"]
 [ext_resource type="Texture2D" uid="uid://pls0s6t2vmxl" path="res://themes/titulo_upscaled.png" id="6_cwkwh"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/capture_focus.gd" id="7_alags"]
-[ext_resource type="PackedScene" uid="uid://cwt4p3bufkke5" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="8_cs2jt"]
+[ext_resource type="PackedScene" path="res://ui/menus/windows/confirmation_overlaid_window_rotlc.tscn" id="8_cs2jt"]
 [ext_resource type="Script" path="res://ui/menus/main_menu/main_menu_button.gd" id="9_ekh3p"]
 [ext_resource type="Texture2D" uid="uid://t783xna2ghd3" path="res://assets/ui/arrow.png" id="10_72cm0"]
 [ext_resource type="Theme" path="res://ui/menus/main_menu/main_menu_button_theme.tres" id="11_bq2et"]
@@ -56,11 +56,9 @@ color = Color(0.015, 0.02, 0.045, 0.55)
 
 [node name="GemParticles" type="GPUParticles2D" parent="GemCanvasLayer"]
 position = Vector2(640, 360)
-emitting = true
 amount = 92
 lifetime = 2.2
 fixed_fps = 0
-local_coords = false
 
 [node name="MenuContainer" type="MarginContainer" parent="."]
 unique_name_in_owner = true

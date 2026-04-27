@@ -3,7 +3,8 @@
 [ext_resource type="Script" path="res://ui/menus/windows/pause_menu.gd" id="2_0ln3r"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/capture_focus.gd" id="3_v0q8a"]
 [ext_resource type="PackedScene" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="3_wiw3s"]
-[ext_resource type="PackedScene" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="4_e5wrg"]
+[ext_resource type="PackedScene" path="res://ui/menus/windows/confirmation_overlaid_window_rotlc.tscn" id="4_e5wrg"]
+[ext_resource type="Theme" path="res://ui/menus/main_menu/main_menu_shell_theme.tres" id="5_shell"]
 
 [node name="PauseMenu" type="PanelContainer"]
 process_mode = 3
@@ -21,6 +22,7 @@ grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(0.9, 0.9)
 script = ExtResource("2_0ln3r")
+theme = ExtResource("5_shell")
 options_menu_scene = ExtResource("3_wiw3s")
 restart_confirmation_node_path = NodePath("RestartConfirmation")
 main_menu_confirmation_node_path = NodePath("MainMenuConfirmation")
@@ -56,7 +58,8 @@ vertical = true
 [node name="TitleLabel" type="Label" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.96, 0.99, 1)
 text = "Pausa"
 horizontal_alignment = 1
 
