@@ -23,10 +23,14 @@ const RAY_COOLDOWN = 15.0
 const RAY_WINDUP_TIME = 1.0
 const RAY_DURATION = 1.5
 
-const HURRICANE_COOLDOWN: float = 14.0
+const HURRICANE_COOLDOWN: float = 20.0
 const HURRICANE_WARNING_TIME: float = 0.8
 const HURRICANE_DAMAGE: int = 2
 const HURRICANE_DURATION = 6.5
+
+const STORM_COOLDOWN: float = 15.0
+const STORM_COUNT: int = 5
+const STORM_INTERVAL: float = 0.5
 
 var current_health = MAX_HEALTH
 var current_state = State.PATROL
@@ -57,6 +61,11 @@ var hurricane_timer: float = HURRICANE_COOLDOWN
 var hurricane_active = false
 var hurricane_duration_timer = 0.0
 
+var storm_timer: float = STORM_COOLDOWN
+var storm_active: bool = false
+var storm_interval_timer: float = 0.0
+var storm_count: int = 0
+
 var returning = false
 var original_y: float = 0.0
 
@@ -76,6 +85,7 @@ var player = null
 @onready var ray_spawn = $SpawnRayo
 @onready var ray_scene = preload("res://enemies/bosses/tempestad_dorada/Rayo.tscn")
 @onready var hurricane_scene = preload("res://enemies/bosses/tempestad_dorada/Huracan.tscn")
+@onready var storm_scene = preload("res://enemies/bosses/tempestad_dorada/Tormenta.tscn")
 
 
 func _ready():
@@ -117,7 +127,30 @@ func _physics_process(delta):
 		
 	if hurricane_timer > 0.0:
 		hurricane_timer -= delta
+	
+	if storm_timer <= 0.0 and player != null and not storm_active:
+		storm_active = true
+		storm_count = 0
+		storm_interval_timer = 0.0
+		storm_timer = STORM_COOLDOWN
+	
+	elif storm_timer > 0.0:
+		storm_timer -= delta
 
+	if storm_active:
+		storm_interval_timer -= delta
+		if storm_interval_timer <= 0.0:
+			storm_interval_timer = STORM_INTERVAL
+			var storm = storm_scene.instantiate()
+			get_parent().add_child(storm)
+			var random_x = player.global_position.x + randf_range(-200.0, 200.0)
+			random_x = clamp(random_x, room_left_limit, room_right_limit)
+			var random_y = randf_range(room_top_limit, room_bottom_limit - 200.0)
+			storm.global_position = Vector2(random_x, random_y)
+			storm_count += 1
+			if storm_count >= STORM_COUNT:
+				storm_active = false
+	
 	_handle_state(delta)
 
 func _handle_state(delta):
@@ -379,6 +412,12 @@ func _reset_for_encounter(make_active: bool) -> void:
 	hurricane_timer = HURRICANE_COOLDOWN
 	for node in get_tree().get_nodes_in_group("hurricane"):
 		node.queue_free()
+	storm_timer = STORM_COOLDOWN
+	storm_active = false
+	storm_count = 0
+	storm_interval_timer = 0.0
+	for node in get_tree().get_nodes_in_group("storm"):
+		node.queue_free()	
 	DAMAGE = 1
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
