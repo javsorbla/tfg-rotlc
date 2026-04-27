@@ -1,10 +1,10 @@
 [gd_scene load_steps=0 format=3 uid="uid://ch7wxnbttg3ik"]
 
 [ext_resource type="Script" path="res://ui/menus/windows/pause_menu_layer.gd" id="1_7wt2f"]
-[ext_resource type="PackedScene" uid="uid://6gdbfi0172ji" path="res://addons/maaacks_menus_template/base/nodes/windows/overlaid_window.tscn" id="2_wso7n"]
+[ext_resource type="PackedScene" path="res://addons/maaacks_menus_template/base/nodes/windows/overlaid_window.tscn" id="2_wso7n"]
 [ext_resource type="Script" path="res://ui/menus/windows/pause_menu.gd" id="3_ykde5"]
-[ext_resource type="PackedScene" uid="uid://xvu2k02xdqi6" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="4_7wt2f"]
-[ext_resource type="PackedScene" uid="uid://cwt4p3bufkke5" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="5_7wt2f"]
+[ext_resource type="PackedScene" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="4_7wt2f"]
+[ext_resource type="PackedScene" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="5_7wt2f"]
 
 [node name="PauseMenuLayer" type="CanvasLayer" unique_id=914002369]
 process_mode = 3

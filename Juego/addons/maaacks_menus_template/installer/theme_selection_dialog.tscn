@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://d25mdvmlbn35"]
 
-[ext_resource type="Script" uid="uid://c6p8xjvlrgsfk" path="res://addons/maaacks_menus_template/installer/theme_selection_dialog.gd" id="1_5u0gx"]
-[ext_resource type="Script" uid="uid://bij7wsh8d44gv" path="res://addons/maaacks_menus_template/base/nodes/utilities/file_lister.gd" id="2_luhgx"]
+[ext_resource type="Script" path="res://addons/maaacks_menus_template/installer/theme_selection_dialog.gd" id="1_5u0gx"]
+[ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/file_lister.gd" id="2_luhgx"]
 
 [node name="ThemeSelectionDialog" type="ConfirmationDialog" unique_id=1923085742]
 oversampling_override = 1.0

@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/video/video_options_menu.gd" id="1_aj0jh"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/capture_focus.gd" id="2_qf2ce"]
-[ext_resource type="PackedScene" uid="uid://b6bl3n5mp3m1e" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/option_control/list_option_control.tscn" id="2_tyiki"]
-[ext_resource type="PackedScene" uid="uid://bsxh6v7j0257h" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/option_control/toggle_option_control.tscn" id="3_xdi1h"]
-[ext_resource type="PackedScene" uid="uid://c01ayjblhcg1t" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/option_control/vector_2_list_option_control.tscn" id="4_0ucjm"]
+[ext_resource type="PackedScene" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/option_control/list_option_control.tscn" id="2_tyiki"]
+[ext_resource type="PackedScene" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/option_control/toggle_option_control.tscn" id="3_xdi1h"]
+[ext_resource type="PackedScene" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/option_control/vector_2_list_option_control.tscn" id="4_0ucjm"]
 
 [node name="Video" type="MarginContainer"]
 anchors_preset = 15

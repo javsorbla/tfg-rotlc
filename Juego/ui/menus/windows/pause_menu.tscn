@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" path="res://ui/menus/windows/pause_menu.gd" id="2_0ln3r"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/capture_focus.gd" id="3_v0q8a"]
-[ext_resource type="PackedScene" uid="uid://xvu2k02xdqi6" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="3_wiw3s"]
-[ext_resource type="PackedScene" uid="uid://cwt4p3bufkke5" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="4_e5wrg"]
+[ext_resource type="PackedScene" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="3_wiw3s"]
+[ext_resource type="PackedScene" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="4_e5wrg"]
 
 [node name="PauseMenu" type="PanelContainer"]
 process_mode = 3

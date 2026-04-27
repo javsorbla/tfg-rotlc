@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://cwt4p3bufkke5" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="8_cs2jt"]
 [ext_resource type="Script" path="res://ui/menus/main_menu/main_menu_button.gd" id="9_ekh3p"]
 [ext_resource type="Texture2D" uid="uid://t783xna2ghd3" path="res://assets/ui/arrow.png" id="10_72cm0"]
+[ext_resource type="Theme" path="res://ui/menus/main_menu/main_menu_button_theme.tres" id="11_bq2et"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -29,7 +30,7 @@ script = ExtResource("4_egdge")
 [node name="BackgroundMusicPlayer" parent="." instance=ExtResource("5_1s4l0")]
 
 [node name="BackgroundTextureRect" type="TextureRect" parent="."]
-z_index = -1
+z_index = -3
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,13 +39,28 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("6_cwkwh")
 expand_mode = 1
+stretch_mode = 5
 
-[node name="ColorOverlay" type="ColorRect" parent="."]
-layout_mode = 0
-offset_right = 1277.0
-offset_bottom = 720.0
+[node name="ProgressionOverlay" type="ColorRect" parent="."]
+z_index = -2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
-color = Color(0, 0, 0, 0.117647)
+color = Color(0.015, 0.02, 0.045, 0.55)
+
+[node name="GemCanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="GemParticles" type="GPUParticles2D" parent="GemCanvasLayer"]
+position = Vector2(640, 360)
+emitting = true
+amount = 92
+lifetime = 2.2
+fixed_fps = 0
+local_coords = false
 
 [node name="MenuContainer" type="MarginContainer" parent="."]
 unique_name_in_owner = true
@@ -56,25 +72,21 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="TitleMargin" type="MarginContainer" parent="MenuContainer"]
-visible = false
 layout_mode = 2
-theme_override_constants/margin_top = 24
+theme_override_constants/margin_top = 68
 
 [node name="TitleContainer" type="Control" parent="MenuContainer/TitleMargin"]
+visible = false
 layout_mode = 2
 mouse_filter = 2
 
 [node name="TitleLabel" type="Label" parent="MenuContainer/TitleMargin/TitleContainer"]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -231.0
-offset_top = -21.0
-offset_right = 299.0
-offset_bottom = 46.0
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 67.0
 grow_horizontal = 2
-scale = Vector2(0.870163, 0.919355)
+theme_override_colors/font_color = Color(0.94, 0.94, 0.95, 1)
 theme_override_font_sizes/font_size = 48
 text = "Rise Of The Lost Colors"
 horizontal_alignment = 1
@@ -84,8 +96,8 @@ script = ExtResource("6_7b6ws")
 [node name="MenuButtonsMargin" type="MarginContainer" parent="MenuContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/margin_top = 96
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_top = 148
+theme_override_constants/margin_bottom = 40
 
 [node name="MenuButtonsContainer" type="Control" parent="MenuContainer/MenuButtonsMargin"]
 layout_mode = 2
@@ -94,105 +106,103 @@ mouse_filter = 2
 [node name="MenuButtonsBoxContainer" type="BoxContainer" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer"]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 7
+anchors_preset = 8
 anchor_left = 0.5
-anchor_top = 1.0
+anchor_top = 0.5
 anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -110.0
-offset_top = -208.0
-offset_right = 110.0
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -126.0
+offset_right = 180.0
+offset_bottom = 126.0
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
 size_flags_horizontal = 4
-theme_override_constants/separation = 16
+theme = ExtResource("11_bq2et")
+theme_override_constants/separation = 14
 alignment = 1
 vertical = true
 script = ExtResource("7_alags")
 
 [node name="NewGameButton" type="Button" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(220, 0)
+custom_minimum_size = Vector2(260, 56)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.666667, 0.666667, 0.666667, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 0.8)
 text = "Nueva Partida"
 script = ExtResource("9_ekh3p")
 
 [node name="Arrow" type="TextureRect" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/NewGameButton"]
 visible = false
 layout_mode = 0
-offset_left = -36.0
-offset_top = -8.0
-offset_right = 4.0
-offset_bottom = 32.0
+offset_left = -30.0
+offset_top = 13.0
+offset_right = -8.0
+offset_bottom = 43.0
+mouse_filter = 2
 texture = ExtResource("10_72cm0")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="OptionsButton" type="Button" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(220, 0)
+custom_minimum_size = Vector2(260, 56)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.666667, 0.666667, 0.666667, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 text = "Opciones"
 script = ExtResource("9_ekh3p")
 
 [node name="Arrow" type="TextureRect" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/OptionsButton"]
 visible = false
 layout_mode = 0
-offset_left = -36.0
-offset_top = -8.0
-offset_right = 4.0
-offset_bottom = 32.0
+offset_left = -30.0
+offset_top = 13.0
+offset_right = -8.0
+offset_bottom = 43.0
+mouse_filter = 2
 texture = ExtResource("10_72cm0")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="CreditsButton" type="Button" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(220, 0)
+custom_minimum_size = Vector2(260, 56)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.666667, 0.666667, 0.666667, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 text = "Créditos"
 script = ExtResource("9_ekh3p")
 
 [node name="Arrow" type="TextureRect" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/CreditsButton"]
 visible = false
 layout_mode = 0
-offset_left = -36.0
-offset_top = -8.0
-offset_right = 4.0
-offset_bottom = 32.0
+offset_left = -30.0
+offset_top = 13.0
+offset_right = -8.0
+offset_bottom = 43.0
+mouse_filter = 2
 texture = ExtResource("10_72cm0")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ExitButton" type="Button" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(220, 0)
+custom_minimum_size = Vector2(260, 56)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.666667, 0.666667, 0.666667, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 text = "Salir"
 script = ExtResource("9_ekh3p")
 
 [node name="Arrow" type="TextureRect" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/ExitButton"]
 visible = false
 layout_mode = 0
-offset_left = -36.0
-offset_top = -8.0
-offset_right = 4.0
-offset_bottom = 32.0
+offset_left = -30.0
+offset_top = 13.0
+offset_right = -8.0
+offset_bottom = 43.0
+mouse_filter = 2
 texture = ExtResource("10_72cm0")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ExitConfirmation" parent="." instance=ExtResource("8_cs2jt")]
 unique_name_in_owner = true
@@ -206,6 +216,18 @@ offset_bottom = 80.0
 ui_cancel_closes = false
 text = "¿Seguro que quieres salir del juego?"
 title_visible = false
+
+[node name="EntryFadeCanvasLayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="EntryFadeRect" type="ColorRect" parent="EntryFadeCanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
 
 [connection signal="pressed" from="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/NewGameButton" to="." method="_on_new_game_button_pressed"]
 [connection signal="pressed" from="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/OptionsButton" to="." method="_on_options_button_pressed"]

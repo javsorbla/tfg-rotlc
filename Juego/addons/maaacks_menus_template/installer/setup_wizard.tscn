@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://uojlvirhbysk"]
 
-[ext_resource type="Script" uid="uid://coq26stqrim51" path="res://addons/maaacks_menus_template/installer/setup_wizard.gd" id="1_jck5m"]
+[ext_resource type="Script" path="res://addons/maaacks_menus_template/installer/setup_wizard.gd" id="1_jck5m"]
 
 [node name="SetupWizardDialog" type="AcceptDialog" unique_id=1285990768]
 oversampling_override = 1.0
