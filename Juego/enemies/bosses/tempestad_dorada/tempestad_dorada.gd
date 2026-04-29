@@ -1,10 +1,11 @@
 extends Node2D
 
-enum State { PATROL, PAUSE, DIVE }
+enum State { PATROL, PAUSE, DIVE, STUNNED, WEAK }
 enum Phase { ONE, TWO }
 
-const MAX_HEALTH = 22
+const MAX_HEALTH = 50
 const PHASE_TWO_THRESHOLD = 20
+
 const BOSS_HALF_WIDTH = 40.0
 const FLOAT_AMPLITUDE = 100.0
 const FLOAT_SPEED = 160.0
@@ -22,6 +23,14 @@ const DIVE_SLIDE_SPEED = 200.0
 const DIVE_COOLDOWN = 10.0
 const RETURN_SPEED = 250.0
 
+const WING_MAX_HEALTH: int = 7
+const WING_REGEN_DELAY: float = 1.0
+const WEAK_DURATION = 5.0
+const WEAK_WALK_SPEED: float = 120.0
+
+const STUN_DURATION: float = 13.0
+const STUN_FALL_SPEED: float = 220.0
+
 const RAY_COOLDOWN = 15.0
 const RAY_WINDUP_TIME = 1.0
 const RAY_DURATION = 1.5
@@ -35,6 +44,8 @@ const STORM_COOLDOWN: float = 15.0
 const STORM_COUNT: int = 5
 const STORM_INTERVAL: float = 0.5
 
+const HIT_COOLDOWN: float = 0.1
+
 var current_health = MAX_HEALTH
 var current_phase = Phase.ONE
 var current_state = State.PATROL
@@ -45,6 +56,15 @@ var pause_timer = 0.0
 var DAMAGE = 1
 var damage_flash_tween: Tween = null
 
+var damage_this_frame_wing1 = false
+var damage_this_frame_wing2 = false
+var damage_this_frame_core = false
+
+var wing_health: int = WING_MAX_HEALTH
+var wing_regen_timer: float = 0.0
+var is_weak = false
+var weak_timer = 0.0
+
 var dive_cooldown_timer = 0.0
 var dive_velocity = Vector2.ZERO
 var dive_gravity_accum = 0.0
@@ -52,6 +72,10 @@ var dive_sliding = false
 var dive_winding_up = false
 var windup_timer = 0.0
 var slide_timer = 0.0
+
+var is_stunned: bool = false
+var stun_timer: float = 0.0
+var stun_falling: bool = false
 
 var ray_cooldown_timer = 0.0
 var ray_winding_up = false
@@ -79,20 +103,25 @@ var room_top_limit = 0.0
 var room_bottom_limit = 0.0
 
 var player = null
+var shapes = []
+var original_pos_x = []
+var original_rot = []
+
+var hit_cooldown: float = 0.0
 
 @onready var sprite = $AnimatedSprite2D
-@onready var core_hurtbox_1 = $CoreHurtbox1
-@onready var core_patrol_1 = $CoreHurtbox1/PatrolShape
-@onready var core_dive_1 = $CoreHurtbox1/DiveShape
-@onready var core_hurtbox_2 = $CoreHurtbox2
-@onready var core_patrol_2 = $CoreHurtbox2/PatrolShape
-@onready var core_dive_2 = $CoreHurtbox2/DiveShape
+@onready var wing_hurtbox_1 = $WingHurtbox1
+@onready var wing_patrol_1 = $WingHurtbox1/PatrolShape
+@onready var wing_dive_1 = $WingHurtbox1/DiveShape
+@onready var wing_hurtbox_2 = $WingHurtbox2
+@onready var wing_patrol_2 = $WingHurtbox2/PatrolShape
+@onready var wing_dive_2 = $WingHurtbox2/DiveShape
 @onready var body_hitbox = $AttackHitbox
 @onready var body_patrol = $AttackHitbox/PatrolShape
 @onready var body_dive = $AttackHitbox/DiveShape
-@onready var normal_hurtbox = $NormalHurtbox
-@onready var hurtbox_patrol = $NormalHurtbox/PatrolShape
-@onready var hurtbox_dive = $NormalHurtbox/DiveShape
+@onready var core_hurtbox = $CoreHurtbox
+@onready var core_patrol = $CoreHurtbox/PatrolShape
+@onready var core_dive = $CoreHurtbox/DiveShape
 
 @onready var ray_spawn = $SpawnRayo
 @onready var ray_scene = preload("res://enemies/bosses/tempestad_dorada/Rayo.tscn")
@@ -100,16 +129,21 @@ var player = null
 @onready var storm_scene = preload("res://enemies/bosses/tempestad_dorada/Tormenta.tscn")
 
 func _set_dive_shapes(diving: bool):
-	body_patrol.disabled = diving
-	body_dive.disabled = not diving
-	hurtbox_patrol.disabled = diving
-	hurtbox_dive.disabled = not diving
-	core_patrol_1.disabled = diving
-	core_dive_1.disabled = not diving
-	core_patrol_1.disabled = diving
-	core_dive_2.disabled = not diving
+	body_patrol.set_deferred("disabled", diving)
+	body_dive.set_deferred("disabled", not diving)
+	core_patrol.set_deferred("disabled", diving)
+	core_dive.set_deferred("disabled", not diving)
+	wing_patrol_1.set_deferred("disabled", diving)
+	wing_dive_1.set_deferred("disabled", not diving)
+	wing_patrol_2.set_deferred("disabled", diving)
+	wing_dive_2.set_deferred("disabled", not diving)
 
 func _ready():
+	shapes = [body_patrol, body_dive, core_patrol, core_dive, 
+			  wing_patrol_1, wing_dive_1, wing_patrol_2, wing_dive_2]
+	for shape in shapes:
+		original_pos_x.append(shape.position.x)
+		original_rot.append(shape.rotation)
 	spawn_position = global_position
 	original_y = global_position.y
 	player = get_tree().get_first_node_in_group("player")
@@ -117,14 +151,16 @@ func _ready():
 	
 	if not is_in_group("boss"):
 		add_to_group("boss")
-	if not core_hurtbox_1.is_in_group("boss_core"):
-		core_hurtbox_1.add_to_group("boss_core")
-	if not core_hurtbox_2.is_in_group("boss_core"):
-		core_hurtbox_2.add_to_group("boss_core")
+	if not wing_hurtbox_1.is_in_group("boss_hurtbox"):
+		wing_hurtbox_1.add_to_group("boss_hurtbox")
+	if not wing_hurtbox_2.is_in_group("boss_hurtbox"):
+		wing_hurtbox_2.add_to_group("boss_hurtbox")
 	if not body_hitbox.is_in_group("enemy_hitbox"):
 		body_hitbox.add_to_group("enemy_hitbox")
 		
-	normal_hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	wing_hurtbox_1.area_entered.connect(_on_wing1_area_entered)
+	wing_hurtbox_2.area_entered.connect(_on_wing2_area_entered)
+	
 	_set_dive_shapes(false)
 
 func _physics_process(delta):
@@ -170,9 +206,21 @@ func _physics_process(delta):
 			storm_count += 1
 			if storm_count >= STORM_COUNT:
 				storm_active = false
+				
+	if wing_regen_timer > 0.0:
+		wing_regen_timer -= delta
+		if wing_regen_timer <= 0.0:
+			wing_health = WING_MAX_HEALTH
 	
+	if hit_cooldown > 0.0:
+		hit_cooldown -= delta
+	
+	
+	damage_this_frame_wing1 = false
+	damage_this_frame_wing2 = false
 	_check_phase()
 	_handle_state(delta)
+
 
 func _check_phase():
 	if current_phase == Phase.ONE and current_health <= PHASE_TWO_THRESHOLD:
@@ -186,6 +234,10 @@ func _handle_state(delta):
 			_pause_state(delta)
 		State.DIVE:   
 			_dive_state(delta)
+		State.STUNNED:
+			_stunned_state(delta)
+		State.WEAK:
+			_weak_state(delta)
 
 func _patrol_state(delta):
 	if returning:
@@ -409,10 +461,108 @@ func _spawn_hurricane(pos: Vector2):
 	hurricane.room_left_limit = room_left_limit
 	hurricane.room_right_limit = room_right_limit
 
+func _stunned_state(delta):
+	if stun_falling:
+		position.y += STUN_FALL_SPEED * delta
+		if position.y >= room_bottom_limit - 40.0:
+			position.y = room_bottom_limit - 40.0
+			stun_falling = false
+			stun_timer = STUN_DURATION
+		return
+
+	stun_timer -= delta
+	if stun_timer <= 0.0 and current_state == State.STUNNED:
+		is_stunned = false
+		returning = true
+		DAMAGE = 1
+		sprite.play("idle")
+		
+		body_hitbox.set_deferred("monitoring", true)
+		body_hitbox.set_deferred("monitorable", true)
+		
+		current_state = State.PATROL
+
+func _enter_stun():
+	current_state = State.STUNNED
+	is_stunned = true
+	stun_falling = true
+	stun_timer = STUN_DURATION
+	dive_sliding = false
+	dive_velocity = Vector2.ZERO
+	dive_winding_up = false
+	DAMAGE = 0
+	sprite.play("stun")
+	
+	body_hitbox.set_deferred("monitoring", false)
+	body_hitbox.set_deferred("monitorable", false)
+	
+	body_patrol.set_deferred("disabled", false)
+	body_dive.set_deferred("disabled", true)
+	core_patrol.set_deferred("disabled", false)
+	core_dive.set_deferred("disabled", true)
+	wing_patrol_1.set_deferred("disabled", false)
+	wing_dive_1.set_deferred("disabled", true)
+	wing_patrol_2.set_deferred("disabled", false)
+	wing_dive_2.set_deferred("disabled", true)
+
+func _weak_state(delta):
+	if position.y < room_bottom_limit - 40.0:
+		position.y = move_toward(position.y, room_bottom_limit - 40.0, STUN_FALL_SPEED * delta)
+		return
+
+	weak_timer -= delta
+
+	if player:
+		var dir_to_player = sign(player.global_position.x - position.x)
+		position.x += dir_to_player * WEAK_WALK_SPEED * delta
+		position.x = clamp(position.x, room_left_limit + BOSS_HALF_WIDTH, room_right_limit - BOSS_HALF_WIDTH)
+		_update_flip(dir_to_player > 0.0)
+
+	if weak_timer <= 0.0:
+		is_weak = false
+		wing_health = WING_MAX_HEALTH
+		returning = true
+		current_state = State.PATROL
+		sprite.play("idle")
+
+
+func _enter_weak():
+	current_state = State.WEAK
+	is_weak = true
+	weak_timer = WEAK_DURATION
+	
+	# Cancelar estados activos
+	is_stunned = false
+	stun_falling = false
+	dive_sliding = false
+	dive_velocity = Vector2.ZERO
+	dive_winding_up = false
+	
+	ray_winding_up = false
+	ray_windup_timer = 0.0
+	if ray_instance:
+		ray_instance.queue_free()
+		ray_instance = null
+	ray_duration_timer = 0.0
+
+	hurricane_active = false
+	hurricane_duration_timer = 0.0
+	for node in get_tree().get_nodes_in_group("hurricane"):
+		node.queue_free()
+	
+	body_hitbox.monitoring = false
+	_set_dive_shapes(false)
+	sprite.play("idle")
+
+
 func _update_flip(flipped: bool):
 	sprite.flip_h = flipped
 	if ray_spawn:
 		ray_spawn.position.x = -abs(ray_spawn.position.x) if flipped else abs(ray_spawn.position.x)
+	var sign_x = -1.0 if flipped else 1.0
+	for i in shapes.size():
+		shapes[i].position.x = original_pos_x[i] * sign_x
+		shapes[i].rotation = -original_rot[i] if flipped else original_rot[i]
 		
 func activate():
 	_reset_for_encounter(true)
@@ -457,26 +607,87 @@ func _reset_for_encounter(make_active: bool) -> void:
 	storm_interval_timer = 0.0
 	for node in get_tree().get_nodes_in_group("storm"):
 		node.queue_free()
+	is_stunned = false
+	stun_timer = 0.0
+	stun_falling = false
+	wing_health = WING_MAX_HEALTH
+	wing_regen_timer = 0.0
+	is_weak = false
+	weak_timer = 0.0
 	DAMAGE = 1
 	body_hitbox.set_deferred("monitoring", true)
 	body_hitbox.set_deferred("monitorable", true)
 	room_right_limit = 0.0
-	
+
 	_update_flip(false)
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	if sprite:
 		sprite.play("idle")
 	is_active = make_active
 	
-func _on_hurtbox_area_entered(area: Area2D):
-	if area.is_in_group("player_hitbox"):
-		var player_node = get_tree().get_first_node_in_group("player")
-		var multiplier = player_node.damage_multiplier if player_node else 1.0
-		take_damage(int(1 * multiplier))
+	
+func _on_wing1_area_entered(area: Area2D):
+	if not area.is_in_group("player_hitbox"):
+		return
+	if damage_this_frame_wing1:
+		return
+	damage_this_frame_wing1 = true
+	_handle_wing_hit(area)
+
+func _on_wing2_area_entered(area: Area2D):
+	if not area.is_in_group("player_hitbox"):
+		return
+	if damage_this_frame_wing2:
+		return
+	damage_this_frame_wing2 = true
+	_handle_wing_hit(area)
+
+func _handle_wing_hit(area: Area2D):
+	if is_weak:
+		return
+
+	var player_node = get_tree().get_first_node_in_group("player")
+	var multiplier = player_node.damage_multiplier if player_node else 1.0
+
+	var hits = 2 if multiplier > 1.0 else 1
+	wing_health -= hits
+	_play_damage_flash()
+
+	if wing_health <= 0:
+		wing_health = 0
+		_enter_weak()
+		return
+
+	if current_state == State.DIVE and not dive_winding_up and not is_stunned:
+		_enter_stun()
+
+
+
+func _on_core_hit(area: Area2D):
+	if not area.is_in_group("player_hitbox"):
+		return
+	if hit_cooldown > 0.0:
+		return
+
+	hit_cooldown = HIT_COOLDOWN
+	call_deferred("_apply_core_damage")
+
+func _reenable_core_hurtbox():
+	core_hurtbox.monitoring = true
+	damage_this_frame_core = false
+
 
 func take_damage(amount: int):
+	if hit_cooldown > 0.0:
+		return
+
+	hit_cooldown = HIT_COOLDOWN
+
+	if current_state==State.WEAK:
+		amount *= 2
 	current_health -= amount
 	_play_damage_flash()
+	
 	if current_health <= 0:
 		die()
 
