@@ -25,10 +25,10 @@ const RETURN_SPEED = 250.0
 
 const WING_MAX_HEALTH: int = 7
 const WING_REGEN_DELAY: float = 1.0
-const WEAK_DURATION = 5.0
+const WEAK_DURATION = 6.0
 const WEAK_WALK_SPEED: float = 120.0
 
-const STUN_DURATION: float = 13.0
+const STUN_DURATION: float = 3.0
 const STUN_FALL_SPEED: float = 220.0
 
 const RAY_COOLDOWN = 15.0
