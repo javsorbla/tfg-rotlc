@@ -91,7 +91,7 @@ func _reset_player():
 
 func _invoke_death_callback() -> void:
 	if death_callback.is_valid():
-		death_callback.call()
+		death_callback.call(get_parent())
 
 func _handle_invincibility(delta):
 	if is_invincible:

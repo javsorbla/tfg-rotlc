@@ -40,6 +40,8 @@ var _finetuning_process_id: int = -1
 var is_finetuning := false
 var _finetune_job_started_msec: int = 0
 var _finetune_last_completed_model_path := ""
+var _onnx_models: Dictionary = {}
+var _onnx_model_file_mtimes: Dictionary = {}
 
 var umbra_progress := _make_default_umbra_progress()
 var player_progress := _make_default_player_progress()
@@ -259,6 +261,80 @@ func get_umbra_runtime_model_path() -> String:
 	if _finetune_last_completed_model_path != "":
 		return _finetune_last_completed_model_path
 	return str(umbra_progress.get("latest_model_path", ""))
+
+
+func bind_onnx_model_for_agent(agent: Node, model_path: String) -> bool:
+	if agent == null or not is_instance_valid(agent):
+		return false
+
+	var resolved_path := _resolve_onnx_model_path(model_path)
+	if resolved_path.is_empty():
+		return false
+
+	prints("[GameState] bind_onnx_model_for_agent: agent=", agent, " model_path=", model_path, " resolved=", resolved_path)
+	var model: ONNXModel = get_or_create_onnx_model(resolved_path)
+	if model == null:
+		prints("[GameState] bind_onnx_model_for_agent: failed to get model for ", resolved_path)
+		return false
+
+	if agent.has_method("set"):
+		agent.set("onnx_model_path", resolved_path)
+		agent.set("onnx_model", model)
+		if not bool(model.action_means_only_set) and agent.has_method("get_action_space"):
+			var action_space: Variant = agent.get_action_space()
+			model.set_action_means_only(action_space)
+		return true
+
+	return false
+
+
+func get_or_create_onnx_model(model_path: String) -> ONNXModel:
+	var resolved_path := _resolve_onnx_model_path(model_path)
+	if resolved_path.is_empty():
+		return null
+
+	prints("[GameState] get_or_create_onnx_model: requesting ", model_path)
+	var current_mtime := FileAccess.get_modified_time(resolved_path)
+	if _onnx_models.has(resolved_path):
+		var existing_model: ONNXModel = _onnx_models[resolved_path]
+		var cached_mtime := int(_onnx_model_file_mtimes.get(resolved_path, -1))
+		prints("[GameState] cache hit check for ", resolved_path, " cached_mtime=", cached_mtime, " current=", current_mtime)
+		if existing_model != null and cached_mtime == current_mtime:
+			prints("[GameState] returning cached ONNX model for ", resolved_path)
+			return existing_model
+		_onnx_models.erase(resolved_path)
+		_onnx_model_file_mtimes.erase(resolved_path)
+
+	prints("[GameState] creating ONNX model for ", resolved_path)
+	var inferencer_script = load("res://addons/godot_rl_agents/onnx/wrapper/ONNX_wrapper.gd")
+	var created_model: ONNXModel = inferencer_script.new(resolved_path, 1)
+	_onnx_models[resolved_path] = created_model
+	_onnx_model_file_mtimes[resolved_path] = current_mtime
+	prints("[GameState] created ONNX model and cached: ", resolved_path)
+	return created_model
+
+
+func clear_onnx_model_cache_for_path(model_path: String) -> void:
+	var resolved_path := _resolve_onnx_model_path(model_path)
+	if resolved_path.is_empty():
+		return
+	_onnx_models.erase(resolved_path)
+	_onnx_model_file_mtimes.erase(resolved_path)
+
+
+func _resolve_onnx_model_path(model_path: String) -> String:
+	if model_path.is_empty():
+		return ""
+
+	if FileAccess.file_exists(model_path):
+		return model_path
+
+	if not model_path.begins_with("res://") and not model_path.begins_with("user://"):
+		var res_path := "res://" + model_path
+		if FileAccess.file_exists(res_path):
+			return res_path
+
+	return ""
 
 
 func save_metrics_for_finetuning() -> bool:
