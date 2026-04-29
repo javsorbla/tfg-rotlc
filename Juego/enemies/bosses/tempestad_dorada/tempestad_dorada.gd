@@ -64,6 +64,7 @@ var wing_health: int = WING_MAX_HEALTH
 var wing_regen_timer: float = 0.0
 var is_weak = false
 var weak_timer = 0.0
+var last_direction := 1.0
 
 var dive_cooldown_timer = 0.0
 var dive_velocity = Vector2.ZERO
@@ -201,7 +202,7 @@ func _physics_process(delta):
 			get_parent().add_child(storm)
 			var random_x = player.global_position.x + randf_range(-200.0, 200.0)
 			random_x = clamp(random_x, room_left_limit, room_right_limit)
-			var random_y = randf_range(room_top_limit, room_bottom_limit - 200.0)
+			var random_y = randf_range(room_top_limit, room_bottom_limit - 250.0)
 			storm.global_position = Vector2(random_x, random_y)
 			storm_count += 1
 			if storm_count >= STORM_COUNT:
@@ -513,10 +514,17 @@ func _weak_state(delta):
 	weak_timer -= delta
 
 	if player:
-		var dir_to_player = sign(player.global_position.x - position.x)
-		position.x += dir_to_player * WEAK_WALK_SPEED * delta
+		var diff = player.global_position.x - position.x
+
+		if abs(diff) > 20.0:
+			var new_dir = sign(diff)
+			if new_dir != last_direction:
+				last_direction = new_dir
+
+		position.x += last_direction * WEAK_WALK_SPEED * delta
 		position.x = clamp(position.x, room_left_limit + BOSS_HALF_WIDTH, room_right_limit - BOSS_HALF_WIDTH)
-		_update_flip(dir_to_player > 0.0)
+
+		_update_flip(last_direction > 0.0)
 
 	if weak_timer <= 0.0:
 		is_weak = false
@@ -660,8 +668,6 @@ func _handle_wing_hit(area: Area2D):
 
 	if current_state == State.DIVE and not dive_winding_up and not is_stunned:
 		_enter_stun()
-
-
 
 func _on_core_hit(area: Area2D):
 	if not area.is_in_group("player_hitbox"):
