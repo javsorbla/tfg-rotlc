@@ -6,6 +6,14 @@
 
 [node name="LoadingScreen" instance=ExtResource("1_2dnq1")]
 script = ExtResource("2_5h2y6")
+loading_ui_style = 2
+state_change_delay = 25.0
+_in_progress = "Cargando"
+_in_progress_waiting = "Todavía cargando.."
+_in_progress_still_waiting = "Todavía cargando... (%d segundos)"
+_complete = "¡Carga completada!"
+_complete_waiting = "Ya queda poco..."
+_complete_still_waiting = "Ya queda poco... (%d segundos)"
 
 [node name="BackgroundTextureRect" parent="Control" index="2"]
 modulate = Color(0.42, 0.44, 0.5, 1)

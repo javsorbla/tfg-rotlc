@@ -207,6 +207,17 @@ func _connect_button_and_add_to_maps(button : Button, input_name : String, actio
 
 func _add_action_options(action_name : String, readable_action_name : String, input_events : Array[InputEvent]) -> void:
 	var new_action_box = %ActionBoxContainer.duplicate()
+
+	var action_name_str := String(action_name)
+	var is_aim_action := action_name_str.begins_with("aim_")
+	if is_aim_action:
+		var move_action := action_name_str.replace("aim_", "move_")
+		var move_events := InputMap.action_get_events(move_action)
+		if move_events.size() > 0:
+			InputMap.action_erase_events(action_name)
+			for ev in move_events:
+				InputMap.action_add_event(action_name, ev)
+			input_events = move_events
 	new_action_box.visible = true
 	new_action_box.vertical = !(vertical)
 	new_action_box.get_child(0).text = readable_action_name
@@ -216,6 +227,9 @@ func _add_action_options(action_name : String, readable_action_name : String, in
 			input_event = input_events[group_iter]
 		var text = InputEventHelper.get_text(input_event)
 		var is_disabled = group_iter > input_events.size()
+		# For aim_ actions, mark as disabled (non-configurable)
+		if is_aim_action:
+			is_disabled = true
 		if text.is_empty(): text = EMPTY_INPUT_ACTION_STRING
 		var icon : Texture
 		if input_icon_mapper:

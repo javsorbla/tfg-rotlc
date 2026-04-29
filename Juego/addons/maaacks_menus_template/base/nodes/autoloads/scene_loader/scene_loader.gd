@@ -14,12 +14,16 @@ signal scene_loaded
 @export var debug_lock_status : ResourceLoader.ThreadLoadStatus
 ## Locks the progress read from the ResourceLoader.
 @export_range(0, 1) var debug_lock_progress : float = 0.0
+## Keeps the loading screen visible a bit longer after the scene is ready.
+@export_range(0.0, 5.0, 0.1) var minimum_loading_screen_time : float = 1.5
 
 var _loading_screen : PackedScene
 var _scene_path : String
 var _loaded_resource : Resource
 var _background_loading : bool
 var _exit_hash : int = 3295764423
+var _loading_screen_started_msec : int = 0
+var _scene_ready_for_switch := false
 
 func _check_scene_path() -> bool:
 	if _scene_path == null or _scene_path == "":
@@ -64,6 +68,8 @@ func change_scene_to_resource() -> void:
 
 func change_scene_to_loading_screen() -> void:
 	_background_loading = false
+	_loading_screen_started_msec = Time.get_ticks_msec()
+	_scene_ready_for_switch = false
 	var err = get_tree().change_scene_to_packed(_loading_screen)
 	if err:
 		push_error("failed to change scenes to loading screen: %d" % err)
@@ -121,7 +127,15 @@ func _process(_delta) -> void:
 		ResourceLoader.THREAD_LOAD_INVALID_RESOURCE, ResourceLoader.THREAD_LOAD_FAILED:
 			set_process(false)
 		ResourceLoader.THREAD_LOAD_LOADED:
-			emit_signal("scene_loaded")
+			if not _scene_ready_for_switch:
+				_scene_ready_for_switch = true
+				emit_signal("scene_loaded")
+			if _background_loading:
+				set_process(false)
+				return
+			if minimum_loading_screen_time > 0.0:
+				var elapsed := float(Time.get_ticks_msec() - _loading_screen_started_msec) / 1000.0
+				if elapsed < minimum_loading_screen_time:
+					return
+			change_scene_to_resource()
 			set_process(false)
-			if not _background_loading:
-				change_scene_to_resource()

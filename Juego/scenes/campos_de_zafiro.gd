@@ -20,12 +20,18 @@ func _ensure_pause_menu_layer() -> void:
 	add_child(PAUSE_MENU_LAYER_SCENE.instantiate())
 
 func _ensure_death_screen() -> void:
-	if get_node_or_null("DeathScreen") != null:
+	if get_node_or_null("DeathScreenLayer/DeathScreen") != null:
 		return
+	var death_layer := get_node_or_null("DeathScreenLayer")
+	if death_layer == null:
+		death_layer = CanvasLayer.new()
+		death_layer.name = "DeathScreenLayer"
+		death_layer.layer = 50
+		add_child(death_layer)
 	var death_screen = DEATH_SCREEN_SCENE.instantiate()
 	death_screen.name = "DeathScreen"
 	death_screen.hide()
-	add_child(death_screen)
+	death_layer.add_child(death_screen)
 
 func _wire_player_death() -> void:
 	var player = get_tree().get_first_node_in_group("player")
@@ -44,6 +50,7 @@ func _mover_player() -> void:
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
 		var player_health = player.get_node("Health")
+		var camera = get_tree().get_first_node_in_group("camera")
 		Hud.show_hud()
 		Hud.update_hearts(player_health.current_health, player_health.MAX_HEALTH)
 		if GameState.coming_from_transition:
@@ -54,8 +61,12 @@ func _mover_player() -> void:
 			player.global_position = GameState.spawn_position
 		else:
 			player.global_position = Vector2(38, -7)
+		if camera != null:
+			camera.global_position = player.global_position + Vector2(30, -10)
+			if camera.has_method("reset_smoothing"):
+				camera.reset_smoothing()
 
 func _on_player_died(_owner: Node) -> void:
-	var death_screen = get_node_or_null("DeathScreen")
+	var death_screen = get_node_or_null("DeathScreenLayer/DeathScreen")
 	if death_screen != null and death_screen.has_method("show"):
 		death_screen.call_deferred("show")

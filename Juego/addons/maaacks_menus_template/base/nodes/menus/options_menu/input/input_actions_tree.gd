@@ -80,7 +80,9 @@ func _add_input_event_as_tree_item(action_name : String, input_event : InputEven
 	if icon:
 		input_tree_item.set_icon(0, icon)
 	input_tree_item.set_text(0, InputEventHelper.get_text(input_event))
-	if remove_button_texture != null:
+
+	var is_aim_action := String(action_name).begins_with("aim_")
+	if remove_button_texture != null and not is_aim_action:
 		input_tree_item.add_button(0, remove_button_texture, -1, false, "Remove")
 	tree_item_remove_map[input_tree_item] = input_event
 	tree_item_action_map[input_tree_item] = action_name
@@ -90,7 +92,18 @@ func _add_action_as_tree_item(readable_name : String, action_name : String, inpu
 	var action_tree_item : TreeItem = create_item(root_tree_item)
 	action_tree_item.set_text(0, readable_name)
 	tree_item_add_map[action_tree_item] = action_name
-	if add_button_texture != null:
+	
+	var action_name_str := String(action_name)
+	var is_aim_action := action_name_str.begins_with("aim_")
+	if is_aim_action:
+		var move_action := action_name_str.replace("aim_", "move_")
+		var move_events := InputMap.action_get_events(move_action)
+		if move_events.size() > 0:
+			InputMap.action_erase_events(action_name)
+			for ev in move_events:
+				InputMap.action_add_event(action_name, ev)
+			input_events = move_events
+	if add_button_texture != null and not is_aim_action:
 		action_tree_item.add_button(0, add_button_texture, -1, false, "Add")
 	for input_event in input_events:
 		_add_input_event_as_tree_item(action_name, input_event, action_tree_item)

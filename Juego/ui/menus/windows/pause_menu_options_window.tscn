@@ -45,14 +45,6 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.01, 0.02, 0.05, 0.48)
 
-[node name="GemCanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="GemParticles" type="GPUParticles2D" parent="GemCanvasLayer"]
-position = Vector2(640, 360)
-amount = 92
-lifetime = 2.2
-fixed_fps = 0
-
 [node name="TitleMargin" parent="ContentContainer/BoxContainer" parent_id_path=PackedInt32Array(394030069) index="0" unique_id=1262022916]
 visible = false
 

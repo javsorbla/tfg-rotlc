@@ -28,14 +28,6 @@ pauses_game = true
 update_content = true
 title = "Pausa"
 
-[node name="GemCanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="GemParticles" type="GPUParticles2D" parent="GemCanvasLayer"]
-position = Vector2(640, 360)
-amount = 92
-lifetime = 2.2
-fixed_fps = 0
-
 [node name="TitleLabel" parent="PauseMenu/ContentContainer/BoxContainer/TitleMargin/BoxContainer" parent_id_path=PackedInt32Array(6629802, 1788474031) index="0" unique_id=1049966061]
 theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.95, 0.96, 0.99, 1)

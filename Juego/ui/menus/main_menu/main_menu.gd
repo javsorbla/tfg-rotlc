@@ -31,6 +31,7 @@ var _breathing_time := 0.0
 
 func _ready() -> void:
 	super._ready()
+	Hud.hide_hud()
 	_base_menu_y = menu_container_fx.position.y
 	_progress = _resolve_progress()
 	_configure_gem_sparkle_particles()
