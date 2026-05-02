@@ -23,12 +23,13 @@ const DIVE_SLIDE_SPEED = 200.0
 const DIVE_COOLDOWN = 10.0
 const RETURN_SPEED = 250.0
 
-const WING_MAX_HEALTH: int = 7
+const WING_MAX_HEALTH: int = 10
 const WING_REGEN_DELAY: float = 1.0
-const WEAK_DURATION = 6.0
+const WEAK_DURATION = 3.0
 const WEAK_WALK_SPEED: float = 120.0
+const WEAK_MAX_DAMAGE: int = 10
 
-const STUN_DURATION: float = 3.0
+const STUN_DURATION: float = 1.5
 const STUN_FALL_SPEED: float = 220.0
 
 const RAY_COOLDOWN = 15.0
@@ -65,6 +66,7 @@ var wing_regen_timer: float = 0.0
 var is_weak = false
 var weak_timer = 0.0
 var last_direction := 1.0
+var weak_damage_taken: int = 0
 
 var dive_cooldown_timer = 0.0
 var dive_velocity = Vector2.ZERO
@@ -527,14 +529,11 @@ func _weak_state(delta):
 		_update_flip(last_direction > 0.0)
 
 	if weak_timer <= 0.0:
-		is_weak = false
-		wing_health = WING_MAX_HEALTH
-		returning = true
-		current_state = State.PATROL
-		sprite.play("idle")
+		_exit_weak()
 
 
 func _enter_weak():
+	weak_damage_taken = 0
 	current_state = State.WEAK
 	is_weak = true
 	weak_timer = WEAK_DURATION
@@ -562,6 +561,13 @@ func _enter_weak():
 	_set_dive_shapes(false)
 	sprite.play("idle")
 
+func _exit_weak():
+	is_weak = false
+	weak_damage_taken = 0
+	wing_health = WING_MAX_HEALTH
+	returning = true
+	current_state = State.PATROL
+	sprite.play("idle")
 
 func _update_flip(flipped: bool):
 	sprite.flip_h = flipped
@@ -686,14 +692,18 @@ func _reenable_core_hurtbox():
 func take_damage(amount: int):
 	if hit_cooldown > 0.0:
 		return
-
 	hit_cooldown = HIT_COOLDOWN
 
-	if current_state==State.WEAK:
+	if is_weak:
 		amount *= 2
+		weak_damage_taken += amount
+
 	current_health -= amount
 	_play_damage_flash()
-	
+
+	if is_weak and weak_damage_taken >= WEAK_MAX_DAMAGE:
+		_exit_weak()
+
 	if current_health <= 0:
 		die()
 
