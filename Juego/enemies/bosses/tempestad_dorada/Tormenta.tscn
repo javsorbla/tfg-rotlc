@@ -1,0 +1,43 @@
+[gd_scene load_steps=7 format=3 uid="uid://vik3mgkolkj7"]
+
+[ext_resource type="Script" path="res://enemies/bosses/tempestad_dorada/tormenta.gd" id="1_3arpu"]
+[ext_resource type="Texture2D" uid="uid://d21jpguv4d8dc" path="res://assets/enemies/bosses/tempestad_dorada/rayos1.png" id="1_drfac"]
+[ext_resource type="Texture2D" uid="uid://dh5a1syr6byx8" path="res://assets/enemies/bosses/tempestad_dorada/rayos_inicio.png" id="2_i6qeb"]
+[ext_resource type="Texture2D" uid="uid://bpblt3ahop05f" path="res://assets/enemies/bosses/tempestad_dorada/rayos2.png" id="2_s8rko"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_f4qvs"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_i6qeb")
+}],
+"loop": true,
+"name": &"inicio",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_drfac")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_s8rko")
+}],
+"loop": true,
+"name": &"rayo",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_jywwb"]
+size = Vector2(12, 512)
+
+[node name="Tormenta" type="Area2D"]
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_3arpu")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_f4qvs")
+animation = &"inicio"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_jywwb")

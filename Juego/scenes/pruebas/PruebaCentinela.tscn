@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=4 uid="uid://1l8d268galpf"]
 
-[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_6grxu"]
+[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_6grxu"]
 [ext_resource type="PackedScene" uid="uid://ednw5et05gxf" path="res://enemies/common/centinela_marfil/CentinelaMarfil.tscn" id="2_0nkr3"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="3_xuvgi"]
 

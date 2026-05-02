@@ -1,18 +1,18 @@
 [gd_scene load_steps=17 format=4 uid="uid://shyldwrlc5so"]
 
-[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_oxa8h"]
-[ext_resource type="PackedScene" uid="uid://j3iq0wr4lk5y" path="res://enemies/bosses/coloso_ceniza/ColosoCeniza.tscn" id="2_4biun"]
-[ext_resource type="Texture2D" uid="uid://pykyxvncyfos" path="res://assets/enemies/bosses/coloso_ceniza/coloso_herido.png" id="3_0sjo0"]
-[ext_resource type="Texture2D" uid="uid://bp73nfu16pj8n" path="res://assets/enemies/bosses/coloso_ceniza/puñetazo.png" id="3_4ejeq"]
-[ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="3_m2ajk"]
-[ext_resource type="Texture2D" uid="uid://gqny0mm1jot1" path="res://assets/enemies/bosses/coloso_ceniza/coloso.png" id="3_twgqw"]
-[ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="4_4g7u8"]
-[ext_resource type="PackedScene" uid="uid://b4xv5brfpegl" path="res://scenes/enviroment/PlataformaRompible.tscn" id="4_wxn0d"]
-[ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="5_81j65"]
-[ext_resource type="Texture2D" uid="uid://xks3jx3sfl8r" path="res://assets/enemies/bosses/coloso_ceniza/grito.png" id="6_yqpkc"]
+[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_njwen"]
+[ext_resource type="PackedScene" uid="uid://b4xv5brfpegl" path="res://scenes/enviroment/PlataformaRompible.tscn" id="2_ideqb"]
+[ext_resource type="PackedScene" uid="uid://j3iq0wr4lk5y" path="res://enemies/bosses/coloso_ceniza/ColosoCeniza.tscn" id="3_etxhj"]
+[ext_resource type="Texture2D" uid="uid://pykyxvncyfos" path="res://assets/enemies/bosses/coloso_ceniza/coloso_herido.png" id="4_h5dbu"]
+[ext_resource type="Texture2D" uid="uid://gqny0mm1jot1" path="res://assets/enemies/bosses/coloso_ceniza/coloso.png" id="5_gms8t"]
+[ext_resource type="Texture2D" uid="uid://bp73nfu16pj8n" path="res://assets/enemies/bosses/coloso_ceniza/puñetazo.png" id="6_35w2w"]
+[ext_resource type="Texture2D" uid="uid://xks3jx3sfl8r" path="res://assets/enemies/bosses/coloso_ceniza/grito.png" id="7_g3a7t"]
+[ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="8_p7ef8"]
+[ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="9_kmxla"]
+[ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="10_fjvfo"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_w1apf"]
-texture = ExtResource("1_oxa8h")
+texture = ExtResource("1_njwen")
 0:0/0 = 0
 1:0/0 = 0
 2:0/0 = 0
@@ -49,7 +49,7 @@ resource_local_to_scene = true
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("3_0sjo0")
+"texture": ExtResource("4_h5dbu")
 }],
 "loop": true,
 "name": &"hurt",
@@ -57,7 +57,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("3_twgqw")
+"texture": ExtResource("5_gms8t")
 }],
 "loop": true,
 "name": &"idle",
@@ -65,7 +65,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("3_4ejeq")
+"texture": ExtResource("6_35w2w")
 }],
 "loop": true,
 "name": &"punch",
@@ -73,7 +73,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("3_twgqw")
+"texture": ExtResource("5_gms8t")
 }],
 "loop": true,
 "name": &"rage",
@@ -81,7 +81,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("6_yqpkc")
+"texture": ExtResource("7_g3a7t")
 }],
 "loop": true,
 "name": &"wave",
@@ -104,58 +104,58 @@ position = Vector2(21, -4)
 tile_map_data = PackedByteArray("AAD6/wIAAQACAAEAAAD7/wIAAQACAAEAAAD8/wIAAQACAAEAAAD9/wIAAQACAAEAAAD+/wIAAQACAAEAAAD//wIAAQACAAEAAAAAAAIAAQACAAEAAAABAAIAAQACAAEAAAACAAIAAQACAAEAAAADAAIAAQACAAEAAAAEAAIAAQACAAEAAAAFAAIAAQACAAEAAAAGAAIAAQACAAEAAAAHAAIAAQACAAEAAAAIAAIAAQACAAEAAAAJAAIAAQACAAEAAAAKAAIAAQACAAEAAAALAAIAAQACAAEAAAAMAAIAAQACAAEAAAANAAIAAQACAAEAAAAOAAIAAQACAAEAAAAPAAIAAQACAAEAAAAQAAIAAQACAAEAAAARAAIAAQACAAEAAAASAAIAAQACAAEAAAATAAIAAQACAAEAAAAUAAIAAQACAAEAAAAVAAIAAQACAAEAAAAWAAIAAQACAAEAAAAWAAMAAQACAAEAAAAVAAMAAQACAAEAAAAUAAMAAQACAAEAAAATAAMAAQACAAEAAAASAAMAAQACAAEAAAARAAMAAQACAAEAAAAQAAMAAQACAAEAAAAPAAMAAQACAAEAAAAOAAMAAQACAAEAAAANAAMAAQACAAEAAAAMAAMAAQACAAEAAAALAAMAAQACAAEAAAAKAAMAAQACAAEAAAAJAAMAAQACAAEAAAAIAAMAAQACAAEAAAD6/wMAAQACAAEAAAD7/wMAAQACAAEAAAD8/wMAAQACAAEAAAD9/wMAAQACAAEAAAD+/wMAAQACAAEAAAAGAAMAAQACAAEAAAAHAAMAAQACAAEAAAAGAAQAAQACAAEAAAAFAAQAAQACAAEAAAAEAAQAAQACAAEAAAADAAQAAQACAAEAAAACAAMAAQACAAEAAAABAAMAAQACAAEAAAAAAAMAAQACAAEAAAD//wMAAQACAAEAAAADAAMAAQACAAEAAAAEAAMAAQACAAEAAAAFAAMAAQACAAEAAAACAAQAAQACAAEAAAABAAQAAQACAAEAAAAAAAQAAQACAAEAAAD//wQAAQACAAEAAAD+/wQAAQACAAEAAAD9/wQAAQACAAEAAAD8/wQAAQACAAEAAAD7/wQAAQACAAEAAAD6/wQAAQACAAEAAAAHAAQAAQACAAEAAAAIAAQAAQACAAEAAAAJAAQAAQACAAEAAAAKAAQAAQACAAEAAAALAAQAAQACAAEAAAAMAAQAAQACAAEAAAANAAQAAQACAAEAAAAOAAQAAQACAAEAAAAPAAQAAQACAAEAAAAQAAQAAQACAAEAAAARAAQAAQACAAEAAAASAAQAAQACAAEAAAATAAQAAQACAAEAAAAUAAQAAQACAAEAAAAVAAQAAQACAAEAAAAWAAQAAQACAAEAAAAXAAIAAQACAAEAAAAXAAMAAQACAAEAAAAXAAQAAQACAAEAAAAYAAIAAQACAAEAAAAYAAMAAQACAAEAAAAYAAQAAQACAAEAAAAZAAIAAQACAAEAAAAZAAMAAQACAAEAAAAZAAQAAQACAAEAAAAaAAIAAQACAAEAAAAaAAMAAQACAAEAAAAaAAQAAQACAAEAAAAbAAIAAQACAAEAAAAbAAMAAQACAAEAAAAbAAQAAQACAAEAAAAcAAIAAQACAAEAAAAcAAMAAQACAAEAAAAcAAQAAQACAAEAAAAdAAIAAQACAAEAAAAdAAMAAQACAAEAAAAdAAQAAQACAAEAAAAeAAIAAQACAAEAAAAeAAMAAQACAAEAAAAeAAQAAQACAAEAAAAfAAIAAQACAAEAAAAfAAMAAQACAAEAAAAfAAQAAQACAAEAAAAgAAIAAQACAAEAAAAgAAMAAQACAAEAAAAgAAQAAQACAAEAAAAhAAIAAQACAAEAAAAhAAMAAQACAAEAAAAhAAQAAQACAAEAAAAiAAIAAQACAAEAAAAiAAMAAQACAAEAAAAiAAQAAQACAAEAAAAjAAIAAQACAAEAAAAjAAMAAQACAAEAAAAjAAQAAQACAAEAAAAkAAIAAQACAAEAAAAkAAMAAQACAAEAAAAkAAQAAQACAAEAAAAlAAIAAQACAAEAAAAlAAMAAQACAAEAAAAlAAQAAQACAAEAAAAmAAIAAQACAAEAAAAmAAMAAQACAAEAAAAmAAQAAQACAAEAAAAnAAIAAQACAAEAAAAnAAMAAQACAAEAAAAnAAQAAQACAAEAAAAoAAIAAQACAAEAAAAoAAMAAQACAAEAAAAoAAQAAQACAAEAAAApAAIAAQACAAEAAAApAAMAAQACAAEAAAApAAQAAQACAAEAAAAqAAIAAQACAAEAAAAqAAMAAQACAAEAAAAqAAQAAQACAAEAAAArAAIAAQACAAEAAAArAAMAAQACAAEAAAArAAQAAQACAAEAAAAsAAIAAQACAAEAAAAsAAMAAQACAAEAAAAsAAQAAQACAAEAAAAtAAIAAQACAAEAAAAtAAMAAQACAAEAAAAtAAQAAQACAAEAAAAuAAIAAQACAAEAAAAuAAMAAQACAAEAAAAuAAQAAQACAAEAAAAvAAIAAQACAAEAAAAvAAMAAQACAAEAAAAvAAQAAQACAAEAAAAwAAIAAQACAAEAAAAwAAMAAQACAAEAAAAwAAQAAQACAAEAAAD5/wIAAQACAAEAAAD4/wIAAQACAAEAAAD3/wIAAQACAAEAAAD2/wIAAQACAAEAAAD1/wIAAQACAAEAAAD0/wIAAQACAAEAAADz/wIAAQACAAEAAADy/wIAAQACAAEAAADx/wIAAQACAAEAAADw/wIAAQACAAEAAADv/wIAAQACAAEAAADu/wIAAQACAAEAAADt/wIAAQACAAEAAADs/wIAAQACAAEAAADs/wMAAQACAAEAAADs/wQAAQACAAEAAADt/wQAAQACAAEAAAD0/wQAAQACAAEAAAD1/wQAAQACAAEAAAD2/wQAAQACAAEAAAD3/wQAAQACAAEAAAD4/wQAAQACAAEAAAD5/wQAAQACAAEAAAD5/wMAAQACAAEAAAD4/wMAAQACAAEAAAD3/wMAAQACAAEAAAD2/wMAAQACAAEAAAD1/wMAAQACAAEAAAD0/wMAAQACAAEAAADz/wMAAQACAAEAAADy/wMAAQACAAEAAADx/wMAAQACAAEAAADw/wMAAQACAAEAAADv/wMAAQACAAEAAADu/wMAAQACAAEAAADt/wMAAQACAAEAAADv/wQAAQACAAEAAADu/wQAAQACAAEAAADw/wQAAQACAAEAAADx/wQAAQACAAEAAADy/wQAAQACAAEAAADz/wQAAQACAAEAAADr/wIAAQACAAEAAADq/wEAAQACAAEAAADq/wAAAQACAAEAAADq////AQACAAEAAADq//7/AQACAAEAAADq//3/AQACAAEAAADq//z/AQACAAEAAADq//v/AQACAAEAAADq//r/AQACAAEAAADq//n/AQACAAEAAADq//j/AQACAAEAAADr//j/AQACAAEAAADr//f/AQACAAEAAAA=")
 tile_set = SubResource("TileSet_34jmr")
 
-[node name="PlataformaRompible1" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible1" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(433, -143)
 
-[node name="PlataformaRompible2" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible2" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(-40, -23)
 
-[node name="PlataformaRompible3" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible3" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(-88, -104)
 
-[node name="PlataformaRompible4" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible4" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(73, -88)
 
-[node name="PlataformaRompible5" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible5" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(53, -175)
 
-[node name="PlataformaRompible6" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible6" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(245, -162)
 
-[node name="PlataformaRompible7" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible7" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(622, -170)
 
-[node name="PlataformaRompible8" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible8" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(168, -41)
 
-[node name="PlataformaRompible9" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible9" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(295, -87)
 
-[node name="PlataformaRompible10" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible10" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(424, -24)
 
-[node name="PlataformaRompible11" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible11" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(520, -105)
 
-[node name="PlataformaRompible12" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible12" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(585, -24)
 
-[node name="PlataformaRompible13" parent="." instance=ExtResource("4_wxn0d")]
+[node name="PlataformaRompible13" parent="." instance=ExtResource("2_ideqb")]
 position = Vector2(681, -88)
 
-[node name="ColosoCeniza" parent="." instance=ExtResource("2_4biun")]
+[node name="ColosoCeniza" parent="." instance=ExtResource("3_etxhj")]
 position = Vector2(690, -17)
 
 [node name="AnimatedSprite2D" parent="ColosoCeniza" index="0"]
 sprite_frames = SubResource("SpriteFrames_esgw8")
 animation = &"rage"
 
-[node name="Camera2D" parent="." instance=ExtResource("4_4g7u8")]
+[node name="Camera2D" parent="." instance=ExtResource("8_p7ef8")]
 
-[node name="Player" parent="." instance=ExtResource("3_m2ajk")]
+[node name="Player" parent="." instance=ExtResource("9_kmxla")]
 position = Vector2(-279, 19)
 
-[node name="ZonaJefe" parent="." instance=ExtResource("5_81j65")]
+[node name="ZonaJefe" parent="." instance=ExtResource("10_fjvfo")]
 position = Vector2(-68, -141)
 
 [node name="CollisionShape2D" parent="ZonaJefe/Trigger" index="0"]

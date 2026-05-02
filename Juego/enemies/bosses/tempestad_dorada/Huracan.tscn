@@ -1,0 +1,43 @@
+[gd_scene load_steps=6 format=3 uid="uid://bbstnd3yu4inu"]
+
+[ext_resource type="Texture2D" uid="uid://bllwptk6g3pkl" path="res://assets/enemies/bosses/tempestad_dorada/huracan.png" id="1_jeykx"]
+[ext_resource type="Script" path="res://enemies/bosses/tempestad_dorada/huracan.gd" id="1_v118m"]
+[ext_resource type="Texture2D" uid="uid://dn7qigmfxjqrg" path="res://assets/enemies/bosses/tempestad_dorada/huracan_inicio.png" id="2_nmxfd"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_isfr6"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_jeykx")
+}],
+"loop": true,
+"name": &"huracan",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_nmxfd")
+}],
+"loop": true,
+"name": &"inicio",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_k33w1"]
+radius = 53.0
+height = 236.0
+
+[node name="Huracan" type="Area2D"]
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_v118m")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(4, -118)
+scale = Vector2(1.96875, 2.44531)
+sprite_frames = SubResource("SpriteFrames_isfr6")
+animation = &"huracan"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(1, -94)
+shape = SubResource("CapsuleShape2D_k33w1")

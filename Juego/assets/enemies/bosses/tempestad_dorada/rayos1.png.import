@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcp8hn3glstjl"
-path="res://.godot/imported/FireSet.png-5931ad1f157364d18d8bd0c3e6f3eb58.ctex"
+uid="uid://d21jpguv4d8dc"
+path="res://.godot/imported/rayos1.png-bac146ef9370a0bafaacb495f96b5eab.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/FireSet.png"
-dest_files=["res://.godot/imported/FireSet.png-5931ad1f157364d18d8bd0c3e6f3eb58.ctex"]
+source_file="res://assets/enemies/bosses/tempestad_dorada/rayos1.png"
+dest_files=["res://.godot/imported/rayos1.png-bac146ef9370a0bafaacb495f96b5eab.ctex"]
 
 [params]
 

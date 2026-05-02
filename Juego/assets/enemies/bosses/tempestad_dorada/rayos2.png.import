@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bqby384r5lm15"
-path="res://.godot/imported/DarkCastle.png-5e7feba3049bfd8c2ad1c6cc99e469a8.ctex"
+uid="uid://bpblt3ahop05f"
+path="res://.godot/imported/rayos2.png-4cd2f184592cf832e2739dec16e97cff.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/DarkCastle.png"
-dest_files=["res://.godot/imported/DarkCastle.png-5e7feba3049bfd8c2ad1c6cc99e469a8.ctex"]
+source_file="res://assets/enemies/bosses/tempestad_dorada/rayos2.png"
+dest_files=["res://.godot/imported/rayos2.png-4cd2f184592cf832e2739dec16e97cff.ctex"]
 
 [params]
 

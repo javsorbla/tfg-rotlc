@@ -1,0 +1,148 @@
+[gd_scene load_steps=15 format=3 uid="uid://btspr1ib0d52y"]
+
+[ext_resource type="Script" path="res://enemies/bosses/tempestad_dorada/tempestad_dorada.gd" id="1_h0175"]
+[ext_resource type="Texture2D" uid="uid://dgm1xjh34qyb0" path="res://assets/enemies/bosses/tempestad_dorada/attack.png" id="2_nd1q5"]
+[ext_resource type="Texture2D" uid="uid://bxqwmdsgdk8dj" path="res://assets/enemies/bosses/tempestad_dorada/charging.png" id="3_yoo5d"]
+[ext_resource type="Texture2D" uid="uid://da8ydomgn18mu" path="res://assets/enemies/bosses/tempestad_dorada/idle.png" id="4_8kejl"]
+[ext_resource type="Texture2D" uid="uid://2uecjcfs2c1e" path="res://assets/enemies/bosses/tempestad_dorada/stun.png" id="5_rsmle"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_4oaa8"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_nd1q5")
+}],
+"loop": true,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_yoo5d")
+}],
+"loop": true,
+"name": &"charging",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_8kejl")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_rsmle")
+}],
+"loop": true,
+"name": &"stun",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1vspu"]
+radius = 15.5555
+height = 104.646
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_seo27"]
+radius = 16.7452
+height = 74.671
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fvn32"]
+radius = 14.1414
+height = 94.7619
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_t5thk"]
+radius = 14.8658
+height = 75.3551
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cm5n4"]
+radius = 10.5986
+height = 49.8085
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1w57l"]
+radius = 11.6605
+height = 65.0638
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_j61d8"]
+radius = 12.0276
+height = 60.793
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_nuw6r"]
+radius = 17.8564
+height = 65.4974
+
+[node name="TempestadDorada" type="Node2D" groups=["boss"]]
+script = ExtResource("1_h0175")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 9.53674e-07)
+scale = Vector2(0.828125, 0.851563)
+sprite_frames = SubResource("SpriteFrames_4oaa8")
+animation = &"attack"
+
+[node name="CoreHurtbox" type="Area2D" parent="." groups=["boss_core"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="DiveShape" type="CollisionShape2D" parent="CoreHurtbox"]
+position = Vector2(9.00001, -11)
+rotation = 0.774926
+shape = SubResource("CapsuleShape2D_1vspu")
+
+[node name="PatrolShape" type="CollisionShape2D" parent="CoreHurtbox"]
+position = Vector2(-7, 9)
+rotation = -0.349066
+shape = SubResource("CapsuleShape2D_seo27")
+debug_color = Color(0, 0, 0.392157, 0.419608)
+
+[node name="AttackHitbox" type="Area2D" parent="." groups=["boss_hitbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="DiveShape" type="CollisionShape2D" parent="AttackHitbox"]
+position = Vector2(8, -10)
+rotation = 0.774926
+shape = SubResource("CapsuleShape2D_fvn32")
+debug_color = Color(1, 0, 0, 0.419608)
+
+[node name="PatrolShape" type="CollisionShape2D" parent="AttackHitbox"]
+position = Vector2(-7, 9)
+rotation = -0.349066
+shape = SubResource("CapsuleShape2D_t5thk")
+debug_color = Color(0.392157, 0, 0, 0.419608)
+
+[node name="WingHurtbox1" type="Area2D" parent="." groups=["boss_hurtbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="DiveShape" type="CollisionShape2D" parent="WingHurtbox1"]
+position = Vector2(-20, -16)
+rotation = 0.610865
+shape = SubResource("CapsuleShape2D_cm5n4")
+debug_color = Color(0, 1, 0, 0.419608)
+
+[node name="PatrolShape" type="CollisionShape2D" parent="WingHurtbox1"]
+position = Vector2(-35, -22)
+rotation = -0.261799
+shape = SubResource("CapsuleShape2D_1w57l")
+debug_color = Color(0, 0.392157, 0, 0.419608)
+
+[node name="WingHurtbox2" type="Area2D" parent="." groups=["boss_hurtbox"]]
+collision_layer = 16
+collision_mask = 4
+
+[node name="DiveShape" type="CollisionShape2D" parent="WingHurtbox2"]
+position = Vector2(18, 15)
+rotation = 0.774926
+shape = SubResource("CapsuleShape2D_j61d8")
+debug_color = Color(0, 1, 0, 0.419608)
+
+[node name="PatrolShape" type="CollisionShape2D" parent="WingHurtbox2"]
+position = Vector2(26, -23)
+rotation = 0.523599
+shape = SubResource("CapsuleShape2D_nuw6r")
+debug_color = Color(0, 0.392157, 0, 0.419608)
+
+[node name="SpawnRayo" type="Marker2D" parent="."]
