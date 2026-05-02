@@ -3,16 +3,17 @@ extends Node2D
 # --- CONSTANTES ---
 const MAX_HEALTH: int = 30
 const DAMAGE: int = 1
-const CHASE_SPEED_P1: float = 55.0 
-const CHASE_SPEED_P2: float = 90.0 
+const CHASE_SPEED_P1: float = 0.0 
+const CHASE_SPEED_P2: float = 110.0 
 const DAMAGE_FLASH_TIME: float = 0.08
 const HEIGHT_OFFSET: float = -30.0 
 
 # --- ESTADOS ---
-enum State { IDLE, CHASE, EXPAND, VANISH, APPEAR, AOE, SPIKE_RAIN, PHASE_TRANSITION, DEAD }
+enum State { IDLE, CHASE, EXPAND, VANISH, APPEAR, AOE, SPIKE_RAIN, SHOOT, PHASE_TRANSITION, DEAD }
 
 # --- VARIABLES ---
-@export var escena_pincho: PackedScene # ¡NUEVO! Aquí arrastraremos la escena del pincho
+@export var escena_pincho: PackedScene 
+@export var escena_bola: PackedScene
 
 var current_health: int = MAX_HEALTH
 var current_state: State = State.IDLE
@@ -60,7 +61,7 @@ func _physics_process(delta: float) -> void:
 	if not is_active or current_state == State.DEAD:
 		return
 
-	if player and current_state in [State.CHASE, State.EXPAND, State.AOE, State.PHASE_TRANSITION, State.SPIKE_RAIN]:
+	if player and current_state in [State.CHASE, State.EXPAND, State.AOE, State.PHASE_TRANSITION, State.SPIKE_RAIN, State.SHOOT]:
 		facing_left = player.global_position.x < global_position.x
 		_update_facing()
 
@@ -71,6 +72,7 @@ func _physics_process(delta: float) -> void:
 		State.APPEAR: _state_appear(delta)
 		State.AOE: _state_aoe(delta)
 		State.SPIKE_RAIN: _state_spike_rain(delta)
+		State.SHOOT: _state_shoot(delta)
 		State.PHASE_TRANSITION: _state_phase_transition(delta)
 
 	_check_continuous_collision()
@@ -113,6 +115,8 @@ func _enter_state(new_state: State) -> void:
 			_start_aoe_attack()
 		State.SPIKE_RAIN:
 			_start_spike_rain()
+		State.SHOOT:
+			_start_shoot()	
 		State.PHASE_TRANSITION:
 			_start_phase_transition()
 		State.DEAD:
@@ -151,21 +155,37 @@ func _state_chase(delta: float) -> void:
 	action_timer -= delta
 	if action_timer <= 0:
 		var r = randf()
-		# Ahora tiene 4 ataques posibles (25% cada uno)
+		
+		# --- RULETA ---
 		if in_phase_2:
-			if r < 0.15: _enter_state(State.EXPAND)
-			elif r < 0.45: _enter_state(State.VANISH)
-			elif r < 0.75: _enter_state(State.SPIKE_RAIN)
+			# En la fase 2
+			if r < 0.20: _enter_state(State.EXPAND)
+			elif r < 0.40: _enter_state(State.VANISH)
+			elif r < 0.60: _enter_state(State.SPIKE_RAIN)
+			elif r < 0.80: _enter_state(State.SHOOT)
 			else: _enter_state(State.AOE)
 		else:
-			if r < 0.25: _enter_state(State.EXPAND)
-			elif r < 0.50: _enter_state(State.VANISH)
-			elif r < 0.75: _enter_state(State.SPIKE_RAIN)
+			# Fase 1 normal
+			if r < 0.20: _enter_state(State.EXPAND)
+			elif r < 0.40: _enter_state(State.VANISH)
+			elif r < 0.60: _enter_state(State.SPIKE_RAIN)
+			elif r < 0.80: _enter_state(State.SHOOT)
 			else: _enter_state(State.AOE)
 
 func _state_expand(delta: float) -> void:
 	state_timer -= delta
-	if state_timer <= 0: _enter_state(State.CHASE)
+	
+	if player:
+		var target_pos = player.global_position + Vector2(0, HEIGHT_OFFSET)
+		var speed = CHASE_SPEED_P2 if in_phase_2 else CHASE_SPEED_P1
+		
+		# multiplicar por 0.8 hace que se mueva un 20% más lento al ser gigante,
+		# para máxima velocidad, simplemente borrar el "* 0.8".
+		global_position += (target_pos - global_position).normalized() * (speed * 0.8) * delta
+	# ----------------------------------------------
+	
+	if state_timer <= 0:
+		_enter_state(State.CHASE)
 
 func _state_vanish(delta: float) -> void:
 	state_timer -= delta
@@ -179,10 +199,9 @@ func _state_appear(delta: float) -> void:
 	if state_timer <= 0: _enter_state(State.CHASE)
 
 
-# --- NUEVO: LLUVIA DE PINCHOS ---
 
 func _start_spike_rain() -> void:
-	state_timer = 2.0 # Se queda quieto 2 segundos mientras caen
+	state_timer = 2.0 # tiempo quieto
 	
 	if action_tween: action_tween.kill()
 	action_tween = create_tween()
@@ -190,11 +209,10 @@ func _start_spike_rain() -> void:
 	action_tween.tween_property(self, "global_position:y", global_position.y - 20, 0.2)
 	action_tween.tween_property(self, "global_position:y", global_position.y, 0.2)
 	
-	# Llama a la función de disparar si le hemos puesto la escena
+
 	if escena_pincho:
 		call_deferred("_spawn_spikes")
-	else:
-		print("ERROR: No has asignado la escena del pincho en el Inspector de El Vacío")
+
 
 func _spawn_spikes() -> void:
 	var boss_room = get_tree().get_first_node_in_group("boss_room")
@@ -205,15 +223,12 @@ func _spawn_spikes() -> void:
 		var altura_techo = spawn_position.y - 300.0 
 		var distancia_total = right - left
 		
-		# --- EL TRUCO ESTÁ AQUÍ ---
-		# Cuántos píxeles ocupa tu pincho de ancho. 
-		# Si ves que se solapan mucho, sube este número. Si ves huecos, bájalo.
+
 		var ancho_pincho = 29.0 
 		
-		# Calculamos exactamente cuántos pinchos caben en la sala
+
 		var numero_pinchos = int(distancia_total / ancho_pincho)
 		
-		# Generamos la fila sólida de izquierda a derecha
 		for i in range(numero_pinchos + 1):
 			var pincho = escena_pincho.instantiate()
 			get_parent().add_child(pincho)
@@ -224,10 +239,8 @@ func _state_spike_rain(delta: float) -> void:
 	if state_timer <= 0:
 		_enter_state(State.CHASE)
 
-# --- (El resto sigue exactamente igual: AOE, Phase Transition, Funciones auxiliares y Combate) ---
 
 func _start_phase_transition() -> void:
-	print("¡EL VACÍO ENTRA EN FASE 2!")
 	state_timer = 2.0 
 	_set_hitboxes_active(false) 
 	if action_tween: action_tween.kill()
@@ -275,9 +288,9 @@ func _execute_aoe_damage() -> void:
 		if health_node:
 			if not health_node.is_invincible and not player.is_shielding:
 				health_node.take_damage(2) 
-				print("¡Iris ha recibido el Vórtice!")
-			else:
-				print("¡Iris bloqueó el Vórtice con su habilidad/escudo!")
+				
+			
+				
 
 func activate() -> void:
 	is_active = true
@@ -332,7 +345,6 @@ func take_damage(amount: int) -> void:
 	if current_state in [State.VANISH, State.APPEAR, State.AOE] and not normal_hurtbox.monitoring:
 		return
 	current_health -= amount
-	print("¡Impacto! Vida de El Vacío: ", current_health, "/", MAX_HEALTH)
 	if current_health <= (MAX_HEALTH / 2) and not in_phase_2:
 		_enter_state(State.PHASE_TRANSITION)
 		return
@@ -351,3 +363,33 @@ func _play_damage_flash() -> void:
 	var target_color = Color(1.0, 0.6, 0.6, 1.0) if in_phase_2 else Color(1.0, 1.0, 1.0, 1.0)
 	target_color.a = modulate.a 
 	damage_flash_tween.tween_property(sprite, "modulate", target_color, DAMAGE_FLASH_TIME)
+
+func _start_shoot() -> void:
+	state_timer = 1.0 # Se queda quieto un segundo antes/después de disparar
+	
+	if action_tween: action_tween.kill()
+	action_tween = create_tween()
+	# Efecto visual: Hace un brillito negro rápido para avisar
+	action_tween.tween_property(sprite, "modulate", Color(0, 0, 0, 1), 0.2)
+	var normal_color = Color(1.0, 0.6, 0.6, 1.0) if in_phase_2 else Color(1, 1, 1, 1)
+	action_tween.tween_property(sprite, "modulate", normal_color, 0.2)
+	
+	if escena_bola:
+		call_deferred("_spawn_bola")
+	
+
+func _spawn_bola() -> void:
+	if not player: return
+	
+	var bola = escena_bola.instantiate()
+	get_parent().add_child(bola)
+	
+	bola.global_position = global_position
+	
+	var target_pos = player.global_position + Vector2(0, HEIGHT_OFFSET)
+	bola.direction = (target_pos - global_position).normalized()
+
+func _state_shoot(delta: float) -> void:
+	state_timer -= delta
+	if state_timer <= 0:
+		_enter_state(State.CHASE)

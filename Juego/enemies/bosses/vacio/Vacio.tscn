@@ -1,8 +1,9 @@
-[gd_scene load_steps=11 format=3 uid="uid://c0ogqogypgm2j"]
+[gd_scene load_steps=12 format=3 uid="uid://c0ogqogypgm2j"]
 
 [ext_resource type="Script" path="res://enemies/bosses/vacio/vacio.gd" id="1_et7wl"]
 [ext_resource type="PackedScene" uid="uid://chl6qutwr0fwl" path="res://enemies/bosses/vacio/pincho_vacio.tscn" id="2_cgq4e"]
 [ext_resource type="Texture2D" uid="uid://carbscgs8x4q7" path="res://assets/enemies/bosses/vacio/vacio2-limpio-reducido.png" id="2_i0uov"]
+[ext_resource type="PackedScene" uid="uid://dcxw5esr7td0d" path="res://enemies/bosses/vacio/bola_oscura.tscn" id="3_wxnae"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_ovn4g"]
 animations = [{
@@ -36,6 +37,7 @@ size = Vector2(22.1359, 77.9003)
 [node name="Vacio" type="Node2D" groups=["boss"]]
 script = ExtResource("1_et7wl")
 escena_pincho = ExtResource("2_cgq4e")
+escena_bola = ExtResource("3_wxnae")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_ovn4g")

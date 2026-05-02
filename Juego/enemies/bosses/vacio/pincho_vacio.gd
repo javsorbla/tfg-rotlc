@@ -1,21 +1,21 @@
 extends Area2D
 
-const FALL_SPEED: float = 250.0 # Reducido (antes 300) para dar más tiempo
+const FALL_SPEED: float = 250.0 
 const DAMAGE: int = 1
 
-var is_falling: bool = false # Controla si ya está cayendo
+var is_falling: bool = false 
 
 func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 	body_entered.connect(_on_body_entered)
 	
-	# --- EL AVISO (Telegraph) ---
-	modulate.a = 0.4 # Aparece medio transparente
-	await get_tree().create_timer(1.0).timeout # Se queda suspendido 1 segundo
 	
-	modulate.a = 1.0 # Se vuelve opaco
-	is_falling = true # ¡Empieza a caer!
-	# -----------------------------
+	modulate.a = 0.4 
+	await get_tree().create_timer(1.0).timeout 
+	
+	modulate.a = 1.0 
+	is_falling = true 
+	
 	
 	get_tree().create_timer(6.0).timeout.connect(queue_free)
 
