@@ -3,8 +3,8 @@ extends Node2D
 # --- CONSTANTES ---
 const MAX_HEALTH: int = 30
 const DAMAGE: int = 1
-const CHASE_SPEED_P1: float = 0.0 
-const CHASE_SPEED_P2: float = 110.0 
+const CHASE_SPEED_P1: float = 65.0 
+const CHASE_SPEED_P2: float = 95.0 
 const DAMAGE_FLASH_TIME: float = 0.08
 const HEIGHT_OFFSET: float = -30.0 
 
@@ -26,6 +26,8 @@ var spawn_position: Vector2 = Vector2.ZERO
 
 var is_invulnerable: bool = false
 var in_phase_2: bool = false 
+
+var bolsa_ataques: Array = [] #
 
 var action_timer: float = 0.0
 var state_timer: float = 0.0
@@ -147,6 +149,7 @@ func _on_level_reset() -> void:
 # --- FUNCIONES DE ESTADO DE IA ---
 
 func _state_chase(delta: float) -> void:
+	# Los ataques van por bolsa para que pase por todos antes de repetir, y se mezclan al azar cada vez que se llenan
 	if not player: return
 	var target_pos = player.global_position + Vector2(0, HEIGHT_OFFSET)
 	var speed = CHASE_SPEED_P2 if in_phase_2 else CHASE_SPEED_P1
@@ -154,23 +157,9 @@ func _state_chase(delta: float) -> void:
 	
 	action_timer -= delta
 	if action_timer <= 0:
-		var r = randf()
+		var siguiente_ataque = _sacar_ataque_de_bolsa()
 		
-		# --- RULETA ---
-		if in_phase_2:
-			# En la fase 2
-			if r < 0.20: _enter_state(State.EXPAND)
-			elif r < 0.40: _enter_state(State.VANISH)
-			elif r < 0.60: _enter_state(State.SPIKE_RAIN)
-			elif r < 0.80: _enter_state(State.SHOOT)
-			else: _enter_state(State.AOE)
-		else:
-			# Fase 1 normal
-			if r < 0.20: _enter_state(State.EXPAND)
-			elif r < 0.40: _enter_state(State.VANISH)
-			elif r < 0.60: _enter_state(State.SPIKE_RAIN)
-			elif r < 0.80: _enter_state(State.SHOOT)
-			else: _enter_state(State.AOE)
+		_enter_state(siguiente_ataque)
 
 func _state_expand(delta: float) -> void:
 	state_timer -= delta
@@ -198,7 +187,14 @@ func _state_appear(delta: float) -> void:
 		_set_hitboxes_active(true)
 	if state_timer <= 0: _enter_state(State.CHASE)
 
-
+func _sacar_ataque_de_bolsa() -> State:
+	# Si la bolsa está vacía, la llenamos con 1 copia de cada ataque
+	if bolsa_ataques.is_empty():
+		bolsa_ataques = [State.EXPAND, State.VANISH, State.SPIKE_RAIN, State.SHOOT, State.AOE]
+		bolsa_ataques.shuffle() # Godot desordena la lista automáticamente al azar
+	
+	# Sacamos y devolvemos el último ataque de la lista
+	return bolsa_ataques.pop_back()
 
 func _start_spike_rain() -> void:
 	state_timer = 2.0 # tiempo quieto
@@ -345,7 +341,7 @@ func take_damage(amount: int) -> void:
 	if current_state in [State.VANISH, State.APPEAR, State.AOE] and not normal_hurtbox.monitoring:
 		return
 	current_health -= amount
-	if current_health <= (MAX_HEALTH / 2) and not in_phase_2:
+	if current_health <= 10 and not in_phase_2:
 		_enter_state(State.PHASE_TRANSITION)
 		return
 	if current_health <= 0:
