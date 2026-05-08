@@ -3,7 +3,7 @@ extends Node2D
 enum State { IDLE, HURT, DEAD, PUNCH }
 enum Phase { ONE, TWO }
 
-const MAX_HEALTH: int = 40
+const MAX_HEALTH: int = 35
 const BOSS_HALF_WIDTH: float = 60.0
 
 const TURN_DELAY_TIME: float = 0.5
@@ -11,7 +11,7 @@ const TURN_DELAY_TIME: float = 0.5
 const DAMAGE_FLASH_TIME: float = 0.08
 
 const LEG_MAX_HEALTH: int = 7
-const HURT_DURATION: float = 4.0
+const HURT_DURATION: float = 4.5
 const LEG_REGEN_DELAY: float = 1.0
 
 const PUNCH_RANGE: float = 80.0
@@ -121,12 +121,19 @@ func _physics_process(delta):
 		return
 
 	if room_right_limit == 0.0:
-		var boss_room = get_tree().get_first_node_in_group("boss_room")
-		if boss_room:
-			room_left_limit = boss_room.get_node("LimiteIzquierda").global_position.x
-			room_right_limit = boss_room.get_node("LimiteDerecha").global_position.x
-			room_top_limit = boss_room.get_node("LimiteArriba").global_position.y
-			room_bottom_limit = boss_room.get_node("LimiteAbajo").global_position.y
+		var boss_rooms = get_tree().get_nodes_in_group("boss_room")
+		var closest_room = null
+		var closest_dist = INF
+		for room in boss_rooms:
+			var d = global_position.distance_to(room.global_position)
+			if d < closest_dist:
+				closest_dist = d
+				closest_room = room
+		if closest_room:
+			room_left_limit = closest_room.get_node("LimiteIzquierda").global_position.x
+			room_right_limit = closest_room.get_node("LimiteDerecha").global_position.x
+			room_top_limit = closest_room.get_node("LimiteArriba").global_position.y
+			room_bottom_limit = closest_room.get_node("LimiteAbajo").global_position.y
 
 	if current_state == State.DEAD:
 		return
@@ -375,14 +382,14 @@ func _start_spike_attack():
 	
 	while true:
 		spawn_x += direction * spike_width
-		spawn_x = clamp(spawn_x, room_left_limit + BOSS_HALF_WIDTH, room_right_limit - BOSS_HALF_WIDTH)
+		spawn_x = clamp(spawn_x, room_left_limit, room_right_limit)
 		_spawn_spike(spawn_x)
 		await get_tree().create_timer(0.04).timeout
 		if current_state == State.DEAD:
 			return
-		if direction > 0 and spawn_x >= room_right_limit - BOSS_HALF_WIDTH:
+		if direction > 0 and spawn_x >= room_right_limit :
 			break
-		if direction < 0 and spawn_x <= room_left_limit + BOSS_HALF_WIDTH:
+		if direction < 0 and spawn_x <= room_left_limit:
 			break
 	
 	if current_state == State.IDLE:

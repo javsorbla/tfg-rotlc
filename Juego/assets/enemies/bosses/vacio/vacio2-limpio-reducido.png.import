@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bqby384r5lm15"
-path="res://.godot/imported/DarkCastle.png-5e7feba3049bfd8c2ad1c6cc99e469a8.ctex"
+uid="uid://carbscgs8x4q7"
+path="res://.godot/imported/vacio2-limpio-reducido.png-a4c3ddf39c5c9095f8b5d29afa82b692.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/DarkCastle.png"
-dest_files=["res://.godot/imported/DarkCastle.png-5e7feba3049bfd8c2ad1c6cc99e469a8.ctex"]
+source_file="res://assets/enemies/bosses/vacio/vacio2-limpio-reducido.png"
+dest_files=["res://.godot/imported/vacio2-limpio-reducido.png-a4c3ddf39c5c9095f8b5d29afa82b692.ctex"]
 
 [params]
 

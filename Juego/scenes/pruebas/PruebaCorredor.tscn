@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=4 uid="uid://drjt4av0b0u7m"]
 
-[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/FireSet.png" id="1_3nurw"]
+[ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_3nurw"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="3_d72tk"]
 [ext_resource type="PackedScene" uid="uid://brsnap3ngcjrq" path="res://enemies/common/corredor_magma/CorredorMagma.tscn" id="3_we5k4"]
 
