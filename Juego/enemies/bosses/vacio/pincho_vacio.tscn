@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://chl6qutwr0fwl"]
+
+[ext_resource type="Script" path="res://enemies/bosses/vacio/pincho_vacio.gd" id="1_8whq0"]
+[ext_resource type="Texture2D" uid="uid://dv4vvt7xg4rio" path="res://assets/traps/pincho.png" id="2_t3dib"]
+
+[node name="PinchoVacio" type="Area2D"]
+collision_mask = 15
+script = ExtResource("1_8whq0")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_t3dib")
+flip_v = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-7, -7, 7, -7, 0, 5)
