@@ -215,7 +215,7 @@ position = Vector2(465, -26)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(422, -120)
-zoom = Vector2(0.53, 0.53)
+zoom = Vector2(1.5, 1.5)
 position_smoothing_enabled = true
 
 [editable path="Umbra"]

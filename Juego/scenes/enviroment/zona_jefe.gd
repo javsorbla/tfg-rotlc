@@ -59,7 +59,7 @@ func _on_trigger_entered(body):
 			# Desactivar seguimiento del jugador
 			camera.boss_room_mode = true
 			camera.boss_room_target = $Centro.global_position
-			_tween_camera_zoom(camera, Vector2(0.5, 0.5), 2.5)
+			_tween_camera_zoom(camera, Vector2(1.25, 1.25), 2.5)
 		
 		# Activar el boss asociado a esta sala (no el primer boss global de la escena).
 		var boss := _get_nearest_boss_to_room_center()
