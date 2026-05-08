@@ -22,6 +22,8 @@ var speed_multiplier = 1.0
 var can_attack = true
 var damage_multiplier = 1.0
 var is_shielding = false
+var is_landing = false
+var landing_timer = 0.0
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -98,6 +100,11 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
 
+	if is_landing:
+		landing_timer -= delta
+		if landing_timer <= 0:
+			is_landing = false
+
 	move_and_slide()
 	_check_checkpoints()
 	health.process(delta)
@@ -108,14 +115,48 @@ func _physics_process(delta: float) -> void:
 func _update_animation():
 	if is_dashing:
 		return
-	if not is_on_floor():
-		pass
-	elif velocity.x > 0:
-		sprite.play("walk_right")
-	elif velocity.x < 0:
-		sprite.play("walk_left")
+
+	# Detectar aterrizaje: justo cuando toca el suelo viniendo del aire
+	if is_on_floor() and not was_on_floor:
+		is_landing = true
+		landing_timer = sprite.sprite_frames.get_frame_count("jump") # se calcula solo
+		# Calcula el tiempo según cuántos frames quedan (frame 6 y 7)
+		var fps = sprite.sprite_frames.get_animation_speed("jump")
+		landing_timer = 2.0 / fps  # 2 frames de transición
+		sprite.play("jump")
+		sprite.speed_scale = 1.0
+		sprite.frame = 6  # empieza en el primer frame de aterrizaje
+		return
+
+	# Mientras está aterrizando, deja que la animación corra sola
+	if is_landing:
+		sprite.speed_scale = 1.0
+		# No interrumpas la animación
+		return
+
+	if is_on_floor():
+		sprite.speed_scale = 1.0
+		if velocity.x > 0:
+			if sprite.animation != "walk_right":
+				sprite.play("walk_right")
+		elif velocity.x < 0:
+			if sprite.animation != "walk_left":
+				sprite.play("walk_left")
+		else:
+			if sprite.animation != "idle":
+				sprite.play("idle")
+		return
+
+	# En el aire
+	if sprite.animation != "jump":
+		sprite.play("jump")
+	sprite.speed_scale = 0.0
+	if was_on_floor:
+		sprite.frame = 3
+	elif velocity.y < 0.0:
+		sprite.frame = 4
 	else:
-		sprite.play("idle")
+		sprite.frame = 5
 
 func _check_checkpoints():
 	for checkpoint in get_tree().get_nodes_in_group("checkpoint"):
