@@ -17,13 +17,13 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cktqs"]
-size = Vector2(45, 97)
+size = Vector2(43, 97)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q442p"]
-size = Vector2(16.0304, 73.2293)
+size = Vector2(7.79246, 73.2293)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_33mpb"]
-size = Vector2(21.537, 77.6236)
+size = Vector2(10.737, 77.6236)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bs8gs"]
 size = Vector2(43, 97)
@@ -47,18 +47,18 @@ collision_layer = 16
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttactHitBox"]
-position = Vector2(0.5, 8.5)
+position = Vector2(1.5, 8.5)
 shape = SubResource("RectangleShape2D_cktqs")
 debug_color = Color(0.969172, 0.154044, 0.220914, 0.42)
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="AttactHitBox"]
-position = Vector2(-34.8855, -2.91699)
+position = Vector2(-34.2872, -2.4833)
 rotation = 0.627238
 shape = SubResource("RectangleShape2D_q442p")
 debug_color = Color(0.969172, 0.154044, 0.220914, 0.42)
 
 [node name="CollisionShape2D3" type="CollisionShape2D" parent="AttactHitBox"]
-position = Vector2(35, 1)
+position = Vector2(34.7162, 1.08838)
 rotation = -0.301847
 shape = SubResource("RectangleShape2D_33mpb")
 debug_color = Color(0.969172, 0.154044, 0.220914, 0.42)
