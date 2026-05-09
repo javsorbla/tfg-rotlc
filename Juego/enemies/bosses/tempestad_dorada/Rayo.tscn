@@ -1,0 +1,32 @@
+[gd_scene load_steps=5 format=3 uid="uid://vmx0u2etren7"]
+
+[ext_resource type="Script" path="res://enemies/bosses/tempestad_dorada/rayo.gd" id="1_chxs3"]
+[ext_resource type="Texture2D" uid="uid://c77ylqdn2pjfm" path="res://assets/enemies/bosses/tempestad_dorada/rayo_inicio.png" id="1_q6gjw"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_2d7xf"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_q6gjw")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_a0rgo"]
+size = Vector2(141, 48)
+
+[node name="Rayo" type="Node2D"]
+script = ExtResource("1_chxs3")
+
+[node name="Inicio" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_2d7xf")
+
+[node name="RayoHitbox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RayoHitbox"]
+position = Vector2(-0.5, -1)
+shape = SubResource("RectangleShape2D_a0rgo")

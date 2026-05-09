@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=4 uid="uid://2fyxrke2wtwy"]
 
-[ext_resource type="Texture2D" uid="uid://cgbjd234ny1kh" path="res://assets/tilesets/IceSet.png" id="1_7qj1o"]
+[ext_resource type="Texture2D" uid="uid://cgbjd234ny1kh" path="res://assets/tilesets/campos_zafiro/IceSet.png" id="1_7qj1o"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="2_tvpg8"]
 [ext_resource type="PackedScene" uid="uid://bav0n7c513nk1" path="res://enemies/common/acechador_aereo/AcechadorAereo.tscn" id="3_yclsi"]
 
