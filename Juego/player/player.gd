@@ -23,7 +23,9 @@ var can_attack = true
 var damage_multiplier = 1.0
 var is_shielding = false
 var is_landing = false
-var landing_timer = 0.0
+var landing_should_run = false
+var run_intro_done = false
+var run_intro_timer = 0.0
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -100,63 +102,100 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
 
+	if direction != 0:
+		sprite.flip_h = direction < 0
+	elif not is_on_floor():
+		sprite.flip_h = last_direction < 0
+
+	if is_on_floor() and abs(velocity.x) <= 0.1 and not is_landing:
+		run_intro_done = false
+
 	if is_landing:
-		landing_timer -= delta
-		if landing_timer <= 0:
-			is_landing = false
+		is_landing = false
+		if landing_should_run:
+			run_intro_done = true
+			run_intro_timer = 0.0
+			sprite.play("run")
+		else:
+			sprite.play("idle")
 
 	move_and_slide()
 	_check_checkpoints()
 	health.process(delta)
 	combat.process(delta)
 	color_manager.process(delta)
-	_update_animation()
+	_update_animation(delta)
 
-func _update_animation():
+func _update_animation(delta: float):
 	if is_dashing:
 		return
 
 	# Detectar aterrizaje: justo cuando toca el suelo viniendo del aire
 	if is_on_floor() and not was_on_floor:
+		landing_should_run = abs(velocity.x) > 0.1 or abs(Input.get_axis("move_left", "move_right")) > 0.1
 		is_landing = true
-		landing_timer = sprite.sprite_frames.get_frame_count("jump") # se calcula solo
-		# Calcula el tiempo según cuántos frames quedan (frame 6 y 7)
-		var fps = sprite.sprite_frames.get_animation_speed("jump")
-		landing_timer = 2.0 / fps  # 2 frames de transición
 		sprite.play("jump")
 		sprite.speed_scale = 1.0
-		sprite.frame = 6  # empieza en el primer frame de aterrizaje
+		sprite.frame = 5  # último frame antes de pasar a correr o quedar quieto
 		return
 
 	# Mientras está aterrizando, deja que la animación corra sola
 	if is_landing:
 		sprite.speed_scale = 1.0
-		# No interrumpas la animación
+		if last_direction != 0:
+			sprite.flip_h = last_direction < 0
 		return
 
 	if is_on_floor():
 		sprite.speed_scale = 1.0
 		if velocity.x > 0:
-			if sprite.animation != "walk_right":
-				sprite.play("walk_right")
+			if not run_intro_done:
+				run_intro_done = true
+				run_intro_timer = 1.0 / sprite.sprite_frames.get_animation_speed("run_intro")
+				sprite.play("run_intro")
+				return
+			if run_intro_timer > 0.0:
+				run_intro_timer -= delta
+				if run_intro_timer > 0.0:
+					return
+				sprite.play("run")
+			elif sprite.animation != "run":
+				sprite.play("run")
 		elif velocity.x < 0:
-			if sprite.animation != "walk_left":
-				sprite.play("walk_left")
+			if not run_intro_done:
+				run_intro_done = true
+				run_intro_timer = 1.0 / sprite.sprite_frames.get_animation_speed("run_intro")
+				sprite.play("run_intro")
+				return
+			if run_intro_timer > 0.0:
+				run_intro_timer -= delta
+				if run_intro_timer > 0.0:
+					return
+				sprite.play("run")
+			elif sprite.animation != "run":
+				sprite.play("run")
 		else:
+			run_intro_timer = 0.0
 			if sprite.animation != "idle":
 				sprite.play("idle")
+		landing_should_run = false
 		return
 
 	# En el aire
+	run_intro_timer = 0.0
 	if sprite.animation != "jump":
 		sprite.play("jump")
 	sprite.speed_scale = 0.0
+	if velocity.x != 0:
+		sprite.flip_h = velocity.x < 0
+	elif last_direction != 0:
+		sprite.flip_h = last_direction < 0
 	if was_on_floor:
-		sprite.frame = 3
+		sprite.frame = 2
 	elif velocity.y < 0.0:
-		sprite.frame = 4
+		sprite.frame = 3
 	else:
-		sprite.frame = 5
+		sprite.frame = 4
 
 func _check_checkpoints():
 	for checkpoint in get_tree().get_nodes_in_group("checkpoint"):
