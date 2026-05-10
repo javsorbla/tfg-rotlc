@@ -1456,7 +1456,7 @@ position = Vector2(10554, -618)
 position = Vector2(12455, -694)
 
 [node name="CollisionShape2D" parent="Entorno/ZonaJefe2/Trigger" index="0"]
-position = Vector2(0, -183)
+position = Vector2(19, -184)
 shape = SubResource("RectangleShape2D_r746h")
 
 [node name="CollisionShape2D" parent="Entorno/ZonaJefe2/ParedIzquierda" index="0"]
