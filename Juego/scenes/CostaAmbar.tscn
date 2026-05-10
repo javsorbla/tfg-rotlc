@@ -1,4 +1,4 @@
-[gd_scene load_steps=68 format=4 uid="uid://dv7tvh0rknvv6"]
+[gd_scene load_steps=67 format=4 uid="uid://dv7tvh0rknvv6"]
 
 [ext_resource type="Texture2D" uid="uid://ckrlk2kf8xtpa" path="res://assets/tilesets/costa_ambar/coast-tileset.png" id="1_c0y7m"]
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="1_mjbm5"]
@@ -19,7 +19,6 @@
 [ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="12_qblky"]
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="14_7tadn"]
 [ext_resource type="PackedScene" uid="uid://btspr1ib0d52y" path="res://enemies/bosses/tempestad_dorada/TempestadDorada.tscn" id="19_ac78p"]
-[ext_resource type="PackedScene" path="res://objects/NucleoDePrisma.tscn" id="20_hsvxv"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mvfmr"]
 texture = ExtResource("1_c0y7m")
@@ -1523,11 +1522,11 @@ shape = SubResource("RectangleShape2D_ql8vt")
 [node name="Camera2D" parent="." instance=ExtResource("1_mjbm5")]
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("2_8wpeh")]
-position = Vector2(12345, -689)
+position = Vector2(-65, -14)
 
 [node name="Umbra" parent="." groups=["boss"] instance=ExtResource("14_7tadn")]
 position = Vector2(5993, 1004)
-max_health = 1
+max_health = 20
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("3_6l75g")
@@ -1537,9 +1536,6 @@ onnx_model_path = "res://umbra.onnx"
 
 [node name="TempestadDorada" parent="." instance=ExtResource("19_ac78p")]
 position = Vector2(13206, -969)
-
-[node name="NucleoDePrisma" parent="." instance=ExtResource("20_hsvxv")]
-position = Vector2(12375, -689)
 
 [editable path="Entorno/ZonaLluvia"]
 [editable path="Entorno/ZonaLluvia2"]
