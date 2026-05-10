@@ -491,7 +491,7 @@ shape = SubResource("RectangleShape2D_ss4jm")
 [node name="Camera2D" parent="." instance=ExtResource("1_y5bao")]
 
 [node name="Player" parent="." instance=ExtResource("2_qyv1n")]
-position = Vector2(6697, 396)
+position = Vector2(9662, 719)
 
 [node name="Timer" type="Timer" parent="."]
 wait_time = 15.0
@@ -506,6 +506,7 @@ shape = SubResource("RectangleShape2D_2f4qr")
 
 [node name="Umbra" parent="." groups=["boss"] instance=ExtResource("10_6ltyf")]
 position = Vector2(8340, 981)
+max_health = 13
 
 [node name="AIController2D" parent="Umbra" index="0"]
 onnx_model_path = "res://umbra.onnx"
