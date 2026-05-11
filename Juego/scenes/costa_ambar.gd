@@ -1,14 +1,11 @@
 extends Node2D
 
-const MONTANAS_SCENE := "res://scenes/MontañasDeCeniza.tscn"
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
 
-
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	GameState.current_level = 1
-	GameState.current_level_path = "res://scenes/CamposDeZafiro.tscn"
+	GameState.current_level = 3
+	GameState.current_level_path = "res://scenes/CostaAmbar.tscn"
 	_ensure_pause_menu_layer()
 	_ensure_death_screen()
 	Hud.show_hud()
@@ -51,26 +48,19 @@ func _mover_player() -> void:
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
 		var player_health = player.get_node("Health")
-		var camera = get_tree().get_first_node_in_group("camera")
 		Hud.show_hud()
 		Hud.update_hearts(player_health.current_health, player_health.MAX_HEALTH)
 		if GameState.coming_from_transition:
 			GameState.coming_from_transition = false
 			GameState.checkpoint_activated = false
-			player.global_position = Vector2(38, -7)
+			player.global_position = Vector2(-64, -14)
 		elif GameState.checkpoint_activated:
 			player.global_position = GameState.spawn_position
 		else:
-			player.global_position = Vector2(38, -7)
-		if camera != null:
-			camera.global_position = player.global_position + Vector2(30, -10)
-			if camera.has_method("reset_smoothing"):
-				camera.reset_smoothing()
+			player.global_position = Vector2(-64, -14)
 
-func _on_final_body_entered(body) -> void:
-	if body is CharacterBody2D:
-		GameState.coming_from_transition = true
-		get_tree().call_deferred("change_scene_to_file", MONTANAS_SCENE)
+func _process(delta: float) -> void:
+	pass
 
 func _on_player_died(_owner: Node) -> void:
 	var death_screen = get_node_or_null("DeathScreenLayer/DeathScreen")
