@@ -591,7 +591,18 @@ func _on_attack_hitbox_area_entered(area: Area2D):
 
 func die():
 	current_state = State.DEAD
-	var boss_room = get_tree().get_first_node_in_group("boss_room")
-	if boss_room:
-		boss_room.on_boss_defeated()
+	
+	var closest_boss_room = null
+	var closest_distance = INF
+	var boss_rooms = get_tree().get_nodes_in_group("boss_room")
+	
+	for room in boss_rooms:
+		var distance = global_position.distance_to(room.global_position)
+		if distance < closest_distance:
+			closest_distance = distance
+			closest_boss_room = room
+	
+	if closest_boss_room:
+		closest_boss_room.on_boss_defeated()
+	
 	queue_free()
