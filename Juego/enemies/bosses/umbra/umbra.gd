@@ -571,6 +571,21 @@ func die():
 	emit_signal("defeated", false)
 	_spawn_prism_core_drop()
 	is_active = false
+	
+	# Notify boss room to deactivate walls
+	var closest_boss_room = null
+	var closest_distance = INF
+	var boss_rooms = get_tree().get_nodes_in_group("boss_room")
+	
+	for room in boss_rooms:
+		var distance = global_position.distance_to(room.global_position)
+		if distance < closest_distance:
+			closest_distance = distance
+			closest_boss_room = room
+	
+	if closest_boss_room:
+		closest_boss_room.on_boss_defeated()
+	
 	if despawn_on_death:
 		queue_free()
 		return
