@@ -63,7 +63,7 @@ shape = SubResource("CapsuleShape2D_i23ur")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(0.71875, 0.71875)
 sprite_frames = SubResource("SpriteFrames_j06ee")
-animation = &"fainted"
+animation = &"shield"
 
 [node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16

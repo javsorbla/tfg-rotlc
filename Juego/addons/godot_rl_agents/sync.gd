@@ -9,11 +9,6 @@ enum ControlModes { HUMAN, TRAINING, ONNX_INFERENCE }
 @export var onnx_model_path := ""
 @export var debug_inference_logits := false
 @export_range(1, 240, 1) var debug_inference_every_frames := 20
-
-# Onnx model stored for each requested path
-var onnx_models: Dictionary
-const ONNX_MODEL_SCRIPT := preload("res://addons/godot_rl_agents/onnx/wrapper/ONNX_wrapper.gd")
-
 @onready var start_time = Time.get_ticks_msec()
 
 const MAJOR_VERSION := "0"
@@ -48,6 +43,10 @@ var just_reset = false
 var onnx_model = null
 var n_action_steps = 0
 
+# Cache local de modelos onnx por si hubiera problemas
+var onnx_models: Dictionary = {}
+var onnx_model_file_mtimes: Dictionary = {}
+
 var _action_space_training: Array[Dictionary] = []
 var _action_space_inference: Array[Dictionary] = []
 var _obs_space_training: Array[Dictionary] = []
@@ -67,7 +66,7 @@ func _ready():
 	get_tree().set_pause(false)
 
 
-func reload_onnx_for_agents(new_onnx_path := "") -> void:
+func reload_onnx_for_agents(new_onnx_path := "", force_reload := false) -> void:
 	var target_path := _resolve_onnx_model_path(new_onnx_path if not new_onnx_path.is_empty() else onnx_model_path)
 
 	if target_path.is_empty():
@@ -75,36 +74,84 @@ func reload_onnx_for_agents(new_onnx_path := "") -> void:
 		return
 
 	onnx_model_path = target_path
-	onnx_models[target_path] = _get_or_create_onnx_model(target_path)
+	if force_reload:
+		if GameState.has_method("clear_onnx_model_cache_for_path"):
+			GameState.clear_onnx_model_cache_for_path(target_path)
+		_get_or_create_onnx_model(target_path)
 
 	for agent in agents_inference:
 		if not is_instance_valid(agent):
 			continue
+		bind_onnx_model_for_agent(agent, target_path)
 
-		var agent_path: String = _resolve_onnx_model_path(agent.onnx_model_path)
-		if agent_path.is_empty():
-			agent_path = target_path
-			agent.onnx_model_path = target_path
 
-		agent.onnx_model = _get_or_create_onnx_model(agent_path)
-		if agent.onnx_model != null and not agent.onnx_model.action_means_only_set:
-			var action_space: Variant = agent.get_action_space()
-			agent.onnx_model.set_action_means_only(action_space)
+func bind_onnx_model_for_agent(agent: AIController2D, override_path := "") -> bool:
+	prints("[Sync] bind_onnx_model_for_agent called for", agent, "override_path=", override_path)
+	if agent == null or not is_instance_valid(agent):
+		prints("[Sync] bind_onnx_model_for_agent: invalid agent")
+		return false
+
+	var candidate_path := override_path if not str(override_path).is_empty() else agent.onnx_model_path
+	if candidate_path.is_empty():
+		candidate_path = onnx_model_path
+
+	var resolved_path := _resolve_onnx_model_path(candidate_path)
+	if resolved_path.is_empty():
+		prints("[Sync] bind_onnx_model_for_agent: could not resolve path for", candidate_path)
+		return false
+
+	agent.onnx_model_path = resolved_path
+	var model: ONNXModel = _get_or_create_onnx_model(resolved_path)
+	if model == null:
+		return false
+
+	agent.onnx_model = model
+	if agent.control_mode == agent.ControlModes.INHERIT_FROM_SYNC or control_mode == ControlModes.ONNX_INFERENCE:
+		prints("[Sync] setting agent.control_mode to ONNX_INFERENCE for", agent)
+		agent.control_mode = agent.ControlModes.ONNX_INFERENCE
+	_ensure_agent_registered_for_inference(agent)
+	prints("[Sync] bind_onnx_model_for_agent: bound model=", model, " to agent=", agent)
+	if not agent.onnx_model.action_means_only_set:
+		var action_space: Variant = agent.get_action_space()
+		agent.onnx_model.set_action_means_only(action_space)
+	return true
+
+
+func _ensure_agent_registered_for_inference(agent: AIController2D) -> void:
+	if agent == null or not is_instance_valid(agent):
+		return
+
+	var training_idx := agents_training.find(agent)
+	if training_idx != -1:
+		agents_training.remove_at(training_idx)
+		if training_idx < _action_space_training.size():
+			_action_space_training.remove_at(training_idx)
+		if training_idx < _obs_space_training.size():
+			_obs_space_training.remove_at(training_idx)
+		if training_idx < agents_training_policy_names.size():
+			agents_training_policy_names.remove_at(training_idx)
+
+	var heuristic_idx := agents_heuristic.find(agent)
+	if heuristic_idx != -1:
+		agents_heuristic.remove_at(heuristic_idx)
+
+	var inference_idx := agents_inference.find(agent)
+	var action_space: Dictionary = agent.get_action_space()
+	if inference_idx == -1:
+		agents_inference.append(agent)
+		_action_space_inference.append(action_space)
+		prints("[Sync] registered agent in agents_inference:", agent)
+		return
+
+	if inference_idx >= _action_space_inference.size():
+		_action_space_inference.resize(inference_idx + 1)
+	_action_space_inference[inference_idx] = action_space
 
 
 func _get_or_create_onnx_model(model_path: String):
-	var resolved_path := _resolve_onnx_model_path(model_path)
-	if resolved_path.is_empty():
-		return null
-
-	if onnx_models.has(resolved_path):
-		var existing_model = onnx_models[resolved_path]
-		if existing_model != null:
-			return existing_model
-
-	var created_model := ONNX_MODEL_SCRIPT.new(resolved_path, 1)
-	onnx_models[resolved_path] = created_model
-	return created_model
+	if GameState.has_method("get_or_create_onnx_model"):
+		return GameState.get_or_create_onnx_model(model_path)
+	return null
 
 
 func _is_agent_active_for_inference(agent: Node) -> bool:
@@ -182,6 +229,7 @@ func _initialize_training_agents():
 
 func _initialize_inference_agents():
 	if agents_inference.size() > 0:
+		prints("[Sync] _initialize_inference_agents: control_mode=", control_mode, "agents_inference_count=", agents_inference.size())
 		if control_mode == ControlModes.ONNX_INFERENCE:
 			var resolved_onnx_path := _resolve_onnx_model_path(onnx_model_path)
 			assert(
@@ -311,6 +359,11 @@ func _inference_process():
 			if not _is_agent_active_for_inference(agents_inference[agent_id]):
 				actions.append(null)
 				continue
+
+			if agent_id >= _action_space_inference.size() or _action_space_inference[agent_id].is_empty():
+				if agent_id >= _action_space_inference.size():
+					_action_space_inference.resize(agent_id + 1)
+				_action_space_inference[agent_id] = agents_inference[agent_id].get_action_space()
 
 			var model = agents_inference[agent_id].onnx_model
 			if model == null:

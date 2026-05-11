@@ -51,6 +51,7 @@ func _ready():
 	}
 	for power in duration_bars:
 		duration_bars[power].visible = false
+	hide()
 
 
 func show_hud():

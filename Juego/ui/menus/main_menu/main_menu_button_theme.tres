@@ -1,0 +1,19 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_main"]
+
+[resource]
+Button/colors/font_color = Color(0.82, 0.82, 0.82, 0.92)
+Button/colors/font_disabled_color = Color(0.45, 0.45, 0.45, 0.72)
+Button/colors/font_focus_color = Color(1, 1, 1, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_pressed_color = Color(0.9, 0.9, 0.9, 1)
+Button/constants/h_separation = 6
+Button/constants/outline_size = 0
+Button/constants/icon_max_width = 0
+Button/font_sizes/font_size = 34
+Button/styles/disabled = SubResource("StyleBoxEmpty_main")
+Button/styles/focus = SubResource("StyleBoxEmpty_main")
+Button/styles/hover = SubResource("StyleBoxEmpty_main")
+Button/styles/normal = SubResource("StyleBoxEmpty_main")
+Button/styles/pressed = SubResource("StyleBoxEmpty_main")

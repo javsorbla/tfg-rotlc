@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://de81d3hggbewt"]
+
+[ext_resource type="Script" path="res://scenes/enviroment/zona_lluvia.gd" id="1_digwt"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dt46j"]
+size = Vector2(930.875, 561.625)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_3hyws"]
+particle_flag_disable_z = true
+spread = 10.0
+initial_velocity_min = 80.0
+initial_velocity_max = 80.0
+gravity = Vector3(0, 98, 0)
+
+[node name="ZonaLluvia" type="Area2D"]
+script = ExtResource("1_digwt")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(1, -1)
+shape = SubResource("RectangleShape2D_dt46j")
+
+[node name="ParticulasLluvia" type="GPUParticles2D" parent="."]
+amount = 50
+process_material = SubResource("ParticleProcessMaterial_3hyws")
+lifetime = 0.8
+fixed_fps = 0

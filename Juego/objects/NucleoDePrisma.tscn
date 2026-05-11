@@ -1,7 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3 uid="uid://bbiiuq0b637s7"]
 
 [ext_resource type="Script" path="res://objects/nucleo_de_prisma.gd" id="1_hh8ff"]
-[ext_resource type="Texture2D" path="res://assets/objects/nucleo_prisma.png" id="2_w3n3a"]
+[ext_resource type="Texture2D" uid="uid://cc4s2nbas34na" path="res://assets/objects/nucleo_prisma.png" id="2_w3n3a"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_3atj4"]
+radius = 8.0
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_vp7ag"]
 animations = [{
@@ -14,8 +17,14 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_3atj4"]
-radius = 8.0
+[sub_resource type="Gradient" id="Gradient_ixtab"]
+offsets = PackedFloat32Array(0, 0.668831)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_4muv3"]
+gradient = SubResource("Gradient_ixtab")
+fill = 1
+fill_from = Vector2(0.522936, 0.518349)
 
 [node name="NucleoDePrisma" type="Area2D"]
 collision_layer = 8
@@ -30,3 +39,8 @@ position = Vector2(0, -1)
 scale = Vector2(0.32, 0.32)
 sprite_frames = SubResource("SpriteFrames_vp7ag")
 animation = &"idle"
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.558801, 0.845454, 0.985056, 1)
+energy = 0.8
+texture = SubResource("GradientTexture2D_4muv3")

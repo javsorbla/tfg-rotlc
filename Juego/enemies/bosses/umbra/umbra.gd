@@ -178,6 +178,9 @@ func _ready():
 
 func _process(_delta):
 	_update_model_indicator()
+	if ai_controller != null and ai_controller.control_mode == ai_controller.ControlModes.ONNX_INFERENCE:
+		if ai_controller.onnx_model == null:
+			_ensure_onnx_model_ready()
 
 
 func _ensure_onnx_model_ready() -> bool:
@@ -191,8 +194,15 @@ func _ensure_onnx_model_ready() -> bool:
 		return false
 
 	var sync_node = get_tree().get_first_node_in_group("sync_node")
-	if sync_node != null and sync_node.has_method("reload_onnx_for_agents"):
-		sync_node.reload_onnx_for_agents(ai_controller.onnx_model_path)
+	if sync_node == null:
+		prints("[Umbra] _ensure_onnx_model_ready: no sync_node found")
+		return false
+	if not sync_node.has_method("bind_onnx_model_for_agent"):
+		prints("[Umbra] _ensure_onnx_model_ready: sync_node missing bind method")
+		return false
+	var bound := bool(sync_node.bind_onnx_model_for_agent(ai_controller))
+	prints("[Umbra] _ensure_onnx_model_ready: bind result=", bound, " agent.onnx_model=", ai_controller.onnx_model)
+	return bound
 
 	return ai_controller.onnx_model != null
 
@@ -598,19 +608,15 @@ func activate():
 	var player := _resolve_player_target()
 	if player != null:
 		ai_controller.init(player)
-	if ai_controller != null and ai_controller.onnx_model_path != "":
-		var sync_node = get_tree().get_first_node_in_group("sync_node")
-		if sync_node != null and sync_node.has_method("reload_onnx_for_agents"):
-			sync_node.reload_onnx_for_agents(ai_controller.onnx_model_path)
 	if ai_controller != null and ai_controller.control_mode == ai_controller.ControlModes.ONNX_INFERENCE:
 		_ensure_onnx_model_ready()
 	if use_runtime_finetuned_model and GameState.check_finetuning_done():
 		var runtime_model_path := GameState.get_umbra_runtime_model_path()
 		if runtime_model_path != "":
-			var sync_node = get_tree().get_first_node_in_group("sync_node")
-			if sync_node != null and sync_node.has_method("reload_onnx_for_agents"):
-				sync_node.reload_onnx_for_agents(runtime_model_path)
-				ai_controller.onnx_model_path = runtime_model_path
+			ai_controller.onnx_model_path = runtime_model_path
+	var sync_node = get_tree().get_first_node_in_group("sync_node")
+	if sync_node != null and sync_node.has_method("bind_onnx_model_for_agent"):
+		sync_node.bind_onnx_model_for_agent(ai_controller)
 	_apply_level_balance()
 	_apply_player_profile_adaptation()
 	_encounter_reported = false
