@@ -3,7 +3,7 @@ extends CharacterBody2D
 const SPEED = 150.0
 const JUMP_VELOCITY = -300.0
 const DASH_SPEED = 300.0
-const DASH_DURATION = 0.20
+const DASH_DURATION = 0.30
 const DASH_COOLDOWN = 0.5
 const ACCELERATION = 1000.0
 const FRICTION = 700.0
@@ -26,6 +26,9 @@ var is_landing = false
 var landing_should_run = false
 var run_intro_done = false
 var run_intro_timer = 0.0
+var dash_started_on_floor = false
+var dash_frame_stage = 0  # 0: inicial, 1: comienzo, 2: main, 3: fin, 4: transición
+var showing_dash_transition_frame = false
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -56,6 +59,7 @@ func _physics_process(delta: float) -> void:
 		dash_timer -= delta
 		if dash_timer <= 0:
 			is_dashing = false
+			showing_dash_transition_frame = true
 			velocity.y = 0
 			velocity.x = dash_direction * SPEED * 0.2
 			if not health.is_invincible:
@@ -63,6 +67,12 @@ func _physics_process(delta: float) -> void:
 		else:
 			velocity.x = dash_direction * DASH_SPEED
 			move_and_slide()
+			was_on_floor = is_on_floor()
+			_check_checkpoints()
+			health.process(delta)
+			combat.process(delta)
+			color_manager.process(delta)
+			_update_animation(delta)
 			return
 
 	if not is_on_floor():
@@ -81,6 +91,8 @@ func _physics_process(delta: float) -> void:
 
 	if Input.is_action_just_pressed("dash") and can_dash:
 		is_dashing = true
+		dash_started_on_floor = is_on_floor() and abs(velocity.x) <= 0.1
+		dash_frame_stage = 0
 		hurtbox.monitorable = false
 		dash_timer = DASH_DURATION
 		dash_cooldown_timer = DASH_COOLDOWN
@@ -127,8 +139,65 @@ func _physics_process(delta: float) -> void:
 	_update_animation(delta)
 
 func _update_animation(delta: float):
+	# Lógica del dash
 	if is_dashing:
+		if sprite.animation != "dash":
+			sprite.play("dash")
+			sprite.speed_scale = 0.0  # Control manual de frames
+		
+		# Actualizar stage del dash según dash_timer
+		if dash_timer > DASH_DURATION * 0.9:  # Al inicio del dash
+			if dash_started_on_floor:
+				sprite.frame = 0  # Frame inicial solo si arranque estático
+			else:
+				sprite.frame = 1  # Frame de comienzo si es aire
+		elif dash_timer > DASH_DURATION * 0.1:  # Durante el main dash
+			sprite.frame = 2  # Frame principal del dash
+		else:  # Final del dash
+			sprite.frame = 3  # Frame de fin del dash
 		return
+
+	# Transición post-dash: mostrar frame 4 solo si está en suelo sin movimiento
+	if showing_dash_transition_frame:
+		if is_on_floor() and abs(velocity.x) <= 0.1 and abs(Input.get_axis("move_left", "move_right")) <= 0.1:
+			if sprite.animation != "dash":
+				sprite.play("dash")
+				sprite.speed_scale = 0.0
+			sprite.frame = 4  # Frame de transición a estático
+			showing_dash_transition_frame = false  # Solo mostrar un frame
+		else:
+			# Si se mueve o salta, saltar directamente a la animación normal
+			showing_dash_transition_frame = false
+
+	# Ataque en suelo: animación estática o ataque corriendo
+	if combat.is_attacking and is_on_floor():
+		var moving_on_floor = abs(velocity.x) > 0.1 or abs(Input.get_axis("move_left", "move_right")) > 0.1
+		if moving_on_floor:
+			if sprite.animation != "attack_run":
+				var previous_animation = sprite.animation
+				var previous_frame = sprite.frame
+				sprite.play("attack_run")
+				sprite.speed_scale = 1.0
+				if previous_animation == "run" or previous_animation == "attack_run":
+					var attack_run_frames = sprite.sprite_frames.get_frame_count("attack_run")
+					if attack_run_frames > 0:
+						sprite.frame = (previous_frame + 1) % attack_run_frames
+			elif sprite.animation == "attack_run":
+				sprite.speed_scale = 1.0
+			if velocity.x != 0:
+				sprite.flip_h = velocity.x < 0
+			elif last_direction != 0:
+				sprite.flip_h = last_direction < 0
+			return
+		else:
+			if sprite.animation != "attack":
+				sprite.play("attack")
+				sprite.speed_scale = 1.0
+			if velocity.x != 0:
+				sprite.flip_h = velocity.x < 0
+			elif last_direction != 0:
+				sprite.flip_h = last_direction < 0
+			return
 
 	# Detectar aterrizaje: justo cuando toca el suelo viniendo del aire
 	if is_on_floor() and not was_on_floor:
