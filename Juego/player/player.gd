@@ -29,6 +29,9 @@ var run_intro_timer = 0.0
 var dash_started_on_floor = false
 var dash_frame_stage = 0  # 0: inicial, 1: comienzo, 2: main, 3: fin, 4: transición
 var showing_dash_transition_frame = false
+var AFTERIMAGE_LIFETIME = 0.20
+var AFTERIMAGE_SPAWN_INTERVAL = 0.06
+var _afterimage_timer = 0.0
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -72,6 +75,13 @@ func _physics_process(delta: float) -> void:
 			health.process(delta)
 			combat.process(delta)
 			color_manager.process(delta)
+			
+			_afterimage_timer -= delta
+			if _afterimage_timer <= 0.0:
+				var tex2 = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+				if tex2 != null:
+					_spawn_afterimage(tex2)
+				_afterimage_timer = AFTERIMAGE_SPAWN_INTERVAL
 			_update_animation(delta)
 			return
 
@@ -96,10 +106,14 @@ func _physics_process(delta: float) -> void:
 		hurtbox.monitorable = false
 		dash_timer = DASH_DURATION
 		dash_cooldown_timer = DASH_COOLDOWN
-		if not is_on_floor():
-			air_dash_used = true
 		var dir = Input.get_axis("move_left", "move_right")
 		dash_direction = dir if dir != 0 else (1.0 if not sprite.flip_h else -1.0)
+		var tex = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+		if tex:
+			_spawn_afterimage(tex)
+		_afterimage_timer = AFTERIMAGE_SPAWN_INTERVAL
+		if not is_on_floor():
+			air_dash_used = true
 		velocity.y = 0
 
 	if is_on_floor() and dash_cooldown_timer <= 0:
@@ -272,3 +286,26 @@ func _check_checkpoints():
 			if checkpoint.global_position != GameState.spawn_position:
 				GameState.spawn_position = checkpoint.global_position
 				GameState.checkpoint_activated = true
+
+func _spawn_afterimage(tex):
+	var si := Sprite2D.new()
+	si.texture = tex
+	si.global_position = global_position
+	si.flip_h = sprite.flip_h
+	si.scale = sprite.scale
+	si.z_index = sprite.z_index - 1
+	var pcol := Color(1, 1, 1, 0.85)
+	if sprite.material != null and sprite.material.has_method("get_shader_parameter"):
+		var sc = sprite.material.get_shader_parameter("color_primary")
+		if sc != null:
+			pcol = Color(sc.r, sc.g, sc.b, 0.85)
+	si.modulate = pcol
+	get_parent().add_child(si)
+	var tw = si.create_tween()
+	tw.tween_property(si, "modulate:a", 0.0, AFTERIMAGE_LIFETIME)
+	tw.tween_property(si, "scale", si.scale * 0.85, AFTERIMAGE_LIFETIME)
+	tw.finished.connect(Callable(si, "queue_free"))
+
+func _on_dash_clear_restore(timer: Timer) -> void:
+	if timer and timer.is_inside_tree():
+		timer.queue_free()
