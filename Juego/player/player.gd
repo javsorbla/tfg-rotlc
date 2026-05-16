@@ -213,7 +213,7 @@ func _update_animation(delta: float):
 				sprite.flip_h = last_direction < 0
 			return
 
-	# Ataque lateral en el aire: usa la animación attack_jump
+	# Ataque lateral en el aire
 	if combat.is_attacking and not is_on_floor():
 		var vertical_aim := Input.is_action_pressed("aim_up") or Input.is_action_pressed("aim_down")
 		if not vertical_aim:
