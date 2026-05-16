@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=3 uid="uid://msgn8vkyft75"]
+[gd_scene load_steps=63 format=3 uid="uid://msgn8vkyft75"]
 
 [ext_resource type="Script" path="res://player/player.gd" id="1_por4q"]
 [ext_resource type="Shader" path="res://player/Player.gdshader" id="2_4gpna"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://crt1tjn65vrnm" path="res://assets/player/walk/left/iris_left_001.png" id="3_qh0vb"]
 [ext_resource type="Texture2D" uid="uid://5khwbhpb5hg7" path="res://assets/player/jump/jump_sheet.png" id="4_irdnm"]
 [ext_resource type="Texture2D" uid="uid://in8cgem7ctcw" path="res://assets/player/attack/expanded_attack_run_sheet.png" id="4_ovn3p"]
+[ext_resource type="Texture2D" uid="uid://cq5sy7lgxxhb" path="res://assets/player/attack/attack_jump_sheet.png" id="4_w7rbu"]
 [ext_resource type="Texture2D" uid="uid://bhmdcxjxgb3gp" path="res://assets/player/run/run_sheet.png" id="5_x2jk7"]
 [ext_resource type="Script" path="res://player/player_combat.gd" id="6_2pkhy"]
 [ext_resource type="Script" path="res://player/player_health.gd" id="6_68mua"]
@@ -49,6 +50,22 @@ region = Rect2(384, 0, 96, 64)
 [sub_resource type="AtlasTexture" id="AtlasTexture_y5kmc"]
 atlas = ExtResource("3_7nmpr")
 region = Rect2(0, 64, 96, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n1qg7"]
+atlas = ExtResource("4_w7rbu")
+region = Rect2(0, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kji1f"]
+atlas = ExtResource("4_w7rbu")
+region = Rect2(96, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j2ucx"]
+atlas = ExtResource("4_w7rbu")
+region = Rect2(0, 64, 96, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e5nmh"]
+atlas = ExtResource("4_w7rbu")
+region = Rect2(96, 64, 96, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hx0le"]
 atlas = ExtResource("4_ovn3p")
@@ -203,6 +220,23 @@ animations = [{
 "loop": false,
 "name": &"attack",
 "speed": 8.0
+}, {
+"frames": [{
+"duration": 0.75,
+"texture": SubResource("AtlasTexture_n1qg7")
+}, {
+"duration": 0.75,
+"texture": SubResource("AtlasTexture_kji1f")
+}, {
+"duration": 1.5,
+"texture": SubResource("AtlasTexture_j2ucx")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_e5nmh")
+}],
+"loop": true,
+"name": &"attack_jump",
+"speed": 5.0
 }, {
 "frames": [{
 "duration": 0.5,
@@ -371,7 +405,7 @@ material = SubResource("ShaderMaterial_eqlrx")
 position = Vector2(1.90735e-06, 2)
 scale = Vector2(0.609375, 0.5625)
 sprite_frames = SubResource("SpriteFrames_1o3aa")
-animation = &"attack"
+animation = &"attack_jump"
 
 [node name="AttackHitbox" type="Area2D" parent="." groups=["player_hitbox"]]
 collision_layer = 4

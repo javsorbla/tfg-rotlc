@@ -213,6 +213,19 @@ func _update_animation(delta: float):
 				sprite.flip_h = last_direction < 0
 			return
 
+	# Ataque lateral en el aire: usa la animación attack_jump
+	if combat.is_attacking and not is_on_floor():
+		var vertical_aim := Input.is_action_pressed("aim_up") or Input.is_action_pressed("aim_down")
+		if not vertical_aim:
+			if sprite.animation != "attack_jump":
+				sprite.play("attack_jump")
+				sprite.speed_scale = 1.0
+			if velocity.x != 0:
+				sprite.flip_h = velocity.x < 0
+			elif last_direction != 0:
+				sprite.flip_h = last_direction < 0
+			return
+
 	# Detectar aterrizaje: justo cuando toca el suelo viniendo del aire
 	if is_on_floor() and not was_on_floor:
 		landing_should_run = abs(velocity.x) > 0.1 or abs(Input.get_axis("move_left", "move_right")) > 0.1
