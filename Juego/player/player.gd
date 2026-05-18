@@ -32,6 +32,9 @@ var showing_dash_transition_frame = false
 var AFTERIMAGE_LIFETIME = 0.20
 var AFTERIMAGE_SPAWN_INTERVAL = 0.06
 var _afterimage_timer = 0.0
+var _attack_anim_playing = false
+var _attack_anim_name = ""
+var _prev_combat_attacking = false
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -48,6 +51,16 @@ func _ready():
 		global_position = GameState.spawn_position
 	else:
 		GameState.spawn_position = global_position
+
+	# Conectar señal para saber cuándo termina una animación y permitir que el ataque visual complete
+	if sprite:
+		sprite.animation_finished.connect(Callable(self, "_on_sprite_animation_finished"))
+		# Asegurar en tiempo de ejecución que las animaciones de ataque no loopen
+		if sprite.sprite_frames:
+			if sprite.sprite_frames.has_animation("attack"):
+				sprite.sprite_frames.set_animation_loop("attack", false)
+			if sprite.sprite_frames.has_animation("attack_up"):
+				sprite.sprite_frames.set_animation_loop("attack_up", false)
 
 func _physics_process(delta: float) -> void:
 	if dash_cooldown_timer > 0:
@@ -152,6 +165,9 @@ func _physics_process(delta: float) -> void:
 	color_manager.process(delta)
 	_update_animation(delta)
 
+	# Actualizar estado previo de ataque para detección de flanco ascendente
+	_prev_combat_attacking = combat.is_attacking
+
 func _update_animation(delta: float):
 	# Lógica del dash
 	if is_dashing:
@@ -183,15 +199,28 @@ func _update_animation(delta: float):
 			# Si se mueve o salta, saltar directamente a la animación normal
 			showing_dash_transition_frame = false
 
+		# Si hay una animación de ataque forzada a completar, déjala terminar
+		if _attack_anim_playing:
+			sprite.speed_scale = 1.0
+			if velocity.x != 0:
+				sprite.flip_h = velocity.x < 0
+			elif last_direction != 0:
+				sprite.flip_h = last_direction < 0
+			return
+
 	# Ataque en suelo: animación estática o ataque corriendo
 	if combat.is_attacking and is_on_floor():
 		var moving_on_floor = abs(velocity.x) > 0.1 or abs(Input.get_axis("move_left", "move_right")) > 0.1
+		var attack_just_started = combat.is_attacking and not _prev_combat_attacking
 		if moving_on_floor:
-			if sprite.animation != "attack_run":
+			if attack_just_started:
 				var previous_animation = sprite.animation
 				var previous_frame = sprite.frame
 				sprite.play("attack_run")
 				sprite.speed_scale = 1.0
+				# Marcar que la animación de ataque debe completarse visualmente
+				_attack_anim_playing = true
+				_attack_anim_name = "attack_run"
 				if previous_animation == "run" or previous_animation == "attack_run":
 					var attack_run_frames = sprite.sprite_frames.get_frame_count("attack_run")
 					if attack_run_frames > 0:
@@ -204,14 +233,32 @@ func _update_animation(delta: float):
 				sprite.flip_h = last_direction < 0
 			return
 		else:
-			if sprite.animation != "attack":
-				sprite.play("attack")
+			var aim_up := Input.is_action_pressed("aim_up")
+			if attack_just_started:
+				if aim_up:
+					sprite.play("attack_up")
+					sprite.speed_scale = 1.0
+					sprite.frame = 0
+					_attack_anim_playing = true
+					_attack_anim_name = "attack_up"
+				else:
+					sprite.play("attack")
+					sprite.speed_scale = 1.0
+					sprite.frame = 0
+					_attack_anim_playing = true
+					_attack_anim_name = "attack"
+				if velocity.x != 0:
+					sprite.flip_h = velocity.x < 0
+				elif last_direction != 0:
+					sprite.flip_h = last_direction < 0
+				return
+			elif _attack_anim_playing and (sprite.animation == "attack" or sprite.animation == "attack_up"):
 				sprite.speed_scale = 1.0
-			if velocity.x != 0:
-				sprite.flip_h = velocity.x < 0
-			elif last_direction != 0:
-				sprite.flip_h = last_direction < 0
-			return
+				if velocity.x != 0:
+					sprite.flip_h = velocity.x < 0
+				elif last_direction != 0:
+					sprite.flip_h = last_direction < 0
+				return
 
 	# Ataque lateral en el aire
 	if combat.is_attacking and not is_on_floor():
@@ -322,3 +369,9 @@ func _spawn_afterimage(tex):
 func _on_dash_clear_restore(timer: Timer) -> void:
 	if timer and timer.is_inside_tree():
 		timer.queue_free()
+
+func _on_sprite_animation_finished() -> void:
+	# Cuando una animación termina, si era una animación de ataque, permitir transición
+	if _attack_anim_playing:
+		_attack_anim_playing = false
+		_attack_anim_name = ""
