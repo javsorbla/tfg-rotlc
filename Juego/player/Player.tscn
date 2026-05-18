@@ -362,18 +362,18 @@ animations = [{
 "duration": 0.5,
 "texture": SubResource("AtlasTexture_qjeaf")
 }, {
-"duration": 0.75,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_saalt")
 }, {
 "duration": 0.75,
 "texture": SubResource("AtlasTexture_32xm6")
 }, {
-"duration": 0.75,
+"duration": 1.25,
 "texture": SubResource("AtlasTexture_vwwca")
 }],
 "loop": true,
 "name": &"attack_up_jump",
-"speed": 5.0
+"speed": 12.0
 }, {
 "frames": [{
 "duration": 0.5,
@@ -385,18 +385,18 @@ animations = [{
 "duration": 0.5,
 "texture": SubResource("AtlasTexture_8dxqj")
 }, {
-"duration": 0.5,
+"duration": 0.75,
 "texture": SubResource("AtlasTexture_llile")
 }, {
-"duration": 0.5,
+"duration": 0.75,
 "texture": SubResource("AtlasTexture_u0f74")
 }, {
-"duration": 0.5,
+"duration": 1.25,
 "texture": SubResource("AtlasTexture_ptivn")
 }],
 "loop": true,
 "name": &"attack_up_run",
-"speed": 5.0
+"speed": 12.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -542,7 +542,7 @@ material = SubResource("ShaderMaterial_eqlrx")
 position = Vector2(1.90735e-06, 2)
 scale = Vector2(0.609375, 0.5625)
 sprite_frames = SubResource("SpriteFrames_1o3aa")
-animation = &"attack_up_jump"
+animation = &"attack_up_run"
 
 [node name="AttackHitbox" type="Area2D" parent="." groups=["player_hitbox"]]
 collision_layer = 4
