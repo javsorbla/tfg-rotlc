@@ -35,6 +35,10 @@ var _afterimage_timer = 0.0
 var _attack_anim_playing = false
 var _attack_anim_name = ""
 var _prev_combat_attacking = false
+var _obtain_playing = false
+var _shield_anim_playing = false
+var _shield_anim_in_progress = false
+var _prev_is_shielding = false
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -58,6 +62,11 @@ func _ready():
 		for name in attack_names:
 			if sprite.sprite_frames.has_animation(name):
 				sprite.sprite_frames.set_animation_loop(name, false)
+		# también asegurar obtain y use_shield no loopeen
+		if sprite.sprite_frames.has_animation("obtain"):
+			sprite.sprite_frames.set_animation_loop("obtain", false)
+		if sprite.sprite_frames.has_animation("use_shield"):
+			sprite.sprite_frames.set_animation_loop("use_shield", false)
 
 	# Conectar señal para saber cuándo termina una animación de ataque
 	if sprite:
@@ -169,7 +178,36 @@ func _physics_process(delta: float) -> void:
 	# Actualizar estado previo de ataque para detección de flanco ascendente
 	_prev_combat_attacking = combat.is_attacking
 
+	# Detección de flanco para el escudo: iniciar animación al activarse
+	if is_shielding and not _prev_is_shielding:
+		_start_shield_animation()
+
+	# Si se ha desactivado el escudo, limpiar estado visual
+	if not is_shielding and _prev_is_shielding:
+		_shield_anim_playing = false
+		# permitir que las animaciones vuelvan a su flujo normal
+		if sprite and sprite.animation == "use_shield":
+			sprite.speed_scale = 1.0
+
+	_prev_is_shielding = is_shielding
+
 func _update_animation(delta: float):
+	# Si estamos reproduciendo la animación de obtención, no sobrescribirla
+	if _obtain_playing:
+		if sprite.animation != "obtain":
+			sprite.play("obtain")
+			sprite.speed_scale = 1.0
+		return
+
+	# Si el escudo visual está activo, mantener la última frame de la animación de uso de escudo
+	if _shield_anim_in_progress:
+		# Si la animación de uso de escudo está en curso, no sobrescribirla
+		return
+	if _shield_anim_playing:
+		if sprite.animation != "use_shield":
+			sprite.play("use_shield")
+		sprite.speed_scale = 0.0
+		return
 	# Lógica del dash
 	if is_dashing:
 		if sprite.animation != "dash":
@@ -414,8 +452,45 @@ func _on_dash_clear_restore(timer: Timer) -> void:
 	if timer and timer.is_inside_tree():
 		timer.queue_free()
 
+func play_obtain_animation() -> void:
+	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("obtain"):
+		sprite.play("obtain")
+		sprite.speed_scale = 1.0
+		sprite.frame = 0
+		_obtain_playing = true
+
+func _start_shield_animation() -> void:
+	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("use_shield"):
+		sprite.play("use_shield")
+		sprite.speed_scale = 1.0
+		sprite.frame = 0
+		_shield_anim_in_progress = true
+		_shield_anim_playing = false
+
+
 func _on_sprite_animation_finished() -> void:
 	# Cuando una animación termina, si era una animación de ataque, permitir transición
+	var anim_name = sprite.animation
+	if anim_name == "use_shield":
+		# Si el escudo sigue activo, mantener en el último frame
+		_shield_anim_in_progress = false
+		if is_shielding:
+			_shield_anim_playing = true
+			var desired = 5
+			var cnt = sprite.sprite_frames.get_frame_count("use_shield")
+			if cnt > desired:
+				sprite.frame = desired
+			elif cnt > 0:
+				sprite.frame = cnt - 1
+			sprite.speed_scale = 0.0
+			return
+		else:
+			_shield_anim_playing = false
+			return
+	elif anim_name == "obtain":
+		_obtain_playing = false
+		return
+	# Ataques
 	if _attack_anim_playing:
 		_attack_anim_playing = false
 		_attack_anim_name = ""

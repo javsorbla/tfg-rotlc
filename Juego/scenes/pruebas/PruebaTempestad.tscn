@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="2_tbsn1"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="3_vu31f"]
 [ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="4_emt4k"]
-[ext_resource type="PackedScene" path="res://objects/NucleoDePrisma.tscn" id="6_oiyu2"]
+[ext_resource type="PackedScene" uid="uid://bbiiuq0b637s7" path="res://objects/NucleoDePrisma.tscn" id="6_oiyu2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uy8jb"]
 texture = ExtResource("1_x4sr8")
