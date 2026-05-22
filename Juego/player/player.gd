@@ -47,9 +47,8 @@ var _prev_is_shielding = false
 @onready var color_manager = $ColorManager
 
 func _ready():
-	color_manager.unlock_power("cyan") # Para probar temporalmente
-	color_manager.unlock_power("red") # Para probar temporalmente
-	color_manager.unlock_power("yellow") # Para probar temporalmente
+	if GameState.has_method("get_unlocked_powers") and color_manager.has_method("apply_unlocked_powers"):
+		color_manager.apply_unlocked_powers(GameState.get_unlocked_powers())
 	var camera = get_tree().get_first_node_in_group("camera")
 	if GameState.checkpoint_activated:
 		global_position = GameState.spawn_position
@@ -425,9 +424,14 @@ func _update_animation(delta: float):
 func _check_checkpoints():
 	for checkpoint in get_tree().get_nodes_in_group("checkpoint"):
 		if global_position.distance_to(checkpoint.global_position) < 32:
-			if checkpoint.global_position != GameState.spawn_position:
-				GameState.spawn_position = checkpoint.global_position
-				GameState.checkpoint_activated = true
+			if GameState.has_method("activate_checkpoint"):
+				if GameState.activate_checkpoint(checkpoint.global_position):
+					if health and health.has_method("heal_to_full"):
+						health.heal_to_full()
+			else:
+				if checkpoint.global_position != GameState.spawn_position:
+					GameState.spawn_position = checkpoint.global_position
+					GameState.checkpoint_activated = true
 
 func _spawn_afterimage(tex):
 	var si := Sprite2D.new()

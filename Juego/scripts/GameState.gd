@@ -1,6 +1,8 @@
 extends Node
 
 signal level_reset
+signal save_started(reason: String)
+signal save_finished(success: bool)
 
 var spawn_position = Vector2.ZERO
 var checkpoint_activated = false
@@ -17,6 +19,10 @@ const UMBRA_FINETUNE_JOBS_LOG_PATH := "user://umbra_finetune_jobs.jsonl"
 const UMBRA_FINETUNE_MAX_DURATION_MSEC := 180000
 const UMBRA_HEADLESS_ENV_PATH := ""
 const EDITOR_DISABLE_PLAYER_PROGRESS_PERSISTENCE := true
+const SAVE_DATA_VERSION := 1
+const SAVE_PATH := "user://savegame.json"
+const SAVE_TMP_PATH := "user://savegame.json.tmp"
+const SAVE_BAK_PATH := "user://savegame.json.bak"
 
 const DEFAULT_UMBRA_PLAYER_METRICS := {
 	"avg_distance": 200.0,
@@ -51,7 +57,16 @@ func _make_default_player_progress() -> Dictionary:
 	return {
 		"max_health_bonus": 0,
 		"prism_core_collected": false,
-		"prism_core_collected_levels": {}
+		"prism_core_collected_levels": {},
+		"unlocked_powers": _make_default_unlocked_powers()
+	}
+
+
+func _make_default_unlocked_powers() -> Dictionary:
+	return {
+		"cyan": false,
+		"red": false,
+		"yellow": false
 	}
 
 
@@ -103,6 +118,8 @@ func _load_player_progress() -> void:
 	if typeof(player_progress.get("prism_core_collected_levels", {})) != TYPE_DICTIONARY:
 		player_progress["prism_core_collected_levels"] = {}
 
+	_ensure_unlocked_powers_defaults()
+
 	# Evita estados inconsistentes si el bonus existe pero la bandera no.
 	if int(player_progress.get("max_health_bonus", 0)) > 0:
 		player_progress["prism_core_collected"] = true
@@ -130,6 +147,59 @@ func _save_player_progress() -> void:
 	file.close()
 
 
+func has_save() -> bool:
+	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(SAVE_BAK_PATH)
+
+
+func save_game(reason := "") -> bool:
+	emit_signal("save_started", reason)
+	_ensure_unlocked_powers_defaults()
+	var payload := _build_save_payload()
+	var wrapper := _wrap_save_payload(payload)
+	var json_text := JSON.stringify(wrapper, "\t")
+	var success := _write_save_file(json_text)
+	emit_signal("save_finished", success)
+	return success
+
+
+func load_game() -> bool:
+	var loaded := _load_game_from_path(SAVE_PATH)
+	if loaded:
+		return true
+	return _load_game_from_path(SAVE_BAK_PATH)
+
+
+func activate_checkpoint(position: Vector2, reason := "checkpoint") -> bool:
+	if position == spawn_position and checkpoint_activated:
+		return false
+	spawn_position = position
+	checkpoint_activated = true
+	save_game(reason)
+	return true
+
+
+func get_unlocked_powers() -> Dictionary:
+	var unlocked_var: Variant = player_progress.get("unlocked_powers", _make_default_unlocked_powers())
+	if typeof(unlocked_var) != TYPE_DICTIONARY:
+		unlocked_var = _make_default_unlocked_powers()
+	var unlocked: Dictionary = unlocked_var
+	return unlocked.duplicate(true)
+
+
+func unlock_power(color: String, save := true) -> bool:
+	var unlocked := get_unlocked_powers()
+	if not unlocked.has(color):
+		return false
+	if unlocked[color]:
+		return false
+	unlocked[color] = true
+	player_progress["unlocked_powers"] = unlocked
+	if save:
+		_save_player_progress()
+		save_game("unlock_power")
+	return true
+
+
 func _is_editor_ephemeral_player_progress_enabled() -> bool:
 	return EDITOR_DISABLE_PLAYER_PROGRESS_PERSISTENCE and OS.has_feature("editor")
 
@@ -155,6 +225,7 @@ func collect_prism_core(level_id: int = -1) -> bool:
 	player_progress["prism_core_collected_levels"] = collected_levels
 	_recompute_player_bonus_from_levels()
 	_save_player_progress()
+	save_game("prism_core")
 	return true
 
 
@@ -168,6 +239,129 @@ func _recompute_player_bonus_from_levels() -> void:
 	var collected_levels: Dictionary = player_progress.get("prism_core_collected_levels", {})
 	player_progress["max_health_bonus"] = collected_levels.size()
 	player_progress["prism_core_collected"] = collected_levels.size() > 0
+	_ensure_unlocked_powers_defaults()
+
+
+func _ensure_unlocked_powers_defaults() -> void:
+	var unlocked_var: Variant = player_progress.get("unlocked_powers", _make_default_unlocked_powers())
+	if typeof(unlocked_var) != TYPE_DICTIONARY:
+		unlocked_var = _make_default_unlocked_powers()
+	var unlocked: Dictionary = unlocked_var
+	for key in _make_default_unlocked_powers().keys():
+		if not unlocked.has(key):
+			unlocked[key] = false
+	player_progress["unlocked_powers"] = unlocked
+
+
+func _build_save_payload() -> Dictionary:
+	return {
+		"version": SAVE_DATA_VERSION,
+		"saved_at_msec": Time.get_ticks_msec(),
+		"current_level": current_level,
+		"current_level_path": current_level_path,
+		"spawn_position": {
+			"x": spawn_position.x,
+			"y": spawn_position.y
+		},
+		"checkpoint_activated": checkpoint_activated,
+		"player_progress": player_progress.duplicate(true)
+	}
+
+
+func _wrap_save_payload(payload: Dictionary) -> Dictionary:
+	var payload_text := JSON.stringify(payload)
+	return {
+		"checksum": _compute_checksum(payload_text),
+		"payload": payload
+	}
+
+
+func _compute_checksum(text: String) -> String:
+	var context := HashingContext.new()
+	context.start(HashingContext.HASH_SHA256)
+	context.update(text.to_utf8_buffer())
+	return context.finish().hex_encode()
+
+
+func _write_save_file(json_text: String) -> bool:
+	var tmp := FileAccess.open(SAVE_TMP_PATH, FileAccess.WRITE)
+	if tmp == null:
+		push_warning("No se pudo abrir el archivo temporal de guardado")
+		return false
+	tmp.store_string(json_text)
+	tmp.close()
+
+	if FileAccess.file_exists(SAVE_PATH):
+		_copy_file(SAVE_PATH, SAVE_BAK_PATH)
+
+	var tmp_abs := ProjectSettings.globalize_path(SAVE_TMP_PATH)
+	var save_abs := ProjectSettings.globalize_path(SAVE_PATH)
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(save_abs)
+	var err := DirAccess.rename_absolute(tmp_abs, save_abs)
+	if err != OK:
+		push_warning("No se pudo completar el guardado: %s" % err)
+		return false
+	return true
+
+
+func _copy_file(source_path: String, target_path: String) -> void:
+	var bytes := FileAccess.get_file_as_bytes(source_path)
+	if bytes.is_empty():
+		return
+	var file := FileAccess.open(target_path, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_buffer(bytes)
+	file.close()
+
+
+func _load_game_from_path(path: String) -> bool:
+	if not FileAccess.file_exists(path):
+		return false
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return false
+	if not _validate_save_wrapper(parsed):
+		return false
+	var payload_var: Variant = parsed.get("payload", {})
+	if typeof(payload_var) != TYPE_DICTIONARY:
+		return false
+	var payload: Dictionary = payload_var
+	_apply_loaded_state(payload)
+	return true
+
+
+func _validate_save_wrapper(wrapper: Dictionary) -> bool:
+	if not wrapper.has("checksum") or not wrapper.has("payload"):
+		return false
+	if typeof(wrapper["payload"]) != TYPE_DICTIONARY:
+		return false
+	var payload_text := JSON.stringify(wrapper["payload"])
+	var checksum := str(wrapper.get("checksum", ""))
+	return checksum == _compute_checksum(payload_text)
+
+
+func _apply_loaded_state(payload: Dictionary) -> void:
+	current_level = int(payload.get("current_level", current_level))
+	current_level_path = str(payload.get("current_level_path", current_level_path))
+	checkpoint_activated = bool(payload.get("checkpoint_activated", checkpoint_activated))
+	var spawn_var: Variant = payload.get("spawn_position", {})
+	if typeof(spawn_var) == TYPE_DICTIONARY:
+		var spawn: Dictionary = spawn_var
+		spawn_position = Vector2(float(spawn.get("x", spawn_position.x)), float(spawn.get("y", spawn_position.y)))
+	var progress_var: Variant = payload.get("player_progress", {})
+	if typeof(progress_var) == TYPE_DICTIONARY:
+		var progress: Dictionary = progress_var
+		player_progress = _make_default_player_progress()
+		for key in player_progress.keys():
+			if progress.has(key):
+				player_progress[key] = progress[key]
+		_recompute_player_bonus_from_levels()
 
 
 func _load_umbra_progress() -> void:

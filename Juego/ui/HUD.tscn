@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://dn5s1g0fvihr6" path="res://assets/ui/cristal_amarillo.png" id="6_h1fjt"]
 [ext_resource type="Texture2D" uid="uid://3txec6ey08od" path="res://assets/ui/cristal_rojo_apagado.png" id="7_hrp81"]
 [ext_resource type="Texture2D" uid="uid://cix7pydwicyni" path="res://assets/ui/cristal_amarillo_apagado.png" id="9_0082l"]
+[ext_resource type="Texture2D" uid="uid://t783xna2ghd3" path="res://assets/ui/arrow.png" id="10_save"]
 
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource("1_7m301")
@@ -25,6 +26,21 @@ grow_vertical = 2
 layout_mode = 0
 offset_right = 200.0
 offset_bottom = 64.0
+
+[node name="SaveIndicator" type="TextureRect" parent="Control"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -54.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 54.0
+grow_horizontal = 0
+texture = ExtResource("10_save")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0)
+visible = false
 
 [node name="Heart1" type="TextureRect" parent="Control/Hearts"]
 custom_minimum_size = Vector2(16, 16)

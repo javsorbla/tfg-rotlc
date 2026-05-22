@@ -8,6 +8,8 @@ var power_overlays = {}
 var heart_full: Texture2D = preload("res://assets/ui/heart.png")
 var heart_empty: Texture2D = preload("res://assets/ui/heart_empty.png")
 var duration_bars = {}
+var save_indicator: TextureRect
+var _save_tween: Tween
 
 const MAX_DURATIONS = {
 	"cyan": 6.0,
@@ -25,6 +27,7 @@ const MAX_COOLDOWNS = {
 func _ready():
 	heart_container = $Control/Hearts
 	heart_template = $Control/Hearts/Heart1
+	save_indicator = $Control/SaveIndicator
 	hearts = [heart_template]
 	for i in range(2, 4):
 		var existing_heart := heart_container.get_node_or_null("Heart%d" % i)
@@ -51,6 +54,12 @@ func _ready():
 	}
 	for power in duration_bars:
 		duration_bars[power].visible = false
+	if has_node("/root/GameState"):
+		var game_state := get_node("/root/GameState")
+		if game_state.has_signal("save_started"):
+			game_state.save_started.connect(_on_save_started)
+		if game_state.has_signal("save_finished"):
+			game_state.save_finished.connect(_on_save_finished)
 	hide()
 
 
@@ -91,6 +100,7 @@ func reset_for_respawn() -> void:
 	for power in duration_bars:
 		if duration_bars[power] != null:
 			duration_bars[power].visible = false
+	_hide_save_indicator()
 
 
 func _ensure_heart_slots(maximum: int) -> void:
@@ -145,10 +155,59 @@ func update_cooldowns(cooldown_timers: Dictionary, active_power: String, unlocke
 			power_overlays[power].value = ratio
 			power_overlays[power].modulate = Color(0.6, 0.6, 0.6, 1)
 			duration_bars[power].visible = false
-		else:
-			# Sin usar: icono apagado
-			power_nodes[power].modulate = Color(1, 1, 1, 1)
-			power_overlays[power].visible = true
-			power_overlays[power].value = 1.0
-			power_overlays[power].modulate = Color(0.6, 0.6, 0.6, 1)
-			duration_bars[power].visible = false
+
+
+func _on_save_started(_reason: String) -> void:
+	_set_saving(true)
+
+
+func _on_save_finished(success: bool) -> void:
+	if success:
+		_show_save_indicator(0.6)
+	else:
+		_set_saving(false)
+
+
+func _set_saving(active: bool) -> void:
+	if save_indicator == null:
+		return
+	if active:
+		_stop_save_tween()
+		save_indicator.visible = true
+		save_indicator.modulate.a = 0.9
+		save_indicator.scale = Vector2.ONE
+		_save_tween = create_tween().set_loops()
+		_save_tween.tween_property(save_indicator, "scale", Vector2(1.15, 1.15), 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_save_tween.tween_property(save_indicator, "scale", Vector2(1.0, 1.0), 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		return
+	_hide_save_indicator()
+
+
+func _show_save_indicator(duration: float) -> void:
+	if save_indicator == null:
+		return
+	_stop_save_tween()
+	save_indicator.visible = true
+	save_indicator.modulate.a = 1.0
+	save_indicator.scale = Vector2(1.2, 1.2)
+	_save_tween = create_tween()
+	_save_tween.tween_property(save_indicator, "scale", Vector2(1.0, 1.0), 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	if duration > 0.0:
+		_save_tween.tween_interval(duration)
+	_save_tween.tween_property(save_indicator, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_save_tween.finished.connect(_hide_save_indicator, CONNECT_ONE_SHOT)
+
+
+func _hide_save_indicator() -> void:
+	_stop_save_tween()
+	if save_indicator == null:
+		return
+	save_indicator.visible = false
+	save_indicator.modulate.a = 0.0
+	save_indicator.scale = Vector2.ONE
+
+
+func _stop_save_tween() -> void:
+	if _save_tween != null and _save_tween.is_running():
+		_save_tween.kill()
+	_save_tween = null

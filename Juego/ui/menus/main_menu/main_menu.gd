@@ -23,6 +23,7 @@ const BUTTON_LEVEL_NORMAL_COLORS := {
 @onready var menu_container_fx: MarginContainer = %MenuContainer
 @onready var menu_buttons_box_container_fx: BoxContainer = %MenuButtonsBoxContainer
 @onready var gem_particles: GPUParticles2D = $GemCanvasLayer/GemParticles
+@onready var continue_button: Button = %ContinueButton
 
 var _progress := 0.0
 var _base_menu_y := 0.0
@@ -38,6 +39,7 @@ func _ready() -> void:
 	_update_effect_layout()
 	_apply_color_progression(_progress)
 	_apply_gem_particles_style(_progress)
+	_refresh_continue_button()
 	if gem_particles != null:
 		gem_particles.emitting = true
 	_play_entry_fade()
@@ -70,6 +72,31 @@ func _resolve_progress() -> float:
 
 	var denominator := float(max(1, max_level))
 	return clamp(float(game_state.current_level) / denominator, 0.0, 1.0)
+
+
+func _refresh_continue_button() -> void:
+	if continue_button == null:
+		return
+	var can_continue := false
+	if has_node("/root/GameState"):
+		var game_state := get_node("/root/GameState")
+		if game_state.has_method("has_save"):
+			can_continue = game_state.has_save()
+	continue_button.disabled = not can_continue
+
+
+func _on_continue_button_pressed() -> void:
+	if not has_node("/root/GameState"):
+		return
+	var game_state := get_node("/root/GameState")
+	if not game_state.has_method("load_game"):
+		return
+	if not game_state.load_game():
+		return
+	var level_path := str(game_state.current_level_path)
+	if level_path.is_empty():
+		return
+	SceneLoader.load_scene(level_path)
 
 
 func _apply_color_progression(progress: float) -> void:
