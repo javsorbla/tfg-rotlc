@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dtoxjup5xbhl5"
-path="res://.godot/imported/south.png-11f11d592f5b31d749085854e8098468.ctex"
+uid="uid://duuj8mq7cote4"
+path="res://.godot/imported/dead_sheet.png-df69c4548364314f4aa5f0ede45c4d35.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/acechador_aereo/south.png"
-dest_files=["res://.godot/imported/south.png-11f11d592f5b31d749085854e8098468.ctex"]
+source_file="res://assets/enemies/common/acechador_aereo/dead_sheet.png"
+dest_files=["res://.godot/imported/dead_sheet.png-df69c4548364314f4aa5f0ede45c4d35.ctex"]
 
 [params]
 

@@ -105,6 +105,8 @@ func _enter_state(new_state: State) -> void:
 		State.IDLE:
 			velocity = Vector2.ZERO
 			has_hit_player = false
+			$AnimatedSprite2D.flip_h = patrol_dir > 0
+			$AnimatedSprite2D.play("move")
 
 		State.DIVING:
 			if player:
@@ -161,17 +163,16 @@ func _state_idle() -> void:
 	elif global_position.x <= patrol_origin.x - PATROL_X_RANGE:
 		patrol_dir = 1.0
 
-	if patrol_dir > 0:
-		$AnimatedSprite2D.play("walk_right")
-	else:
-		$AnimatedSprite2D.play("walk_left")
+	$AnimatedSprite2D.flip_h = patrol_dir > 0
+	$AnimatedSprite2D.play("move")
 
 
 func _state_diving() -> void:
 	if not player:
 		return
 
-	$AnimatedSprite2D.play("dive")
+	$AnimatedSprite2D.flip_h = dive_direction.x > 0
+	$AnimatedSprite2D.play("move")
 	velocity = dive_direction * DIVE_SPEED
 
 	# Si choca con un muro, cancela el ataque
@@ -199,10 +200,8 @@ func _state_returning() -> void:
 	new_pos.y -= sin(t * PI) * RETURN_ARC_HEIGHT
 	global_position = new_pos
 
-	if total_dir.x < 0:
-		$AnimatedSprite2D.play("walk_left")
-	else:
-		$AnimatedSprite2D.play("walk_right")
+	$AnimatedSprite2D.flip_h = total_dir.x > 0
+	$AnimatedSprite2D.play("move")
 
 	if t >= 1.0:
 		global_position = patrol_origin
