@@ -52,19 +52,16 @@ func _ready():
 	else:
 		GameState.spawn_position = global_position
 
-	# Conectar señal para saber cuándo termina una animación y permitir que el ataque visual complete
+	# Asegurar en tiempo de ejecución que las animaciones de ataque no loopen
+	if sprite and sprite.sprite_frames:
+		var attack_names = ["attack", "attack_up", "attack_up_jump", "attack_up_run", "attack_down", "attack_down_jump", "attack_down_run"]
+		for name in attack_names:
+			if sprite.sprite_frames.has_animation(name):
+				sprite.sprite_frames.set_animation_loop(name, false)
+
+	# Conectar señal para saber cuándo termina una animación de ataque
 	if sprite:
 		sprite.animation_finished.connect(Callable(self, "_on_sprite_animation_finished"))
-		# Asegurar en tiempo de ejecución que las animaciones de ataque no loopen
-		if sprite.sprite_frames:
-			if sprite.sprite_frames.has_animation("attack"):
-				sprite.sprite_frames.set_animation_loop("attack", false)
-			if sprite.sprite_frames.has_animation("attack_up"):
-				sprite.sprite_frames.set_animation_loop("attack_up", false)
-			if sprite.sprite_frames.has_animation("attack_up_jump"):
-				sprite.sprite_frames.set_animation_loop("attack_up_jump", false)
-			if sprite.sprite_frames.has_animation("attack_up_run"):
-				sprite.sprite_frames.set_animation_loop("attack_up_run", false)
 
 func _physics_process(delta: float) -> void:
 	if dash_cooldown_timer > 0:
@@ -203,46 +200,38 @@ func _update_animation(delta: float):
 			# Si se mueve o salta, saltar directamente a la animación normal
 			showing_dash_transition_frame = false
 
-		# Si hay una animación de ataque forzada a completar, déjala terminar
-		if _attack_anim_playing:
-			sprite.speed_scale = 1.0
-			if velocity.x != 0:
-				sprite.flip_h = velocity.x < 0
-			elif last_direction != 0:
-				sprite.flip_h = last_direction < 0
-			return
-
 	# Ataque en suelo: animación estática o ataque corriendo
 	if combat.is_attacking and is_on_floor():
 		var moving_on_floor = abs(velocity.x) > 0.1 or abs(Input.get_axis("move_left", "move_right")) > 0.1
 		var attack_just_started = combat.is_attacking and not _prev_combat_attacking
 		if moving_on_floor:
+			var aim_up := Input.is_action_pressed("aim_up")
+			var aim_down := Input.is_action_pressed("aim_down")
 			if attack_just_started:
-				var aim_up := Input.is_action_pressed("aim_up")
 				var previous_animation = sprite.animation
 				var previous_frame = sprite.frame
-				if aim_up and sprite.sprite_frames.has_animation("attack_up_run"):
+				if aim_down and sprite.sprite_frames.has_animation("attack_down_run"):
+					sprite.play("attack_down_run")
+					sprite.speed_scale = 1.0
+					sprite.frame = 0
+					_attack_anim_playing = true
+					_attack_anim_name = "attack_down_run"
+				elif aim_up and sprite.sprite_frames.has_animation("attack_up_run"):
 					sprite.play("attack_up_run")
 					sprite.speed_scale = 1.0
 					sprite.frame = 0
-					# Marcar que la animación de ataque debe completarse visualmente
 					_attack_anim_playing = true
 					_attack_anim_name = "attack_up_run"
 				else:
 					sprite.play("attack_run")
 					sprite.speed_scale = 1.0
-					# Marcar que la animación de ataque debe completarse visualmente
 					_attack_anim_playing = true
 					_attack_anim_name = "attack_run"
 					if previous_animation == "run" or previous_animation == "attack_run":
 						var attack_run_frames = sprite.sprite_frames.get_frame_count("attack_run")
 						if attack_run_frames > 0:
 							sprite.frame = (previous_frame + 1) % attack_run_frames
-			elif sprite.animation == "attack_run":
-				sprite.speed_scale = 1.0
-			elif sprite.animation == "attack_up_run":
-				sprite.speed_scale = 1.0
-			elif sprite.animation == "attack_run":
+			elif sprite.animation == "attack_run" or sprite.animation == "attack_up_run" or sprite.animation == "attack_down_run":
 				sprite.speed_scale = 1.0
 			if velocity.x != 0:
 				sprite.flip_h = velocity.x < 0
@@ -251,8 +240,16 @@ func _update_animation(delta: float):
 			return
 		else:
 			var aim_up := Input.is_action_pressed("aim_up")
-			if attack_just_started:
-				if aim_up:
+			var aim_down := Input.is_action_pressed("aim_down")
+			var attack_just_started_ground = combat.is_attacking and not _prev_combat_attacking
+			if attack_just_started_ground:
+				if aim_down and sprite.sprite_frames.has_animation("attack_down"):
+					sprite.play("attack_down")
+					sprite.speed_scale = 1.0
+					sprite.frame = 0
+					_attack_anim_playing = true
+					_attack_anim_name = "attack_down"
+				elif aim_up and sprite.sprite_frames.has_animation("attack_up"):
 					sprite.play("attack_up")
 					sprite.speed_scale = 1.0
 					sprite.frame = 0
@@ -269,7 +266,7 @@ func _update_animation(delta: float):
 				elif last_direction != 0:
 					sprite.flip_h = last_direction < 0
 				return
-			elif _attack_anim_playing and (sprite.animation == "attack" or sprite.animation == "attack_up"):
+			elif _attack_anim_playing and (sprite.animation == "attack" or sprite.animation == "attack_up" or sprite.animation == "attack_down"):
 				sprite.speed_scale = 1.0
 				if velocity.x != 0:
 					sprite.flip_h = velocity.x < 0
@@ -277,35 +274,39 @@ func _update_animation(delta: float):
 					sprite.flip_h = last_direction < 0
 				return
 
-	# Ataque lateral en el aire
+	# Ataque lateral en el aire: puede ser attack_jump o variantes hacia arriba/abajo
 	if combat.is_attacking and not is_on_floor():
 		var aim_up := Input.is_action_pressed("aim_up")
 		var aim_down := Input.is_action_pressed("aim_down")
 		var vertical_aim := aim_up or aim_down
 		var attack_just_started_air = combat.is_attacking and not _prev_combat_attacking
-		if vertical_aim and aim_up:
+		if vertical_aim:
 			if attack_just_started_air:
-				# Ataque hacia arriba en el aire
-				sprite.play("attack_up_jump")
-				sprite.speed_scale = 1.0
-				sprite.frame = 0
-				_attack_anim_playing = true
-				_attack_anim_name = "attack_up_jump"
+				if aim_down and sprite.sprite_frames.has_animation("attack_down_jump"):
+					sprite.play("attack_down_jump")
+					sprite.speed_scale = 1.0
+					sprite.frame = 0
+					_attack_anim_playing = true
+					_attack_anim_name = "attack_down_jump"
+				elif aim_up and sprite.sprite_frames.has_animation("attack_up_jump"):
+					sprite.play("attack_up_jump")
+					sprite.speed_scale = 1.0
+					sprite.frame = 0
+					_attack_anim_playing = true
+					_attack_anim_name = "attack_up_jump"
 				if velocity.x != 0:
 					sprite.flip_h = velocity.x < 0
 				elif last_direction != 0:
 					sprite.flip_h = last_direction < 0
 				return
-			# Si no es inicio, si ya está sonando, mantenerla
-			elif _attack_anim_playing and sprite.animation == "attack_up_jump":
+			elif _attack_anim_playing and (sprite.animation == "attack_up_jump" or sprite.animation == "attack_down_jump"):
 				sprite.speed_scale = 1.0
 				if velocity.x != 0:
 					sprite.flip_h = velocity.x < 0
 				elif last_direction != 0:
 					sprite.flip_h = last_direction < 0
 				return
-		# Si no apuntó hacia arriba, usar ataque lateral normal
-		if not vertical_aim:
+		else:
 			if sprite.animation != "attack_jump":
 				sprite.play("attack_jump")
 				sprite.speed_scale = 1.0
@@ -338,6 +339,7 @@ func _update_animation(delta: float):
 				run_intro_done = true
 				run_intro_timer = 1.0 / sprite.sprite_frames.get_animation_speed("run_intro")
 				sprite.play("run_intro")
+
 				return
 			if run_intro_timer > 0.0:
 				run_intro_timer -= delta
