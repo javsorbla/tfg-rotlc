@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://rfcc48670okt"
-path="res://.godot/imported/stunned.png-0f49acae9635cb95600305c1e23a7124.ctex"
+uid="uid://0xraiixnl4t"
+path="res://.godot/imported/dead_sheet.png-fcff139bc478b3f31defc966c79175ee.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/nucleo_inestable/stunned.png"
-dest_files=["res://.godot/imported/stunned.png-0f49acae9635cb95600305c1e23a7124.ctex"]
+source_file="res://assets/enemies/common/nucleo_inestable/dead_sheet.png"
+dest_files=["res://.godot/imported/dead_sheet.png-fcff139bc478b3f31defc966c79175ee.ctex"]
 
 [params]
 
