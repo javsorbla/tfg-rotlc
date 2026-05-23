@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cfoeycc345pmv"
-path="res://.godot/imported/idle.png-a73c4c3e4e9e7cdc1faf10bbf2c8b903.ctex"
+uid="uid://qxb5gvvgotg1"
+path="res://.godot/imported/charged_sheet.png-dbd9f0543b74225e26e78b4a494782a1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/kamikaze_electrico/idle.png"
-dest_files=["res://.godot/imported/idle.png-a73c4c3e4e9e7cdc1faf10bbf2c8b903.ctex"]
+source_file="res://assets/enemies/common/kamikaze_electrico/charged_sheet.png"
+dest_files=["res://.godot/imported/charged_sheet.png-dbd9f0543b74225e26e78b4a494782a1.ctex"]
 
 [params]
 
