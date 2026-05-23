@@ -77,20 +77,23 @@ text = "Salir del juego"
 unique_name_in_owner = true
 visible = false
 text = "¿Reiniciar la partida?"
-title = "Confirmar reinicio"
+title = "Confirmar Reinicio"
+title_visible = true
 
 [node name="MainMenuConfirmation" parent="." unique_id=1848000740 instance=ExtResource("5_7wt2f")]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(220, 0)
 text = "¿Volver al menú principal?"
-title = "Confirmar salida"
+title = "Volver al Menu Principal"
+title_visible = true
 
 [node name="ExitConfirmation" parent="." unique_id=1161491301 instance=ExtResource("5_7wt2f")]
 unique_name_in_owner = true
 visible = false
 text = "¿Salir del juego?"
-title = "Confirmar salida"
+title = "Confirmar Salida"
+title_visible = true
 
 [connection signal="hidden" from="PauseMenu" to="." method="_on_pause_menu_hidden"]
 [connection signal="pressed" from="PauseMenu/ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/CloseButton" to="PauseMenu" method="_on_close_button_pressed"]

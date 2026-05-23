@@ -229,3 +229,28 @@ func _get_game_state() -> Node:
 	if has_node("/root/GameState"):
 		return get_node("/root/GameState")
 	return null
+
+
+func try_exit_game() -> void:
+	if confirm_exit and (not exit_confirmation.visible):
+		MenuProgressionHelper.apply_progress_to_node(exit_confirmation)
+		exit_confirmation.show()
+	else:
+		exit_game()
+
+
+func _on_new_game_button_pressed() -> void:
+	var new_confirm := get_node_or_null("NewGameConfirmation")
+	if new_confirm == null:
+		return
+	MenuProgressionHelper.apply_progress_to_node(new_confirm)
+	new_confirm.show()
+
+
+func _on_new_game_confirmation_confirmed() -> void:
+	var game_state := _get_game_state()
+	if game_state != null and game_state.has_method("reset_for_new_game"):
+		game_state.reset_for_new_game()
+	# Cargar la escena inicial (Campos de Zafiro)
+	# Cargar la escena inicial (Tutorial)
+	SceneLoader.load_scene("res://scenes/Tutorial.tscn")

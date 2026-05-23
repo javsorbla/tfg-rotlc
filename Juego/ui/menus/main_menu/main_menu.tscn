@@ -233,7 +233,20 @@ offset_right = 150.0
 offset_bottom = 80.0
 ui_cancel_closes = false
 text = "¿Seguro que quieres salir del juego?"
-title_visible = false
+title = "Confirmar Salida"
+
+[node name="NewGameConfirmation" parent="." instance=ExtResource("8_cs2jt")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(320, 160)
+layout_mode = 1
+offset_left = -160.0
+offset_top = -80.0
+offset_right = 160.0
+offset_bottom = 80.0
+ui_cancel_closes = false
+text = "¿Iniciar nueva partida? Se sobrescribirá el progreso guardado."
+title = "Confirmar Nueva Partida"
 
 [node name="EntryFadeCanvasLayer" type="CanvasLayer" parent="."]
 layer = 10
@@ -253,3 +266,4 @@ color = Color(0, 0, 0, 1)
 [connection signal="pressed" from="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/CreditsButton" to="." method="_on_credits_button_pressed"]
 [connection signal="pressed" from="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
 [connection signal="confirmed" from="ExitConfirmation" to="." method="_on_exit_confirmation_confirmed"]
+[connection signal="confirmed" from="NewGameConfirmation" to="." method="_on_new_game_confirmation_confirmed"]

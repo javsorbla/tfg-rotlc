@@ -162,6 +162,32 @@ func save_game(reason := "") -> bool:
 	return success
 
 
+func reset_for_new_game() -> void:
+	# Remove existing save files and reset in-memory progress to defaults.
+	if FileAccess.file_exists(SAVE_PATH):
+		var abs := ProjectSettings.globalize_path(SAVE_PATH)
+		DirAccess.remove_absolute(abs)
+	if FileAccess.file_exists(SAVE_BAK_PATH):
+		var abs_bak := ProjectSettings.globalize_path(SAVE_BAK_PATH)
+		DirAccess.remove_absolute(abs_bak)
+	if FileAccess.file_exists(PLAYER_PROGRESS_PATH):
+		var abs_pp := ProjectSettings.globalize_path(PLAYER_PROGRESS_PATH)
+		DirAccess.remove_absolute(abs_pp)
+	if FileAccess.file_exists(UMBRA_SAVE_PATH):
+		var abs_umbra := ProjectSettings.globalize_path(UMBRA_SAVE_PATH)
+		DirAccess.remove_absolute(abs_umbra)
+
+	player_progress = _make_default_player_progress()
+	umbra_progress = _make_default_umbra_progress()
+	current_level = 0
+	current_level_path = ""
+	spawn_position = Vector2.ZERO
+	checkpoint_activated = false
+
+	# Persist cleared player progress (so has_save() returns false)
+	_save_player_progress()
+
+
 func load_game() -> bool:
 	var loaded := _load_game_from_path(SAVE_PATH)
 	if loaded:
