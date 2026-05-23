@@ -10,6 +10,8 @@ size = Vector2(16, 15)
 rotation = 3.14159
 collision_mask = 4
 script = ExtResource("1_fjosb")
+velocidad_caida = 200.0
+distancia_maxima = 370.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_mxas3")

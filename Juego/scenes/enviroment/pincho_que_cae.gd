@@ -2,10 +2,20 @@ extends Area2D
 
 @export var velocidad_caida: float = 400.0
 @export var dano: int = 1
+@export var distancia_maxima: float = 500.0 # Distancia a recorrer antes de destruirse
+
+var posicion_inicial_y: float = 0.0
+
+func _ready():
+	posicion_inicial_y = global_position.y
 
 func _physics_process(delta):
 	# Hace que el pincho caiga constantemente
 	position.y += velocidad_caida * delta
+	
+	# Destruimos el pincho si ha sobrepasado la distancia máxima
+	if global_position.y - posicion_inicial_y >= distancia_maxima:
+		queue_free()
 
 # NUEVA FUNCIÓN: Ahora detectamos otras ÁREAS (como tu Hurtbox)
 func _on_area_entered(area):

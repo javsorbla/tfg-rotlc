@@ -5,6 +5,7 @@
 
 [node name="GeneradorPinchos" type="Node2D"]
 script = ExtResource("1_hlrh1")
+tiempo_entre_pinchos = 9.0
 
 [node name="Timer" type="Timer" parent="."]
 autostart = true
