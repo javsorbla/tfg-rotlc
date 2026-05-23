@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c7158ys1wtm4u"
-path="res://.godot/imported/sleep.png-0484c4a458708b029e3b05ab033f195d.ctex"
+uid="uid://c8qhxywrugiug"
+path="res://.godot/imported/stun_dead_sheet.png-481e7217a61d663af82cbddf8f0e3b27.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/nucleo_inestable/sleep.png"
-dest_files=["res://.godot/imported/sleep.png-0484c4a458708b029e3b05ab033f195d.ctex"]
+source_file="res://assets/enemies/common/nucleo_inestable/stun_dead_sheet.png"
+dest_files=["res://.godot/imported/stun_dead_sheet.png-481e7217a61d663af82cbddf8f0e3b27.ctex"]
 
 [params]
 

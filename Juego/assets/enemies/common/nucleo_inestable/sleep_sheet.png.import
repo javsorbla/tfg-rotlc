@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ca0ean37i67fk"
-path="res://.godot/imported/attack.png-365a5c79fbc2e9cdbdbea653c2008266.ctex"
+uid="uid://bwi48rykh2dmq"
+path="res://.godot/imported/sleep_sheet.png-f43f1da8d50f08b055cc2e1021bf2497.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/nucleo_inestable/attack.png"
-dest_files=["res://.godot/imported/attack.png-365a5c79fbc2e9cdbdbea653c2008266.ctex"]
+source_file="res://assets/enemies/common/nucleo_inestable/sleep_sheet.png"
+dest_files=["res://.godot/imported/sleep_sheet.png-f43f1da8d50f08b055cc2e1021bf2497.ctex"]
 
 [params]
 
