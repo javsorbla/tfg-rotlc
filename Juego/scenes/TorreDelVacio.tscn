@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=4 uid="uid://bx25imn2lrp2c"]
+[gd_scene load_steps=18 format=4 uid="uid://bx25imn2lrp2c"]
 
 [ext_resource type="Texture2D" uid="uid://breoi48iiv0rb" path="res://assets/tilesets/torre_vacio/torre-vacio-tileset.png" id="2_006yg"]
 [ext_resource type="PackedScene" uid="uid://ba7a36qorhbxj" path="res://scenes/enviroment/PlataformaMagica.tscn" id="2_mbkwy"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bav0n7c513nk1" path="res://enemies/common/acechador_aereo/AcechadorAereo.tscn" id="3_hjs8s"]
 [ext_resource type="Script" path="res://scenes/enviroment/zona_reinicio.gd" id="3_sj7vq"]
 [ext_resource type="PackedScene" uid="uid://sgyjw0t82rmd" path="res://scenes/enviroment/GeneradorPinchos.tscn" id="6_kmi3x"]
+[ext_resource type="Script" path="res://scenes/zona_camara_pinchos.gd" id="6_ywbwb"]
 [ext_resource type="PackedScene" uid="uid://de3l4ucej6p1t" path="res://scenes/enviroment/pincho_que_cae.tscn" id="7_k3ue5"]
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="11_740x8"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="15_4xeyx"]
@@ -66,6 +67,9 @@ sources/0 = SubResource("TileSetAtlasSource_33l2h")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_no222"]
 size = Vector2(347.5, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_com61"]
+size = Vector2(481, 491)
 
 [sub_resource type="Environment" id="Environment_iu2ym"]
 background_mode = 3
@@ -153,8 +157,21 @@ primera_plataforma = NodePath("../PlataformaMagica1")
 position = Vector2(2160.25, -1506)
 shape = SubResource("RectangleShape2D_no222")
 
+[node name="CamaraPinchos" type="Camera2D" parent="Entorno"]
+position = Vector2(2744, -2191)
+enabled = false
+
+[node name="ZonaCamaraPinchos" type="Area2D" parent="Entorno" node_paths=PackedStringArray("camara_fija")]
+collision_mask = 5
+script = ExtResource("6_ywbwb")
+camara_fija = NodePath("../CamaraPinchos")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Entorno/ZonaCamaraPinchos"]
+position = Vector2(2733.5, -2196.5)
+shape = SubResource("RectangleShape2D_com61")
+
 [node name="GeneradorPinchos" parent="." instance=ExtResource("6_kmi3x")]
-position = Vector2(2719, -2102)
+position = Vector2(2738, -2338)
 escena_pincho = ExtResource("7_k3ue5")
 ancho_generacion = 373.0
 separacion_pinchos = 12.0
@@ -165,7 +182,8 @@ separacion_pinchos = 12.0
 zoom = Vector2(1, 1)
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("15_4xeyx")]
-position = Vector2(2537, -2002)
+position = Vector2(2431, -1993)
+collision_mask = 5
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("16_grtny")
@@ -187,3 +205,5 @@ energy = 0.72
 shadow_enabled = true
 
 [connection signal="body_entered" from="Entorno/ZonaReinicio" to="Entorno/ZonaReinicio" method="_on_body_entered"]
+[connection signal="body_entered" from="Entorno/ZonaCamaraPinchos" to="Entorno/ZonaCamaraPinchos" method="_on_body_entered"]
+[connection signal="body_exited" from="Entorno/ZonaCamaraPinchos" to="Entorno/ZonaCamaraPinchos" method="_on_body_exited"]

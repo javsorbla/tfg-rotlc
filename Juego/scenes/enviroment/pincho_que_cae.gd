@@ -4,21 +4,25 @@ extends Area2D
 @export var dano: int = 1
 
 func _physics_process(delta):
-	# Esto hace que el pincho caiga constantemente hacia abajo
+	# Hace que el pincho caiga constantemente
 	position.y += velocidad_caida * delta
 
-# Conecta la señal 'body_entered' del Area2D a esta función
-func _on_body_entered(body):
-	if body.is_in_group("player"):
-		# Aquí llamas a la función que le quita vida a tu jugador.
-		# Asegúrate de que el nombre coincida con cómo lo tengas programado en tu Player.gd
-		if body.has_method("recibir_dano"):
-			body.recibir_dano(dano)
+# NUEVA FUNCIÓN: Ahora detectamos otras ÁREAS (como tu Hurtbox)
+func _on_area_entered(area):
+	# Comprobamos si el área que el pincho ha tocado tiene el grupo "player_hurtbox"
+	if area.is_in_group("player_hurtbox"):
+		
+		# El Hurtbox suele ser un "hijo" del jugador. 'owner' busca al nodo principal (el Player)
+		var jugador = area.owner 
+		
+		# Accedemos al nodo Health del jugador
+		var health = jugador.get_node_or_null("Health")
+		if health and health.has_method("take_damage"): 
+			health.take_damage(dano)
 			
-		# Después de hacer daño, el pincho se destruye
+		# El pincho se destruye tras pinchar al jugador
 		queue_free()
 
-# Conecta la señal 'screen_exited' del VisibleOnScreenNotifier2D a esta función
+# Para que se borre si cae al vacío
 func _on_visible_on_screen_notifier_2d_screen_exited():
-	# Si el pincho sale de la pantalla (cae al vacío), se borra para no consumir RAM
 	queue_free()

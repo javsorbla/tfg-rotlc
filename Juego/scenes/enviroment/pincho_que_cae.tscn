@@ -8,6 +8,7 @@ size = Vector2(16, 15)
 
 [node name="PinchoQueCae" type="Area2D"]
 rotation = 3.14159
+collision_mask = 4
 script = ExtResource("1_fjosb")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
@@ -19,5 +20,5 @@ shape = SubResource("RectangleShape2D_53mj8")
 
 [node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
 
-[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
 [connection signal="screen_exited" from="VisibleOnScreenNotifier2D" to="." method="_on_visible_on_screen_notifier_2d_screen_exited"]
