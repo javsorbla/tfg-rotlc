@@ -1,0 +1,82 @@
+[gd_scene load_steps=13 format=3 uid="uid://dio85tcy1g662"]
+
+[ext_resource type="Texture2D" uid="uid://bv280rhxrojy0" path="res://assets/environment/checkpoint_sheet.png" id="1_eybee"]
+[ext_resource type="Script" path="res://scenes/enviroment/checkpoint.gd" id="2_checkpoint_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kdetm"]
+size = Vector2(24, 27)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x0q46"]
+atlas = ExtResource("1_eybee")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bmtsa"]
+atlas = ExtResource("1_eybee")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_50w1d"]
+atlas = ExtResource("1_eybee")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ocxgx"]
+atlas = ExtResource("1_eybee")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hgwkb"]
+atlas = ExtResource("1_eybee")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nwleb"]
+atlas = ExtResource("1_eybee")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_sane2"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x0q46")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bmtsa")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_50w1d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ocxgx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hgwkb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nwleb")
+}],
+"loop": true,
+"name": &"activate",
+"speed": 5.0
+}]
+
+[sub_resource type="Gradient" id="Gradient_checkpoint"]
+offsets = PackedFloat32Array(0, 0.8)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_checkpoint"]
+gradient = SubResource("Gradient_checkpoint")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[node name="Checkpoint" type="Area2D" groups=["checkpoint"]]
+collision_mask = 5
+script = ExtResource("2_checkpoint_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 0.5)
+shape = SubResource("RectangleShape2D_kdetm")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_sane2")
+animation = &"activate"
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(0, 0.5)
+texture = SubResource("GradientTexture2D_checkpoint")

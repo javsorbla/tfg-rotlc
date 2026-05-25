@@ -3,7 +3,7 @@ extends CharacterBody2D
 const SPEED = 150.0
 const JUMP_VELOCITY = -300.0
 const DASH_SPEED = 300.0
-const DASH_DURATION = 0.30
+const DASH_DURATION = 0.25
 const DASH_COOLDOWN = 0.5
 const ACCELERATION = 1000.0
 const FRICTION = 700.0
@@ -426,8 +426,11 @@ func _check_checkpoints():
 		if global_position.distance_to(checkpoint.global_position) < 32:
 			if GameState.has_method("activate_checkpoint"):
 				if GameState.activate_checkpoint(checkpoint.global_position):
-					if health and health.has_method("heal_to_full"):
-						health.heal_to_full()
+					if health:
+						if health.has_method("heal"):
+							health.heal(1)
+						elif health.has_method("heal_to_full"):
+							health.heal_to_full()
 			else:
 				if checkpoint.global_position != GameState.spawn_position:
 					GameState.spawn_position = checkpoint.global_position

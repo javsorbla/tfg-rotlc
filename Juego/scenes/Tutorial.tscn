@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=4 uid="uid://bmmg7n8gcdsue"]
+[gd_scene load_steps=19 format=4 uid="uid://bmmg7n8gcdsue"]
 
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_74p10"]
 [ext_resource type="Script" path="res://scenes/tutorial.gd" id="1_p6cp1"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://b7kj5rrupn1ou" path="res://enemies/common/caminante_helado/CaminanteHelado.tscn" id="7_e86ce"]
 [ext_resource type="Texture2D" uid="uid://daklo3s4cbdxv" path="res://assets/objects/orbeluz.png" id="7_u8v25"]
 [ext_resource type="Script" path="res://scenes/camara.gd" id="10_ajmfl"]
+[ext_resource type="PackedScene" uid="uid://dio85tcy1g662" path="res://scenes/enviroment/Checkpoint.tscn" id="10_fjwp8"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i6t85"]
 texture = ExtResource("1_whyj1")
@@ -431,6 +432,9 @@ position = Vector2(-164.569, 54.9008)
 
 [node name="Spawn2" type="Marker2D" parent="." groups=["checkpoint"]]
 position = Vector2(4580.49, 54.5826)
+
+[node name="Checkpoint" parent="." instance=ExtResource("10_fjwp8")]
+position = Vector2(2132, 63)
 
 [node name="Camera2D" type="Camera2D" parent="." groups=["camera"]]
 position = Vector2(42, -19)
