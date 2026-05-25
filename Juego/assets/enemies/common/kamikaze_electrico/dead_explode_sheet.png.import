@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dpc4v1unqmii7"
-path="res://.godot/imported/explode.png-bd6287dc8686c00b22a8ee7e5807a2ff.ctex"
+uid="uid://lasq6lbyxh5p"
+path="res://.godot/imported/dead_explode_sheet.png-0a16d0a052d39722619b384912d26c36.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/kamikaze_electrico/explode.png"
-dest_files=["res://.godot/imported/explode.png-bd6287dc8686c00b22a8ee7e5807a2ff.ctex"]
+source_file="res://assets/enemies/common/kamikaze_electrico/dead_explode_sheet.png"
+dest_files=["res://.godot/imported/dead_explode_sheet.png-0a16d0a052d39722619b384912d26c36.ctex"]
 
 [params]
 

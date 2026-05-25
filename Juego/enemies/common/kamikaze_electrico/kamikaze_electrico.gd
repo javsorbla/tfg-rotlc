@@ -15,6 +15,7 @@ var explode_timer: float = 0.0
 var explode_from_death: bool = false
 var dead_timer: float = 0.0
 var spawn_position = Vector2.ZERO
+var previous_state: State = State.SLEEP
 var _combat_reset_state: Dictionary = {}
 
 func _ready() -> void:
@@ -64,6 +65,7 @@ func _despawn_dead_instance() -> void:
 	EnemyResetUtils.despawn(self)
 
 func _enter_state(new_state: State) -> void:
+	previous_state = current_state
 	current_state = new_state
 
 	match new_state:
@@ -79,7 +81,10 @@ func _enter_state(new_state: State) -> void:
 				
 		State.EXPLODE:
 			velocity = Vector2.ZERO
-			$AnimatedSprite2D.play("explode")
+			if previous_state == State.DEAD:
+				$AnimatedSprite2D.play("dead_explode")
+			else:
+				$AnimatedSprite2D.play("explode")
 			if $EnemyHitbox:
 				$EnemyHitbox.monitoring = false
 				$EnemyHitbox.monitorable = false
