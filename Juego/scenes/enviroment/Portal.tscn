@@ -1,0 +1,69 @@
+[gd_scene load_steps=11 format=3 uid="uid://bw2xpibsekhh0"]
+
+[ext_resource type="Texture2D" uid="uid://bjs80i1jkobyt" path="res://assets/environment/portal_sheet.png" id="1_wsu3u"]
+[ext_resource type="Script" path="res://scenes/enviroment/portal.gd" id="2_scrip"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_27by2"]
+atlas = ExtResource("1_wsu3u")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f3epu"]
+atlas = ExtResource("1_wsu3u")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_78c7w"]
+atlas = ExtResource("1_wsu3u")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ajit3"]
+atlas = ExtResource("1_wsu3u")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8wxp7"]
+atlas = ExtResource("1_wsu3u")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gyr88"]
+atlas = ExtResource("1_wsu3u")
+region = Rect2(64, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_s240g"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_27by2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f3epu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_78c7w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ajit3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8wxp7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gyr88")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_b3mjx"]
+size = Vector2(21, 39)
+
+[node name="Portal" type="Area2D"]
+collision_mask = 4
+script = ExtResource("2_scrip")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_s240g")
+animation = &"idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0.5, -1.5)
+shape = SubResource("RectangleShape2D_b3mjx")

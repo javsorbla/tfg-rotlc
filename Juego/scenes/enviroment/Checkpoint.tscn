@@ -53,7 +53,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"activate",
-"speed": 5.0
+"speed": 10.0
 }]
 
 [sub_resource type="Gradient" id="Gradient_checkpoint"]

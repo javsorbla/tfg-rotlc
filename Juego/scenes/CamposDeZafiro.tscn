@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="14_g5mn7"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="15_ct6xk"]
 [ext_resource type="PackedScene" uid="uid://dio85tcy1g662" path="res://scenes/enviroment/Checkpoint.tscn" id="17_qbu25"]
+[ext_resource type="PackedScene" uid="uid://bw2xpibsekhh0" path="res://scenes/enviroment/Portal.tscn" id="18_byghq"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k56g7"]
 texture = ExtResource("1_kj2pu")
@@ -498,9 +499,6 @@ size = Vector2(302, 38)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ctank"]
 size = Vector2(1993.5, 30)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_a5833"]
-size = Vector2(148.008, 61.0466)
-
 [sub_resource type="Environment" id="Environment_iu2ym"]
 background_mode = 3
 tonemap_mode = 1
@@ -798,15 +796,6 @@ position = Vector2(4865, -285)
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("1_5ebei")]
 position = Vector2(5006, -714)
 
-[node name="Final" type="Area2D" parent="."]
-position = Vector2(1085, -427)
-rotation = -0.0193191
-collision_mask = 4
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Final"]
-position = Vector2(12905, -1214.42)
-shape = SubResource("RectangleShape2D_a5833")
-
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("15_ct6xk")
 control_mode = 2
@@ -832,7 +821,8 @@ position = Vector2(6760, -755)
 [node name="Checkpoint2" parent="." instance=ExtResource("17_qbu25")]
 position = Vector2(12693, -1714)
 
-[connection signal="body_entered" from="Final" to="." method="_on_final_body_entered"]
+[node name="Final" parent="." instance=ExtResource("18_byghq")]
+position = Vector2(14014, -1885)
 
 [editable path="Entorno/ZonaViento"]
 [editable path="Entorno/ZonaViento2"]

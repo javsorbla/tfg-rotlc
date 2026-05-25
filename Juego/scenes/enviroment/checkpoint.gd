@@ -10,6 +10,10 @@ func _ready() -> void:
 		if sprite.animation == "" and sprite.sprite_frames.get_animation_names().size() > 0:
 			sprite.animation = sprite.sprite_frames.get_animation_names()[0]
 		sprite.frame = 0
+		if sprite.sprite_frames.has_animation("idle"):
+			sprite.sprite_frames.set_animation_loop("idle", true)
+			sprite.animation = "idle"
+			sprite.play("idle")
 	# ensure the point light is hidden until activation
 	if light2d:
 		light2d.visible = false

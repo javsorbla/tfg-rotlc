@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://daklo3s4cbdxv" path="res://assets/objects/orbeluz.png" id="7_u8v25"]
 [ext_resource type="Script" path="res://scenes/camara.gd" id="10_ajmfl"]
 [ext_resource type="PackedScene" uid="uid://dio85tcy1g662" path="res://scenes/enviroment/Checkpoint.tscn" id="10_fjwp8"]
+[ext_resource type="PackedScene" uid="uid://bw2xpibsekhh0" path="res://scenes/enviroment/Portal.tscn" id="10_w7krm"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i6t85"]
 texture = ExtResource("1_whyj1")
@@ -227,9 +228,6 @@ default_font = ExtResource("3_q2tak")
 
 [sub_resource type="LabelSettings" id="LabelSettings_de41u"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_u2a58"]
-size = Vector2(146, 46)
-
 [node name="Tutorial" type="Node2D"]
 script = ExtResource("1_p6cp1")
 
@@ -420,12 +418,8 @@ position = Vector2(-19, 87)
 [node name="Player" parent="." instance=ExtResource("1_74p10")]
 position = Vector2(-130, 58)
 
-[node name="Final" type="Area2D" parent="."]
-collision_mask = 4
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Final"]
-position = Vector2(4709, 48)
-shape = SubResource("RectangleShape2D_u2a58")
+[node name="Final" parent="." instance=ExtResource("10_w7krm")]
+position = Vector2(4765, 53)
 
 [node name="Spawn1" type="Marker2D" parent="." groups=["checkpoint"]]
 position = Vector2(-164.569, 54.9008)
@@ -440,5 +434,3 @@ position = Vector2(2132, 63)
 position = Vector2(42, -19)
 position_smoothing_enabled = true
 script = ExtResource("10_ajmfl")
-
-[connection signal="body_entered" from="Final" to="." method="_on_final_body_entered"]

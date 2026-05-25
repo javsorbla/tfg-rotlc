@@ -42,6 +42,13 @@ var current_level: int = 0
 var cleared_boss_rooms: Dictionary = {}
 var current_level_path: String = ""
 
+const LEVEL_ORDER := [
+	"res://scenes/Tutorial.tscn",
+	"res://scenes/CamposDeZafiro.tscn",
+	"res://scenes/MontañasDeCeniza.tscn",
+	"res://scenes/CostaAmbar.tscn",
+]
+
 var _finetuning_process_id: int = -1
 var is_finetuning := false
 var _finetune_job_started_msec: int = 0
@@ -751,6 +758,14 @@ func _resolve_headless_env_absolute() -> String:
 	return UMBRA_HEADLESS_ENV_PATH
 
 
+func get_next_level_scene() -> String:
+	# Return the scene path for the next level in LEVEL_ORDER based on current_level
+	var next_index := int(current_level) + 1
+	if next_index >= 0 and next_index < LEVEL_ORDER.size():
+		return LEVEL_ORDER[next_index]
+	return ""
+
+
 func _append_finetune_job_log(payload: Dictionary) -> void:
 	var file := FileAccess.open(UMBRA_FINETUNE_JOBS_LOG_PATH, FileAccess.WRITE_READ)
 	if file == null:
@@ -760,6 +775,22 @@ func _append_finetune_job_log(payload: Dictionary) -> void:
 	payload["timestamp_unix"] = Time.get_unix_time_from_system()
 	file.store_line(JSON.stringify(payload))
 	file.close()
+
+
+func request_level_change(next_scene: String) -> void:
+	if next_scene == "":
+		# try to resolve next scene from level order
+		var resolved := get_next_level_scene()
+		if resolved == "":
+			push_warning("request_level_change called with empty next_scene and no next level available")
+			return
+		next_scene = resolved
+	# mark that we're coming from a transition so respawn logic can adapt
+	coming_from_transition = true
+	# persist current state before changing (small save)
+	save_game("level_change")
+	# change scene
+	get_tree().change_scene(next_scene)
 
 
 func get_umbra_bootstrap_data() -> Dictionary:
