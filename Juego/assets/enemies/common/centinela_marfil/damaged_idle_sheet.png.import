@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bocwrjmwaqk1"
-path="res://.godot/imported/damaged.png-65012017f9fb484e86cf4c3f2d518408.ctex"
+uid="uid://7i4ixe2srh18"
+path="res://.godot/imported/damaged_idle_sheet.png-59afba0b9ec8d8cbb2236b7209ee6a6d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/centinela_marfil/damaged.png"
-dest_files=["res://.godot/imported/damaged.png-65012017f9fb484e86cf4c3f2d518408.ctex"]
+source_file="res://assets/enemies/common/centinela_marfil/damaged_idle_sheet.png"
+dest_files=["res://.godot/imported/damaged_idle_sheet.png-59afba0b9ec8d8cbb2236b7209ee6a6d.ctex"]
 
 [params]
 

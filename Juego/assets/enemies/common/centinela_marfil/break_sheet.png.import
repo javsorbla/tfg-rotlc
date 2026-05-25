@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c0tygq8mw7wt"
-path="res://.godot/imported/fainted.png-82409eb7f952a6217c328087cb95f4c4.ctex"
+uid="uid://btj88ybu8cix1"
+path="res://.godot/imported/break_sheet.png-6120b5dbc83647d9b4e4336918d282e1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/centinela_marfil/fainted.png"
-dest_files=["res://.godot/imported/fainted.png-82409eb7f952a6217c328087cb95f4c4.ctex"]
+source_file="res://assets/enemies/common/centinela_marfil/break_sheet.png"
+dest_files=["res://.godot/imported/break_sheet.png-6120b5dbc83647d9b4e4336918d282e1.ctex"]
 
 [params]
 
