@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dfhh8jwwem6fm"
-path="res://.godot/imported/shield.png-2800553cab7815d5aadd3ec5b19bb9db.ctex"
+uid="uid://by7cmen2m6p2c"
+path="res://.godot/imported/revive_sheet.png-ef494df2b0eae7af8111eeeb669dbaad.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/centinela_marfil/shield.png"
-dest_files=["res://.godot/imported/shield.png-2800553cab7815d5aadd3ec5b19bb9db.ctex"]
+source_file="res://assets/enemies/common/centinela_marfil/revive_sheet.png"
+dest_files=["res://.godot/imported/revive_sheet.png-ef494df2b0eae7af8111eeeb669dbaad.ctex"]
 
 [params]
 

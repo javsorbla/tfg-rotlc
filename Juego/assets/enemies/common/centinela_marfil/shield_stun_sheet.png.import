@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dnqaki6buswut"
-path="res://.godot/imported/stunned.png-8c541932bafd92e2843c4d826755f46a.ctex"
+uid="uid://drcr036jkqx42"
+path="res://.godot/imported/shield_stun_sheet.png-33880e54f6d24c6e9c396a34cc7b2eca.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/centinela_marfil/stunned.png"
-dest_files=["res://.godot/imported/stunned.png-8c541932bafd92e2843c4d826755f46a.ctex"]
+source_file="res://assets/enemies/common/centinela_marfil/shield_stun_sheet.png"
+dest_files=["res://.godot/imported/shield_stun_sheet.png-33880e54f6d24c6e9c396a34cc7b2eca.ctex"]
 
 [params]
 
