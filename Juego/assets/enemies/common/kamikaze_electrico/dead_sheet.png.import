@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bb2bl3hab3l2s"
-path="res://.godot/imported/charged.png-067880a055ede088566b3956fec04543.ctex"
+uid="uid://d3o3f1vpuh0rh"
+path="res://.godot/imported/dead_sheet.png-d5bc3dc87d1d7b99762e23fe3164685d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/kamikaze_electrico/charged.png"
-dest_files=["res://.godot/imported/charged.png-067880a055ede088566b3956fec04543.ctex"]
+source_file="res://assets/enemies/common/kamikaze_electrico/dead_sheet.png"
+dest_files=["res://.godot/imported/dead_sheet.png-d5bc3dc87d1d7b99762e23fe3164685d.ctex"]
 
 [params]
 
