@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://bw2xpibsekhh0"]
+[gd_scene load_steps=11 format=3 uid="uid://xgvqki0gryl3"]
 
 [ext_resource type="Texture2D" uid="uid://bjs80i1jkobyt" path="res://assets/environment/portal_sheet.png" id="1_wsu3u"]
 [ext_resource type="Script" path="res://scenes/enviroment/portal.gd" id="2_scrip"]

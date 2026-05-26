@@ -262,11 +262,50 @@ func collect_prism_core(level_id: int = -1) -> bool:
 	return true
 
 
+func has_boss_crystal(level_id: int = -1, variant: int = 0) -> bool:
+	var resolved: int = level_id if level_id > 0 else current_level
+	var collected_var: Variant = player_progress.get("boss_crystals", {})
+	if typeof(collected_var) != TYPE_DICTIONARY:
+		return false
+	var collected: Dictionary = collected_var as Dictionary
+	var level_dict_var: Variant = collected.get(str(resolved), {})
+	if typeof(level_dict_var) != TYPE_DICTIONARY:
+		return false
+	var level_dict: Dictionary = level_dict_var as Dictionary
+	return bool(level_dict.get(str(variant), false))
+
+
+func collect_boss_crystal(level_id: int = -1, variant: int = 0) -> bool:
+	var resolved: int = level_id if level_id > 0 else current_level
+	if has_boss_crystal(resolved, variant):
+		return false
+	var collected_var: Variant = player_progress.get("boss_crystals", {})
+	var collected: Dictionary
+	if typeof(collected_var) != TYPE_DICTIONARY:
+		collected = {}
+	else:
+		collected = collected_var as Dictionary
+
+	var level_key: String = str(resolved)
+	var level_dict_var: Variant = collected.get(level_key, {})
+	var level_dict: Dictionary
+	if typeof(level_dict_var) != TYPE_DICTIONARY:
+		level_dict = {}
+	else:
+		level_dict = level_dict_var as Dictionary
+
+	level_dict[str(variant)] = true
+	collected[level_key] = level_dict
+	player_progress["boss_crystals"] = collected
+	_save_player_progress()
+	save_game("boss_crystal")
+	return true
+
+
 func _resolve_prism_core_level(level_id: int) -> int:
 	if level_id > 0:
 		return level_id
 	return maxi(1, current_level)
-
 
 func _recompute_player_bonus_from_levels() -> void:
 	var collected_levels: Dictionary = player_progress.get("prism_core_collected_levels", {})

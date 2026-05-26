@@ -8,6 +8,8 @@ var _room_key: String = ""
 var _active_boss: Node
 var _pending_rearm_after_reset: bool = false
 var _camera_zoom_tween: Tween
+var _previous_camera_zoom: Vector2 = Vector2(2.25, 2.25)
+var _has_previous_camera_zoom: bool = false
 
 func _ready():
 	add_to_group("boss_room")
@@ -59,6 +61,9 @@ func _on_trigger_entered(body):
 			# Desactivar seguimiento del jugador
 			camera.boss_room_mode = true
 			camera.boss_room_target = $Centro.global_position
+			# Guardar zoom actual para restaurarlo después
+			_previous_camera_zoom = camera.zoom
+			_has_previous_camera_zoom = true
 			_tween_camera_zoom(camera, Vector2(1.25, 1.25), 2.5)
 		
 		# Activar el boss asociado a esta sala (no el primer boss global de la escena).
@@ -98,7 +103,10 @@ func on_boss_defeated():
 	var camera = get_tree().get_first_node_in_group("camera")
 	if camera:
 		camera.boss_room_mode = false
-		_tween_camera_zoom(camera, Vector2(1.0, 1.0), 0.5)
+		# Restaurar el zoom previo si está disponible, si no usar 2.25 como fallback
+		var target_zoom = _previous_camera_zoom if _has_previous_camera_zoom else Vector2(2.25, 2.25)
+		_tween_camera_zoom(camera, target_zoom, 0.5)
+		_has_previous_camera_zoom = false
 
 	GameState.mark_boss_room_cleared(_room_key)
 
@@ -146,7 +154,10 @@ func _on_level_reset() -> void:
 	if camera:
 		camera.boss_room_mode = false
 		camera.boss_room_target = Vector2.ZERO
-		_tween_camera_zoom(camera, Vector2(1.0, 1.0), 0.25)
+		# Restaurar el zoom previo si existe, o usar 2.25 como fallback
+		var reset_zoom = _previous_camera_zoom if _has_previous_camera_zoom else Vector2(2.25, 2.25)
+		_tween_camera_zoom(camera, reset_zoom, 0.25)
+		_has_previous_camera_zoom = false
 
 	_active_boss = null
 

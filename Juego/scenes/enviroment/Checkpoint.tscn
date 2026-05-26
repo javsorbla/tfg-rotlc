@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://dio85tcy1g662"]
+[gd_scene load_steps=13 format=3 uid="uid://do0au5ur218xe"]
 
 [ext_resource type="Texture2D" uid="uid://bv280rhxrojy0" path="res://assets/environment/checkpoint_sheet.png" id="1_eybee"]
 [ext_resource type="Script" path="res://scenes/enviroment/checkpoint.gd" id="2_checkpoint_script"]

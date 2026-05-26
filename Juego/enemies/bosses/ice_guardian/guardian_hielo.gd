@@ -69,6 +69,34 @@ var room_bottom_limit = 0.0
 @onready var shockwave_scene = preload("res://enemies/bosses/ice_guardian/OndaHielo.tscn")
 @onready var caminante_helado_scene = preload("res://enemies/common/caminante_helado/CaminanteHelado.tscn")
 
+const CRYSTAL_SCENE: PackedScene = preload("res://objects/Cristal.tscn")
+
+func _spawn_final_boss_crystal(variant_idx: int = 0, offset := Vector2(0, -34)) -> void:
+	if CRYSTAL_SCENE == null:
+		return
+	# no spawnear si ya se recogió en este nivel
+	if GameState.has_boss_crystal(GameState.current_level, variant_idx):
+		return
+	# evitar en modo sync/control remoto
+	var sync_node = get_tree().get_first_node_in_group("sync_node")
+	if sync_node != null and int(sync_node.control_mode) == 1:
+		return
+	# evitar duplicados en escena
+	if get_tree().get_nodes_in_group("boss_crystal").size() > 0:
+		return
+
+	var scene_root = get_tree().root.get_child(0)
+	if scene_root == null:
+		return
+
+	var crystal = CRYSTAL_SCENE.instantiate()
+	crystal.global_position = global_position + offset
+	# asignar variante y nivel al cristal
+	crystal.visual_variant = variant_idx
+	crystal.level_id = GameState.current_level
+	crystal.add_to_group("boss_crystal")
+	scene_root.call_deferred("add_child", crystal)
+
 func _ready():
 	player = get_tree().get_first_node_in_group("player")
 	charge_timer = CHARGE_COOLDOWN
@@ -450,4 +478,6 @@ func die():
 	var boss_room = get_tree().get_first_node_in_group("boss_room")
 	if boss_room:
 		boss_room.on_boss_defeated()
+	# Spawn boss crystal before despawn
+	_spawn_final_boss_crystal(0)
 	queue_free()

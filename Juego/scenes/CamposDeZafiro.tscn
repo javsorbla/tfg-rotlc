@@ -16,8 +16,8 @@
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="14_3sfkm"]
 [ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="14_g5mn7"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="15_ct6xk"]
-[ext_resource type="PackedScene" uid="uid://dio85tcy1g662" path="res://scenes/enviroment/Checkpoint.tscn" id="17_qbu25"]
-[ext_resource type="PackedScene" uid="uid://bw2xpibsekhh0" path="res://scenes/enviroment/Portal.tscn" id="18_byghq"]
+[ext_resource type="PackedScene" uid="uid://do0au5ur218xe" path="res://scenes/enviroment/Checkpoint.tscn" id="17_qbu25"]
+[ext_resource type="PackedScene" uid="uid://xgvqki0gryl3" path="res://scenes/enviroment/Portal.tscn" id="18_byghq"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k56g7"]
 texture = ExtResource("1_kj2pu")
@@ -606,6 +606,12 @@ position = Vector2(2949, -172)
 [node name="Checkpoint1" type="Marker2D" parent="Checkpoints" groups=["checkpoint"]]
 position = Vector2(22, -9)
 
+[node name="Checkpoint" parent="Checkpoints" instance=ExtResource("17_qbu25")]
+position = Vector2(6760, -755)
+
+[node name="Checkpoint2" parent="Checkpoints" instance=ExtResource("17_qbu25")]
+position = Vector2(12693, -1714)
+
 [node name="Entorno" type="Node2D" parent="."]
 
 [node name="PlataformaRompible" parent="Entorno" instance=ExtResource("5_u0h4b")]
@@ -776,11 +782,11 @@ position = Vector2(13635, -1838)
 
 [node name="Umbra" parent="." groups=["boss"] instance=ExtResource("14_3sfkm")]
 position = Vector2(7659, -759)
-max_health = 10
 jump_cooldown_seconds = 2.0
 dash_cooldown_seconds = 6.0
-darkness_cast_cooldown = 7.0
 debug_darkness_logs = false
+max_health = 10
+darkness_cast_cooldown = 7.0
 debug_model_indicator = false
 
 [node name="AIController2D" parent="Umbra" index="0"]
@@ -814,12 +820,6 @@ rotation = -0.0193191
 color = Color(0.9, 0.94, 0.98, 1)
 energy = 0.72
 shadow_enabled = true
-
-[node name="Checkpoint" parent="." instance=ExtResource("17_qbu25")]
-position = Vector2(6760, -755)
-
-[node name="Checkpoint2" parent="." instance=ExtResource("17_qbu25")]
-position = Vector2(12693, -1714)
 
 [node name="Final" parent="." instance=ExtResource("18_byghq")]
 position = Vector2(14014, -1885)
