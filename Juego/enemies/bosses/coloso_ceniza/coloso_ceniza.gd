@@ -64,8 +64,10 @@ var punch_hit_done: bool = false
 var punch_damage: int = 2
 
 var spike_timer: float = SPIKE_COOLDOWN
+var is_spike_attacking: bool = false
 var lava_timer: float = LAVA_COOLDOWN
 
+var recover_timer: float = 0.0
 var phase_two: bool = false
 
 @onready var sprite = $AnimatedSprite2D
@@ -207,7 +209,9 @@ func _idle_state(delta):
 		last_target_left = desired_left
 		_update_flip(desired_left)
 
-	if turning:
+	if is_spike_attacking:
+		move_direction = Vector2.ZERO
+	elif turning:
 		move_direction.x = 0
 	else:
 		move_direction.x = sign(dist_x)
@@ -225,8 +229,11 @@ func _idle_state(delta):
 	if lava_timer <= 0.0:
 		_start_lava_attack()
 	
+	if recover_timer > 0.0:
+		recover_timer -= delta
+	
 	var dist = global_position.distance_to(player.global_position)
-	if dist <= PUNCH_RANGE and punch_timer <= 0.0:
+	if dist <= PUNCH_RANGE and punch_timer <= 0.0 and recover_timer <= 0.0:
 		_enter_punch()
 
 
@@ -261,6 +268,9 @@ func _recover_from_hurt():
 	
 	_restore_boss_collisions()
 
+	var wave_duration = sprite.sprite_frames.get_frame_count("wave") / sprite.sprite_frames.get_animation_speed("wave")
+	recover_timer = wave_duration
+
 	if phase_two:
 		sprite.play("rage") # pendiente de implementar
 	else:
@@ -279,7 +289,7 @@ func _recover_from_hurt():
 	
 	await get_tree().create_timer(sprite.sprite_frames.get_frame_count("wave") / sprite.sprite_frames.get_animation_speed("wave")).timeout
 	if current_state == State.IDLE:
-		sprite.play("idle")
+		sprite.play("walk")
 
 func _restore_boss_collisions():
 	body_hitbox.monitoring = true
@@ -301,19 +311,18 @@ func _enter_punch():
 
 	body_hitbox.set_deferred("monitoring", false)
 	body_hitbox.set_deferred("monitorable", false)
+	
+	sprite.frame_changed.connect(_on_punch_frame_changed)
 
 
 func _punch_state(delta):
 	punch_state_timer -= delta
 
-	if not punch_hit_done and punch_state_timer <= PUNCH_DURATION - PUNCH_WINDUP:
-		punch_hit_done = true
-		_do_punch()
 
 	if punch_state_timer <= 0.0:
 		punch_timer = PUNCH_COOLDOWN
 		current_state = State.IDLE
-		sprite.play("idle")
+		sprite.play("walk")
 		body_hitbox.set_deferred("monitoring", true)
 		body_hitbox.set_deferred("monitorable", true)
 
@@ -335,6 +344,15 @@ func _do_punch():
 	var health_node = player.get_node_or_null("Health")
 	if health_node and health_node.has_method("take_damage"):
 		health_node.take_damage(2)
+
+
+func _on_punch_frame_changed():
+	if sprite.animation != "punch":
+		return
+	if sprite.frame == 5 and not punch_hit_done:
+		punch_hit_done = true
+		_do_punch()
+		sprite.frame_changed.disconnect(_on_punch_frame_changed)
 
 
 func _spawn_shockwave():
@@ -363,6 +381,7 @@ func _start_spike_attack():
 	if dist > 150.0:
 		return
 	
+	is_spike_attacking = true 
 	sprite.play("wave")
 	var push_x = sign(p.global_position.x - global_position.x)
 	p.velocity.x = push_x * SPIKE_SHOCKWAVE_FORCE
@@ -370,10 +389,12 @@ func _start_spike_attack():
 	await get_tree().create_timer(0.8).timeout
 	
 	if current_state == State.DEAD:
+		is_spike_attacking = false 
 		return
 	
 	p = get_tree().get_first_node_in_group("player")
 	if not p:
+		is_spike_attacking = false
 		return
 		
 	var direction = sign(p.global_position.x - global_position.x)
@@ -386,14 +407,17 @@ func _start_spike_attack():
 		_spawn_spike(spawn_x)
 		await get_tree().create_timer(0.04).timeout
 		if current_state == State.DEAD:
+			is_spike_attacking = false
 			return
 		if direction > 0 and spawn_x >= room_right_limit :
 			break
 		if direction < 0 and spawn_x <= room_left_limit:
 			break
 	
+	is_spike_attacking = false
+	
 	if current_state == State.IDLE:
-		sprite.play("idle")
+		sprite.play("walk")
 		
 
 func _spawn_spike(spawn_x: float):
@@ -471,7 +495,7 @@ func _update_flip(should_face_left: bool):
 
 func activate():
 	_reset_for_encounter(true)
-	sprite.play("idle")
+	sprite.play("walk")
 
 
 func _on_level_reset() -> void:
@@ -498,6 +522,8 @@ func _reset_for_encounter(make_active: bool) -> void:
 	punch_state_timer = 0.0
 	punch_hit_done = false
 	spike_timer = SPIKE_COOLDOWN
+	is_spike_attacking = false
+	recover_timer = 0.0
 
 	body_hitbox.set_deferred("monitoring", true)
 	body_hitbox.set_deferred("monitorable", true)
@@ -518,7 +544,7 @@ func _reset_for_encounter(make_active: bool) -> void:
 
 	is_active = make_active
 	
-	sprite.play("idle")
+	sprite.play("walk")
 	is_active = make_active
 
 
