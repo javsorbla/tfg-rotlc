@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cxvx7vxns2u58"
-path="res://.godot/imported/stunned.png-1bc2da93d914a002f092927ad35c7445.ctex"
+uid="uid://s1l1hpxi52de"
+path="res://.godot/imported/attack_sheet.png-c87588af37da5e6a19756573e2e890b2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/inquisidor_tenebroso/stunned.png"
-dest_files=["res://.godot/imported/stunned.png-1bc2da93d914a002f092927ad35c7445.ctex"]
+source_file="res://assets/enemies/common/inquisidor_tenebroso/attack_sheet.png"
+dest_files=["res://.godot/imported/attack_sheet.png-c87588af37da5e6a19756573e2e890b2.ctex"]
 
 [params]
 

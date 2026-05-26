@@ -8,7 +8,7 @@ const IDLE_DISTANCE: float = 250.0
 const LOSE_DISTANCE: float = 275.0
 const GRAVITY: float = 700.0
 
-const TELEPORT_DISTANCE: float = 70.0      # Distancia mínima con el jugador
+const TELEPORT_DISTANCE: float = 120.0      # Distancia mínima con el jugador
 const TELEPORT_MIN_DIST: float = 200.0      # Distancia mínima tras teletransporte
 const TELEPORT_MAX_DIST: float = 250.0      # Distancia máxima tras teletransporte
 const TELEPORT_ATTEMPTS: int = 20           # Intentos para encontrar posición válida
@@ -24,6 +24,11 @@ var player: Node2D = null
 var stun_timer: float = 0.0
 var shoot_timer: float = 0.0
 var death_timer: float = -1.0
+
+var teleporting: bool = false
+var teleport_target: Vector2 = Vector2.ZERO
+var attack_fired: bool = false
+
 var spawn_position = Vector2.ZERO
 var _combat_reset_state: Dictionary = {}
 
@@ -123,6 +128,9 @@ func _state_idle() -> void:
 
 
 func _state_attack() -> void:
+	if teleporting:
+		return
+		
 	velocity.x = 0
 	
 	if not player:
@@ -149,11 +157,28 @@ func _state_attack() -> void:
 
 
 func _shoot() -> void:
-	var attack = attack_scene.instantiate()
-	attack.source_enemy = self
-	get_tree().current_scene.add_child(attack)
-	attack.global_position = global_position
-	attack.direction = global_position.direction_to(player.global_position)
+	attack_fired = false
+	$AnimatedSprite2D.play("attack")
+	if not $AnimatedSprite2D.frame_changed.is_connected(_on_attack_frame_changed):
+		$AnimatedSprite2D.frame_changed.connect(_on_attack_frame_changed)
+	$AnimatedSprite2D.animation_finished.connect(_on_attack_finished, CONNECT_ONE_SHOT)
+
+
+func _on_attack_frame_changed() -> void:
+	if $AnimatedSprite2D.frame == 4 and not attack_fired:
+		attack_fired = true
+		if not player:
+			return
+		var attack = attack_scene.instantiate()
+		attack.source_enemy = self
+		get_tree().current_scene.add_child(attack)
+		attack.global_position = global_position
+		attack.direction = global_position.direction_to(player.global_position)
+
+
+func _on_attack_finished() -> void:
+	$AnimatedSprite2D.frame_changed.disconnect(_on_attack_frame_changed)
+	$AnimatedSprite2D.play("idle")
 
 
 func _should_teleport() -> bool:
@@ -231,10 +256,23 @@ func _teleport_away() -> void:
 		if landing_pos.distance_to(player.global_position) < TELEPORT_MIN_DIST:
 			continue
 
-		global_position = landing_pos
+		teleport_target = landing_pos
 		velocity = Vector2.ZERO
+		teleporting = true
+		$AnimatedSprite2D.speed_scale = 1.5
+		$AnimatedSprite2D.play("teleport")
+		$AnimatedSprite2D.animation_finished.connect(_on_teleport_disappear, CONNECT_ONE_SHOT)
 		return
 
+func _on_teleport_disappear() -> void:
+	global_position = teleport_target
+	$AnimatedSprite2D.play("teleport")
+	$AnimatedSprite2D.animation_finished.connect(_on_teleport_finished, CONNECT_ONE_SHOT)
+
+func _on_teleport_finished() -> void:
+	teleporting = false
+	$AnimatedSprite2D.speed_scale = 1.0
+	$AnimatedSprite2D.play("idle")
 
 func _state_stunned(delta):
 	stun_timer -= delta

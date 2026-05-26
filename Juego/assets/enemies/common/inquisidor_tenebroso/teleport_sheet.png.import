@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqrde48165s46"
-path="res://.godot/imported/dead.png-c4aade5cbffbb96e6b5ad6b165055609.ctex"
+uid="uid://7u8q1p32en8k"
+path="res://.godot/imported/teleport_sheet.png-fd177ba9c256c04edbc6b74f54c12fe0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/inquisidor_tenebroso/dead.png"
-dest_files=["res://.godot/imported/dead.png-c4aade5cbffbb96e6b5ad6b165055609.ctex"]
+source_file="res://assets/enemies/common/inquisidor_tenebroso/teleport_sheet.png"
+dest_files=["res://.godot/imported/teleport_sheet.png-fd177ba9c256c04edbc6b74f54c12fe0.ctex"]
 
 [params]
 
