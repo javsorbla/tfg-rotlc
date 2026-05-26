@@ -8,7 +8,6 @@ signal collected(level_id: int, variant: int, collector: Node)
 @export var is_persistent: bool = true
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
 
-# Follow behaviour: when the player is within `follow_start_distance` the crystal moves toward them
 @export var follow_player: bool = true
 @export var follow_speed: float = 120.0
 @export var follow_start_distance: float = 300.0
@@ -23,7 +22,7 @@ func _ready() -> void:
 	_initial_collision_layer = collision_layer
 	_initial_collision_mask = collision_mask
 
-	# Seleccionar animación según variante: 0->cyan, 1->red, 2->yellow
+	# Seleccionar animación según variante
 	if anim != null:
 		var names: Array[String] = ["cyan", "red", "yellow"]
 		var idx: int = int(clamp(visual_variant, 0, names.size() - 1))
@@ -85,15 +84,13 @@ func _on_body_entered(body: Node2D) -> void:
 			queue_free()
 			return
 		GameState.collect_boss_crystal(resolved_level, visual_variant)
-		# No aplicar bonus de vida aquí: los cristales de jefe SOLO desbloquean poderes
 
-		# Desbloquear el poder correspondiente al cristal (cyan/red/yellow)
+		# Desbloquear el poder correspondiente al cristal
 		var color_names: Array[String] = ["cyan", "red", "yellow"]
 		var color_idx: int = int(clamp(visual_variant, 0, color_names.size() - 1))
 		var color_name: String = color_names[color_idx]
 		var color_manager = player_node.get_node_or_null("ColorManager")
 		if color_manager != null and color_manager.has_method("unlock_power"):
-			# Unlock and immediately activate the power so shader updates before animation
 			color_manager.unlock_power(color_name)
 			if color_manager.has_method("change_state"):
 				match color_name:
@@ -109,7 +106,6 @@ func _on_body_entered(body: Node2D) -> void:
 		else:
 			if GameState.has_method("unlock_power"):
 				GameState.unlock_power(color_name)
-				# If player has a ColorManager node, refresh and activate the unlocked power
 				var cm2 = player_node.get_node_or_null("ColorManager")
 				if cm2 != null and cm2.has_method("apply_unlocked_powers"):
 					cm2.apply_unlocked_powers(GameState.get_unlocked_powers())
@@ -125,7 +121,6 @@ func _on_body_entered(body: Node2D) -> void:
 								if cm2.yellow_state != null:
 									cm2.change_state(cm2.yellow_state)
 
-	# Trigger player feedback if possible
 	if player_node.has_method("play_obtain_animation"):
 		player_node.call_deferred("play_obtain_animation")
 
