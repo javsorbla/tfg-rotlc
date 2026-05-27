@@ -7,6 +7,15 @@ signal collected(level_id: int, variant: int, collector: Node)
 @export var level_id: int = -1
 @export var is_persistent: bool = true
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
+@onready var glow: PointLight2D = get_node_or_null("PointLight2D")
+
+# Glow parameters
+@export var glow_energy: float = 0.75
+@export var glow_pulse_enabled: bool = true
+@export var glow_pulse_min: float = 0.45
+@export var glow_pulse_max: float = 1.0
+@export var glow_pulse_speed: float = 1.2
+var _glow_pulse_dir: int = 1
 
 @export var follow_player: bool = true
 @export var follow_speed: float = 120.0
@@ -40,6 +49,11 @@ func _ready() -> void:
 		add_to_group("boss_crystal")
 	body_entered.connect(_on_body_entered)
 
+	# Inicializar glow
+	if glow != null:
+		glow.energy = glow_energy
+		_match_glow_color()
+
 func _physics_process(delta: float) -> void:
 	if not follow_player:
 		return
@@ -65,6 +79,25 @@ func _physics_process(delta: float) -> void:
 
 	var dir: Vector2 = (_player_ref.global_position - global_position).normalized()
 	global_position += dir * follow_speed * delta
+
+	# Handle glow pulsing
+	if glow != null and glow_pulse_enabled:
+		# simple ping-pong pulse
+		glow.energy += _glow_pulse_dir * glow_pulse_speed * delta
+		if glow.energy >= glow_pulse_max:
+			glow.energy = glow_pulse_max
+			_glow_pulse_dir = -1
+		elif glow.energy <= glow_pulse_min:
+			glow.energy = glow_pulse_min
+			_glow_pulse_dir = 1
+
+
+func _match_glow_color() -> void:
+	if glow == null:
+		return
+	var colors: Array[Color] = [Color(0.558801, 0.845454, 0.985056), Color(1.0, 0.2, 0.2), Color(1.0, 0.9, 0.0)]
+	var idx: int = int(clamp(visual_variant, 0, colors.size() - 1))
+	glow.color = colors[idx]
 
 func _on_body_entered(body: Node2D) -> void:
 	if body == null:

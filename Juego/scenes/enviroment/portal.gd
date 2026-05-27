@@ -23,28 +23,33 @@ func _ready() -> void:
 func _on_body_entered(body: Node) -> void:
 	if is_transitioning:
 		return
-	if not body or not body.is_in_group("player"):
+
+	var player_body: Node = null
+	var candidate := body
+	while candidate != null:
+		if candidate.is_in_group("player"):
+			player_body = candidate
+			break
+		candidate = candidate.get_parent()
+
+	if player_body == null:
 		return
+
 	is_transitioning = true
-	_entered_body = body
+	_entered_body = player_body
 	if sfx:
 		sfx.play()
-	# Emit activation immediately so parent handles transition (visual-only animation)
-	emit_signal("activated", body)
+	emit_signal("activated", _entered_body)
 	if anim and anim.sprite_frames and anim.sprite_frames.has_animation("enter"):
 		anim.sprite_frames.set_animation_loop("enter", false)
 		anim.play("enter")
-	# Auto-connect or call parent handler for compatibility with scenes that expect Final.body_entered -> _on_final_body_entered
 	var p = get_parent()
 	if p and p.has_method("_on_final_body_entered"):
 		var handler := Callable(p, "_on_final_body_entered")
-		# connect activated -> parent's handler if not already connected
 		if not is_connected("activated", handler):
 			connect("activated", handler)
-		# If the scene connected Final.body_entered -> parent already, skip calling directly
 		if auto_call_parent and not is_connected("body_entered", handler):
-			# Call deferred like MontañasDeCeniza does to preserve transition timing
-			p.call_deferred("_on_final_body_entered", body)
+			p.call_deferred("_on_final_body_entered", _entered_body)
 
 	# If configured to auto change scene and next_scene is set, request it (fallback)
 	if auto_change_scene and next_scene != "":

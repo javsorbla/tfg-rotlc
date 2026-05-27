@@ -8,8 +8,9 @@ var power_overlays = {}
 var heart_full: Texture2D = preload("res://assets/ui/heart.png")
 var heart_empty: Texture2D = preload("res://assets/ui/heart_empty.png")
 var duration_bars = {}
-var save_indicator: TextureRect
+var save_indicator: AnimatedSprite2D
 var _save_tween: Tween
+var _save_shader: Shader = preload("res://ui/shaders/save_icon_replace.gdshader")
 
 const MAX_DURATIONS = {
 	"cyan": 6.0,
@@ -27,7 +28,7 @@ const MAX_COOLDOWNS = {
 func _ready():
 	heart_container = $Control/Hearts
 	heart_template = $Control/Hearts/Heart1
-	save_indicator = $Control/SaveIndicator
+	save_indicator = $SaveIndicator
 	hearts = [heart_template]
 	for i in range(2, 4):
 		var existing_heart := heart_container.get_node_or_null("Heart%d" % i)
@@ -60,11 +61,18 @@ func _ready():
 			game_state.save_started.connect(_on_save_started)
 		if game_state.has_signal("save_finished"):
 			game_state.save_finished.connect(_on_save_finished)
+
+	if save_indicator != null and _save_shader != null:
+		var mat := ShaderMaterial.new()
+		mat.shader = _save_shader
+		save_indicator.material = mat
+		_update_save_icon_color()
 	hide()
 
 
 func show_hud():
 	show()
+	_update_save_icon_color()
 
 
 func hide_hud():
@@ -176,6 +184,11 @@ func _set_saving(active: bool) -> void:
 		save_indicator.visible = true
 		save_indicator.modulate.a = 0.9
 		save_indicator.scale = Vector2.ONE
+		if save_indicator.has_method("set_animation"):
+			save_indicator.animation = "save"
+		else:
+			save_indicator.animation = "save"
+		save_indicator.play()
 		_save_tween = create_tween().set_loops()
 		_save_tween.tween_property(save_indicator, "scale", Vector2(1.15, 1.15), 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_save_tween.tween_property(save_indicator, "scale", Vector2(1.0, 1.0), 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -195,6 +208,7 @@ func _show_save_indicator(duration: float) -> void:
 	if duration > 0.0:
 		_save_tween.tween_interval(duration)
 	_save_tween.tween_property(save_indicator, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	save_indicator.play()
 	_save_tween.finished.connect(_hide_save_indicator, CONNECT_ONE_SHOT)
 
 
@@ -205,6 +219,63 @@ func _hide_save_indicator() -> void:
 	save_indicator.visible = false
 	save_indicator.modulate.a = 0.0
 	save_indicator.scale = Vector2.ONE
+
+
+func _update_save_icon_color() -> void:
+	var level_name := ""
+	if has_node("/root/GameState"):
+		var gs := get_node("/root/GameState")
+		if gs.has_method("get_current_level"):
+			level_name = str(gs.get_current_level())
+		elif typeof(gs) == TYPE_OBJECT and gs.get("current_level") != null:
+			var prop_val = gs.get("current_level")
+			if prop_val != null:
+				level_name = str(prop_val)
+		else:
+			level_name = str(gs)
+	level_name = level_name.to_lower()
+
+	var target := Color(1, 1, 1, 1)
+	if level_name.is_valid_int():
+		var idx = int(level_name)
+		match idx:
+			0:
+				target = Color(0.6, 0.6, 0.6, 1.0) # tutorial
+			1:
+				target = Color(0.36, 0.72, 0.97, 1.0) # campos zafiro
+			2:
+				target = Color(1.0, 0.2, 0.2, 1.0) # montañas de ceniza
+			3:
+				target = Color(1.0, 0.9, 0.0, 1.0) # costa ambar
+			_:
+				target = Color(0.6, 0.2, 0.8, 1.0) # nivel final
+	else:
+		if level_name.find("tutorial") >= 0:
+			target = Color(0.6, 0.6, 0.6, 1.0)
+		elif level_name.find("zafiro") >= 0:
+			target = Color(0.36, 0.72, 0.97, 1.0)
+		elif level_name.find("mont") >= 0 or level_name.find("ceniza") >= 0:
+			target = Color(1.0, 0.2, 0.2, 1.0)
+		elif level_name.find("costa") >= 0 or level_name.find("ambar") >= 0:
+			target = Color(1.0, 0.9, 0.0, 1.0)
+		elif level_name.find("ultimo") >= 0 or level_name.find("final") >= 0 or level_name.find("boss") >= 0:
+			target = Color(0.6, 0.2, 0.8, 1.0)
+
+	if save_indicator != null:
+		if save_indicator.material != null and save_indicator.material is ShaderMaterial:
+			save_indicator.material.set_shader_parameter("target_color", target)
+			save_indicator.material.set_shader_parameter("force_tint", 1.0)
+			save_indicator.modulate = target
+		else:
+			var mat = ShaderMaterial.new()
+			mat.shader = _save_shader
+			save_indicator.material = mat
+			save_indicator.material.set_shader_parameter("target_color", target)
+			save_indicator.material.set_shader_parameter("force_tint", 1.0)
+			save_indicator.modulate = target
+	else:
+		print("HUD: save_indicator is null, cannot set shader")
+
 
 
 func _stop_save_tween() -> void:

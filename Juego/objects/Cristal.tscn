@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://boopduuep25rb"]
+[gd_scene load_steps=9 format=3 uid="uid://boopduuep25rb"]
 
 [ext_resource type="Script" path="res://objects/cristal.gd" id="1_t2fin"]
 [ext_resource type="Texture2D" uid="uid://cy5kokuo5k5xv" path="res://assets/objects/cristal_celeste.png" id="2_d8lcw"]
@@ -36,6 +36,15 @@ animations = [{
 radius = 11.0
 height = 26.0
 
+[sub_resource type="Gradient" id="Gradient_crystal_glow"]
+offsets = PackedFloat32Array(0, 0.6)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_crystal_glow"]
+gradient = SubResource("Gradient_crystal_glow")
+fill = 1
+fill_from = Vector2(0.52, 0.52)
+
 [node name="Cristal" type="Area2D"]
 collision_mask = 4
 script = ExtResource("1_t2fin")
@@ -47,3 +56,8 @@ animation = &"cyan"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_mk7n6")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.558801, 0.845454, 0.985056, 1)
+energy = 0.75
+texture = SubResource("GradientTexture2D_crystal_glow")

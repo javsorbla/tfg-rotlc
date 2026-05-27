@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bce6576tqo4wu"]
+[gd_scene load_steps=17 format=3 uid="uid://bce6576tqo4wu"]
 
 [ext_resource type="Script" path="res://ui/hud.gd" id="1_7m301"]
 [ext_resource type="Texture2D" uid="uid://df656uykohch0" path="res://assets/ui/heart.png" id="2_uwfcu"]
@@ -9,7 +9,50 @@
 [ext_resource type="Texture2D" uid="uid://dn5s1g0fvihr6" path="res://assets/ui/cristal_amarillo.png" id="6_h1fjt"]
 [ext_resource type="Texture2D" uid="uid://3txec6ey08od" path="res://assets/ui/cristal_rojo_apagado.png" id="7_hrp81"]
 [ext_resource type="Texture2D" uid="uid://cix7pydwicyni" path="res://assets/ui/cristal_amarillo_apagado.png" id="9_0082l"]
-[ext_resource type="Texture2D" uid="uid://t783xna2ghd3" path="res://assets/ui/arrow.png" id="10_save"]
+[ext_resource type="Texture2D" uid="uid://c5vd4f8xdq3b3" path="res://assets/ui/icono_guardado_sheet.png" id="10_tdq5p"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0l2rf"]
+atlas = ExtResource("10_tdq5p")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nsr4n"]
+atlas = ExtResource("10_tdq5p")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t0kmx"]
+atlas = ExtResource("10_tdq5p")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aq06c"]
+atlas = ExtResource("10_tdq5p")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_urtwf"]
+atlas = ExtResource("10_tdq5p")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_dv5ir"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0l2rf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nsr4n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t0kmx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aq06c")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_urtwf")
+}],
+"loop": true,
+"name": &"save",
+"speed": 4.0
+}]
 
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource("1_7m301")
@@ -26,21 +69,6 @@ grow_vertical = 2
 layout_mode = 0
 offset_right = 200.0
 offset_bottom = 64.0
-
-[node name="SaveIndicator" type="TextureRect" parent="Control"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -54.0
-offset_top = 12.0
-offset_right = -12.0
-offset_bottom = 54.0
-grow_horizontal = 0
-texture = ExtResource("10_save")
-expand_mode = 1
-stretch_mode = 5
-modulate = Color(1, 1, 1, 0)
-visible = false
 
 [node name="Heart1" type="TextureRect" parent="Control/Hearts"]
 custom_minimum_size = Vector2(16, 16)
@@ -245,3 +273,10 @@ max_value = 1.0
 step = 0.01
 texture_under = ExtResource("9_0082l")
 texture_progress = ExtResource("6_h1fjt")
+
+[node name="SaveIndicator" type="AnimatedSprite2D" parent="."]
+visible = false
+position = Vector2(1249, 32)
+sprite_frames = SubResource("SpriteFrames_dv5ir")
+animation = &"save"
+frame_progress = 0.723545
