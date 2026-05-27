@@ -109,11 +109,11 @@ func _update_animations() -> void:
 		sprite.play("idle")
 		sprite.flip_h = (facing_dir > 0)
 	elif current_state in [State.PATROL, State.CHASE]:
-		sprite.flip_h = false 
-		if facing_dir < 0:
-			sprite.play("walk_left")
+		sprite.flip_h = (facing_dir > 0)
+		if abs(velocity.x) > 0.1:
+			sprite.play("walk")
 		else:
-			sprite.play("walk_right")
+			sprite.play("idle")
 
 
 # --- MANEJO DE ESTADOS ---

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://clgw1i4r5i7wx"
-path="res://.godot/imported/north.png-f79ba56cc994c9866ffb70e13184ff60.ctex"
+uid="uid://ddomoywx6fmyt"
+path="res://.godot/imported/walk_sheet.png-4dcf08ea4d0a53cc192255cdefe701de.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/caminante_helado/north.png"
-dest_files=["res://.godot/imported/north.png-f79ba56cc994c9866ffb70e13184ff60.ctex"]
+source_file="res://assets/enemies/common/caminante_helado/walk_sheet.png"
+dest_files=["res://.godot/imported/walk_sheet.png-4dcf08ea4d0a53cc192255cdefe701de.ctex"]
 
 [params]
 
