@@ -170,6 +170,18 @@ func _physics_process(delta):
 	_handle_state(delta)
 
 
+func _anim(name: String) -> String:
+	if phase_two:
+		match name:
+			"idle": return "rage_idle"
+			"hurt": return "rage_hurt"
+			"hurt_idle": return "rage_hurt_idle"
+			"punch": return "rage_punch"
+			"walk": return "rage_walk"
+			"roar": return "rage_roar"
+	return name
+	
+
 func _check_phase():
 	if not phase_two and current_health <= 15:
 		_enter_phase_two()
@@ -182,10 +194,19 @@ func _enter_phase_two():
 	_restore_boss_collisions()
 	
 	if current_state == State.HURT:
+		sprite.play(_anim("hurt_idle"))
 		_recover_from_hurt()
+		return
 	
-	sprite.play("rage") # pendiente de implementar
+	sprite.play(_anim("roar"))
+	
+	if not sprite.animation_finished.is_connected(_on_phase_two_roar_finished):
+		sprite.animation_finished.connect(_on_phase_two_roar_finished)
 
+func _on_phase_two_roar_finished():
+	sprite.animation_finished.disconnect(_on_phase_two_roar_finished)
+	if current_state != State.DEAD:
+		sprite.play(_anim("walk"))
 
 func _handle_state(delta):
 	match current_state:
@@ -209,7 +230,7 @@ func _idle_state(delta):
 		last_target_left = desired_left
 		_update_flip(desired_left)
 
-	if is_spike_attacking:
+	if is_spike_attacking or recover_timer > 0.0:
 		move_direction = Vector2.ZERO
 	elif turning:
 		move_direction.x = 0
@@ -235,6 +256,13 @@ func _idle_state(delta):
 	var dist = global_position.distance_to(player.global_position)
 	if dist <= PUNCH_RANGE and punch_timer <= 0.0 and recover_timer <= 0.0:
 		_enter_punch()
+	
+	if move_direction.x == 0 and not is_spike_attacking and recover_timer <= 0.0:
+		if sprite.animation == _anim("walk"):
+			sprite.play(_anim("idle"))
+	elif move_direction.x != 0:
+		if sprite.animation == _anim("idle"):
+			sprite.play(_anim("walk"))
 
 
 func _enter_hurt():
@@ -246,7 +274,10 @@ func _enter_hurt():
 	sprite.stop()
 	sprite.animation = "hurt"
 	sprite.frame = 0
-	sprite.play("hurt")
+	sprite.play(_anim("hurt"))
+	
+	if not sprite.animation_finished.is_connected(_on_hurt_animation_finished):
+		sprite.animation_finished.connect(_on_hurt_animation_finished)
 
 	body_hitbox.set_deferred("monitoring", false)
 	body_hitbox.set_deferred("monitorable", false)
@@ -260,21 +291,25 @@ func _enter_hurt():
 		core_hurtbox.set_deferred("monitoring", true)
 		core_hurtbox.set_deferred("monitorable", true)
 
+func _on_hurt_animation_finished():
+	sprite.animation_finished.disconnect(_on_hurt_animation_finished)
+	if current_state == State.HURT:
+		sprite.play(_anim("hurt_idle"))
 
 func _recover_from_hurt():
 	current_state = State.IDLE
 	is_vulnerable = false
 	hurt_timer = 0.0
 	
+	if sprite.animation_finished.is_connected(_on_hurt_animation_finished):
+		sprite.animation_finished.disconnect(_on_hurt_animation_finished)
+	
 	_restore_boss_collisions()
 
-	var wave_duration = sprite.sprite_frames.get_frame_count("wave") / sprite.sprite_frames.get_animation_speed("wave")
-	recover_timer = wave_duration
+	var roar_duration = sprite.sprite_frames.get_frame_count("roar") / sprite.sprite_frames.get_animation_speed("roar")
+	recover_timer = roar_duration
 
-	if phase_two:
-		sprite.play("rage") # pendiente de implementar
-	else:
-		sprite.play("wave")
+	sprite.play(_anim("roar"))
 
 	body_hitbox.set_deferred("monitoring", true)
 	body_hitbox.set_deferred("monitorable", true)
@@ -287,9 +322,9 @@ func _recover_from_hurt():
 	leg_health = LEG_MAX_HEALTH
 	_spawn_shockwave()
 	
-	await get_tree().create_timer(sprite.sprite_frames.get_frame_count("wave") / sprite.sprite_frames.get_animation_speed("wave")).timeout
+	await get_tree().create_timer(roar_duration).timeout
 	if current_state == State.IDLE:
-		sprite.play("walk")
+		sprite.play(_anim("walk"))
 
 func _restore_boss_collisions():
 	body_hitbox.monitoring = true
@@ -307,7 +342,7 @@ func _enter_punch():
 	punch_state_timer = PUNCH_DURATION
 	punch_hit_done = false
 	move_direction = Vector2.ZERO
-	sprite.play("punch")
+	sprite.play(_anim("punch"))
 
 	body_hitbox.set_deferred("monitoring", false)
 	body_hitbox.set_deferred("monitorable", false)
@@ -322,7 +357,7 @@ func _punch_state(delta):
 	if punch_state_timer <= 0.0:
 		punch_timer = PUNCH_COOLDOWN
 		current_state = State.IDLE
-		sprite.play("walk")
+		sprite.play(_anim("walk"))
 		body_hitbox.set_deferred("monitoring", true)
 		body_hitbox.set_deferred("monitorable", true)
 
@@ -382,7 +417,7 @@ func _start_spike_attack():
 		return
 	
 	is_spike_attacking = true 
-	sprite.play("wave")
+	sprite.play(_anim("roar"))
 	var push_x = sign(p.global_position.x - global_position.x)
 	p.velocity.x = push_x * SPIKE_SHOCKWAVE_FORCE
 	
@@ -417,7 +452,7 @@ func _start_spike_attack():
 	is_spike_attacking = false
 	
 	if current_state == State.IDLE:
-		sprite.play("walk")
+		sprite.play(_anim("walk"))
 		
 
 func _spawn_spike(spawn_x: float):
@@ -495,7 +530,7 @@ func _update_flip(should_face_left: bool):
 
 func activate():
 	_reset_for_encounter(true)
-	sprite.play("walk")
+	sprite.play(_anim("walk"))
 
 
 func _on_level_reset() -> void:
@@ -544,7 +579,7 @@ func _reset_for_encounter(make_active: bool) -> void:
 
 	is_active = make_active
 	
-	sprite.play("walk")
+	sprite.play(_anim("walk"))
 	is_active = make_active
 
 
@@ -617,6 +652,16 @@ func _on_attack_hitbox_area_entered(area: Area2D):
 
 func die():
 	current_state = State.DEAD
+	is_active = false
+	
+	body_hitbox.set_deferred("monitoring", false)
+	body_hitbox.set_deferred("monitorable", false)
+	normal_hurtbox.set_deferred("monitoring", false)
+	normal_hurtbox.set_deferred("monitorable", false)
+	core_hurtbox.set_deferred("monitoring", false)
+	core_hurtbox.set_deferred("monitorable", false)
+	
+	sprite.play("dead")
 	
 	var closest_boss_room = null
 	var closest_distance = INF
@@ -631,4 +676,5 @@ func die():
 	if closest_boss_room:
 		closest_boss_room.on_boss_defeated()
 	
+	await sprite.animation_finished
 	queue_free()

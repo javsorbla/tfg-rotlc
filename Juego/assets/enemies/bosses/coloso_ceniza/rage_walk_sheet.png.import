@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c5p40odrlmh0l"
-path="res://.godot/imported/base_lava.png-2ad6dd925e3fabd90e3e83d49a53ae2b.ctex"
+uid="uid://rj4ipp4dgswo"
+path="res://.godot/imported/rage_walk_sheet.png-59eac7a0d3939698d19b640ce64ce075.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/coloso_ceniza/base_lava.png"
-dest_files=["res://.godot/imported/base_lava.png-2ad6dd925e3fabd90e3e83d49a53ae2b.ctex"]
+source_file="res://assets/enemies/bosses/coloso_ceniza/rage_walk_sheet.png"
+dest_files=["res://.godot/imported/rage_walk_sheet.png-59eac7a0d3939698d19b640ce64ce075.ctex"]
 
 [params]
 

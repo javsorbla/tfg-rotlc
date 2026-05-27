@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://xks3jx3sfl8r"
-path="res://.godot/imported/grito.png-6abc60b1c587c3cf41ac97671936c78a.ctex"
+uid="uid://dagubdwqhrsa"
+path="res://.godot/imported/idle_sheet.png-4caf03c5241b24bb839c81175aa1d3ff.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/coloso_ceniza/grito.png"
-dest_files=["res://.godot/imported/grito.png-6abc60b1c587c3cf41ac97671936c78a.ctex"]
+source_file="res://assets/enemies/bosses/coloso_ceniza/idle_sheet.png"
+dest_files=["res://.godot/imported/idle_sheet.png-4caf03c5241b24bb839c81175aa1d3ff.ctex"]
 
 [params]
 

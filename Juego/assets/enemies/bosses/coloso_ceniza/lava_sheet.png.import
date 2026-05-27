@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://gqny0mm1jot1"
-path="res://.godot/imported/coloso.png-577ced173a0835e24b7e876344a1bf8a.ctex"
+uid="uid://cfo85x75h3y5d"
+path="res://.godot/imported/lava_sheet.png-851a6ce27b1700df465fa58e1952e83e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/coloso_ceniza/coloso.png"
-dest_files=["res://.godot/imported/coloso.png-577ced173a0835e24b7e876344a1bf8a.ctex"]
+source_file="res://assets/enemies/bosses/coloso_ceniza/lava_sheet.png"
+dest_files=["res://.godot/imported/lava_sheet.png-851a6ce27b1700df465fa58e1952e83e.ctex"]
 
 [params]
 
