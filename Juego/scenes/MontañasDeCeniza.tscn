@@ -257,6 +257,9 @@ position = Vector2(9715, 789)
 [node name="Checkpoint3" parent="Checkpoints" instance=ExtResource("8_kp27v")]
 position = Vector2(4064, 453)
 
+[node name="Checkpoint4" parent="Checkpoints" instance=ExtResource("8_kp27v")]
+position = Vector2(-46, 22)
+
 [node name="Entorno" type="Node2D" parent="."]
 
 [node name="PlataformaRompible" parent="Entorno" instance=ExtResource("7_gnk2d")]
