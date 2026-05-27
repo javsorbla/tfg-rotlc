@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqrde48165s46"
-path="res://.godot/imported/dead.png-c4aade5cbffbb96e6b5ad6b165055609.ctex"
+uid="uid://s1l1hpxi52de"
+path="res://.godot/imported/attack_sheet.png-c87588af37da5e6a19756573e2e890b2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/inquisidor_tenebroso/dead.png"
-dest_files=["res://.godot/imported/dead.png-c4aade5cbffbb96e6b5ad6b165055609.ctex"]
+source_file="res://assets/enemies/common/inquisidor_tenebroso/attack_sheet.png"
+dest_files=["res://.godot/imported/attack_sheet.png-c87588af37da5e6a19756573e2e890b2.ctex"]
 
 [params]
 
