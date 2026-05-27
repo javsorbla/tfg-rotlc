@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://wj0sleo1kar0"
-path="res://.godot/imported/chorro_lava.png-9532a6f2a2fe1020cd5d41154f922e84.ctex"
+uid="uid://bnym2hqwnft16"
+path="res://.godot/imported/roar_sheet.png-8fe48104304359933ce93101b8ae9621.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/coloso_ceniza/chorro_lava.png"
-dest_files=["res://.godot/imported/chorro_lava.png-9532a6f2a2fe1020cd5d41154f922e84.ctex"]
+source_file="res://assets/enemies/bosses/coloso_ceniza/roar_sheet.png"
+dest_files=["res://.godot/imported/roar_sheet.png-8fe48104304359933ce93101b8ae9621.ctex"]
 
 [params]
 

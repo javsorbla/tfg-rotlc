@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://pykyxvncyfos"
-path="res://.godot/imported/coloso_herido.png-814eae4bd0e30761e8a29602e2d09c4e.ctex"
+uid="uid://dagubdwqhrsa"
+path="res://.godot/imported/idle_sheet.png-4caf03c5241b24bb839c81175aa1d3ff.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/coloso_ceniza/coloso_herido.png"
-dest_files=["res://.godot/imported/coloso_herido.png-814eae4bd0e30761e8a29602e2d09c4e.ctex"]
+source_file="res://assets/enemies/bosses/coloso_ceniza/idle_sheet.png"
+dest_files=["res://.godot/imported/idle_sheet.png-4caf03c5241b24bb839c81175aa1d3ff.ctex"]
 
 [params]
 

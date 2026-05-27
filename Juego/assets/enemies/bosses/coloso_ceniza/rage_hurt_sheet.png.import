@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://gqny0mm1jot1"
-path="res://.godot/imported/coloso.png-577ced173a0835e24b7e876344a1bf8a.ctex"
+uid="uid://mkqlr8ltyoyo"
+path="res://.godot/imported/rage_hurt_sheet.png-d9f33929ec1ad67923d59f7cb5955a66.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/coloso_ceniza/coloso.png"
-dest_files=["res://.godot/imported/coloso.png-577ced173a0835e24b7e876344a1bf8a.ctex"]
+source_file="res://assets/enemies/bosses/coloso_ceniza/rage_hurt_sheet.png"
+dest_files=["res://.godot/imported/rage_hurt_sheet.png-d9f33929ec1ad67923d59f7cb5955a66.ctex"]
 
 [params]
 

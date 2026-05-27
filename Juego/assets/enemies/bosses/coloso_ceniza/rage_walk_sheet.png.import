@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://xks3jx3sfl8r"
-path="res://.godot/imported/grito.png-6abc60b1c587c3cf41ac97671936c78a.ctex"
+uid="uid://rj4ipp4dgswo"
+path="res://.godot/imported/rage_walk_sheet.png-59eac7a0d3939698d19b640ce64ce075.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/coloso_ceniza/grito.png"
-dest_files=["res://.godot/imported/grito.png-6abc60b1c587c3cf41ac97671936c78a.ctex"]
+source_file="res://assets/enemies/bosses/coloso_ceniza/rage_walk_sheet.png"
+dest_files=["res://.godot/imported/rage_walk_sheet.png-59eac7a0d3939698d19b640ce64ce075.ctex"]
 
 [params]
 
