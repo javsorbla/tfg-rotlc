@@ -23,6 +23,7 @@ var player: Node2D = null
 var space_state: PhysicsDirectSpaceState2D = null
 
 var death_timer: float = -1.0
+var previous_state: State = State.SLEEP
 var _combat_reset_state: Dictionary = {}
 
 
@@ -80,6 +81,7 @@ func _despawn_dead_instance() -> void:
 	EnemyResetUtils.despawn(self)
 
 func _enter_state(new_state: State) -> void:
+	previous_state = current_state
 	current_state = new_state
 	match new_state:
 		State.SLEEP:
@@ -112,7 +114,10 @@ func _enter_state(new_state: State) -> void:
 		State.DEAD:
 			velocity = Vector2.ZERO
 			$AnimatedSprite2D.rotation = 0.0
-			$AnimatedSprite2D.play("dead")
+			if previous_state == State.STUNNED:
+				$AnimatedSprite2D.play("dead_stun")
+			else:
+				$AnimatedSprite2D.play("dead")
 			
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)
