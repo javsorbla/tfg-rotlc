@@ -10,8 +10,8 @@
 [ext_resource type="PackedScene" uid="uid://b7kj5rrupn1ou" path="res://enemies/common/caminante_helado/CaminanteHelado.tscn" id="7_e86ce"]
 [ext_resource type="Texture2D" uid="uid://daklo3s4cbdxv" path="res://assets/objects/orbeluz.png" id="7_u8v25"]
 [ext_resource type="Script" path="res://scenes/camara.gd" id="10_ajmfl"]
-[ext_resource type="PackedScene" uid="uid://do0au5ur218xe" path="res://scenes/enviroment/Checkpoint.tscn" id="10_fjwp8"]
-[ext_resource type="PackedScene" uid="uid://xgvqki0gryl3" path="res://scenes/enviroment/Portal.tscn" id="10_w7krm"]
+[ext_resource type="PackedScene" path="res://scenes/enviroment/Checkpoint.tscn" id="10_fjwp8"]
+[ext_resource type="PackedScene" path="res://scenes/enviroment/Portal.tscn" id="10_w7krm"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i6t85"]
 texture = ExtResource("1_whyj1")

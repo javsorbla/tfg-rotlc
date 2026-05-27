@@ -6,9 +6,13 @@ const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
 func _ready() -> void:
 	GameState.current_level = 3
 	GameState.current_level_path = "res://scenes/CostaAmbar.tscn"
+	# Auto-unlock level's default power if configured
+	if GameState.has_method("auto_unlock_power_for_level"):
+		GameState.auto_unlock_power_for_level()
 	_ensure_pause_menu_layer()
 	_ensure_death_screen()
-	Hud.show_hud()
+	# Defer HUD show + player ColorManager sync to avoid init race
+	call_deferred("_init_level_hud_sync")
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
 

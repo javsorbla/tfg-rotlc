@@ -42,12 +42,12 @@ func _ready():
 		"red": $Control/Powers/Red/RechargeBar,
 		"yellow": $Control/Powers/Yellow/RechargeBar
 	}
-	power_overlays = power_nodes  
+	power_overlays = power_nodes
 	show()
 	update_hearts(GameState.get_player_max_health(), GameState.get_player_max_health())
 	for power in power_overlays:
 		power_overlays[power].visible = false
-		
+
 	duration_bars = {
 		"cyan": $Control/Powers/Cyan/DurationBar,
 		"red": $Control/Powers/Red/DurationBar,
@@ -61,6 +61,8 @@ func _ready():
 			game_state.save_started.connect(_on_save_started)
 		if game_state.has_signal("save_finished"):
 			game_state.save_finished.connect(_on_save_finished)
+		if game_state.has_signal("player_progress_reset"):
+			game_state.player_progress_reset.connect(_on_player_progress_reset)
 
 	if save_indicator != null and _save_shader != null:
 		var mat := ShaderMaterial.new()
@@ -71,8 +73,16 @@ func _ready():
 
 
 func show_hud():
+	reset_for_respawn()
 	show()
 	_update_save_icon_color()
+
+
+func _on_player_progress_reset() -> void:
+	reset_for_respawn()
+	if has_node("/root/GameState"):
+		var unlocked = get_node("/root/GameState").get_unlocked_powers()
+		update_powers("", unlocked)
 
 
 func hide_hud():
@@ -163,6 +173,13 @@ func update_cooldowns(cooldown_timers: Dictionary, active_power: String, unlocke
 			power_overlays[power].value = ratio
 			power_overlays[power].modulate = Color(0.6, 0.6, 0.6, 1)
 			duration_bars[power].visible = false
+		else:
+			# Sin usar: icono apagado
+			power_nodes[power].modulate = Color(1, 1, 1, 1)
+			power_overlays[power].visible = true
+			power_overlays[power].value = 1.0
+			power_overlays[power].modulate = Color(0.6, 0.6, 0.6, 1)
+			duration_bars[power].visible = false
 
 
 func _on_save_started(_reason: String) -> void:
@@ -184,10 +201,7 @@ func _set_saving(active: bool) -> void:
 		save_indicator.visible = true
 		save_indicator.modulate.a = 0.9
 		save_indicator.scale = Vector2.ONE
-		if save_indicator.has_method("set_animation"):
-			save_indicator.animation = "save"
-		else:
-			save_indicator.animation = "save"
+		save_indicator.animation = "save"
 		save_indicator.play()
 		_save_tween = create_tween().set_loops()
 		_save_tween.tween_property(save_indicator, "scale", Vector2(1.15, 1.15), 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -244,7 +258,7 @@ func _update_save_icon_color() -> void:
 			1:
 				target = Color(0.36, 0.72, 0.97, 1.0) # campos zafiro
 			2:
-				target = Color(1.0, 0.2, 0.2, 1.0) # montañas de ceniza
+				target = Color(1.0, 0.2, 0.2, 1.0) # montanas de ceniza
 			3:
 				target = Color(1.0, 0.9, 0.0, 1.0) # costa ambar
 			_:
@@ -275,7 +289,6 @@ func _update_save_icon_color() -> void:
 			save_indicator.modulate = target
 	else:
 		print("HUD: save_indicator is null, cannot set shader")
-
 
 
 func _stop_save_tween() -> void:

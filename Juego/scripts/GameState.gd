@@ -3,6 +3,7 @@ extends Node
 signal level_reset
 signal save_started(reason: String)
 signal save_finished(success: bool)
+signal player_progress_reset
 
 var spawn_position = Vector2.ZERO
 var checkpoint_activated = false
@@ -48,6 +49,11 @@ const LEVEL_ORDER := [
 	"res://scenes/MontañasDeCeniza.tscn",
 	"res://scenes/CostaAmbar.tscn",
 ]
+
+# Mapping of levels to their default boss power (extend as needed)
+const LEVEL_DEFAULT_POWER := {
+	2: "cyan" # MontañasDeCeniza -> cyan (Ice Guardian)
+}
 
 var _finetuning_process_id: int = -1
 var is_finetuning := false
@@ -194,6 +200,9 @@ func reset_for_new_game() -> void:
 	# Persist cleared player progress (so has_save() returns false)
 	_save_player_progress()
 
+	# Notify listeners (HUD, player) that progress was reset
+	emit_signal("player_progress_reset")
+
 
 func load_game() -> bool:
 	var loaded := _load_game_from_path(SAVE_PATH)
@@ -338,6 +347,36 @@ func _build_save_payload() -> Dictionary:
 		"checkpoint_activated": checkpoint_activated,
 		"player_progress": player_progress.duplicate(true)
 	}
+
+
+func auto_unlock_power_for_level(level_id: int = -1) -> bool:
+	var resolved: int = level_id if level_id > 0 else current_level
+	if not LEVEL_DEFAULT_POWER.has(resolved):
+		return false
+	var color: String = LEVEL_DEFAULT_POWER[resolved]
+	var unlocked := get_unlocked_powers()
+	if unlocked.get(color, false):
+		return false
+	# Unlock and persist
+	var did := unlock_power(color)
+	# Apply to player ColorManager if present so effect is immediate
+	var player = get_tree().get_first_node_in_group("player")
+	if player != null:
+		var cm = player.get_node_or_null("ColorManager")
+		if cm != null and cm.has_method("apply_unlocked_powers"):
+			cm.apply_unlocked_powers(get_unlocked_powers())
+			if cm.has_method("change_state"):
+				match color:
+					"cyan":
+						if cm.cyan_state != null:
+							cm.change_state(cm.cyan_state)
+					"red":
+						if cm.red_state != null:
+							cm.change_state(cm.red_state)
+					"yellow":
+						if cm.yellow_state != null:
+							cm.change_state(cm.yellow_state)
+	return did
 
 
 func _wrap_save_payload(payload: Dictionary) -> Dictionary:

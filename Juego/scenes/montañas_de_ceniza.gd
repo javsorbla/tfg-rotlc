@@ -28,9 +28,11 @@ var coordenadas_imagen = Vector2i(2, 1)
 func _ready() -> void:
 	GameState.current_level = 2
 	GameState.current_level_path = "res://scenes/MontañasDeCeniza.tscn"
+	
+	if GameState.has_method("auto_unlock_power_for_level"):
+		GameState.auto_unlock_power_for_level()
 	_ensure_pause_menu_layer()
 	_ensure_death_screen()
-	Hud.show_hud()
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
 	GameState.level_reset.connect(reiniciar_trampa)
