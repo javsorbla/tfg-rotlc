@@ -93,7 +93,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		if sprite.animation == "jump":
 			if current_state == State.IDLE:
-				sprite.play("iddle")
+				sprite.play("idle")
 			elif current_state in [State.PATROL, State.CHASE]:
 				sprite.play("run")
 
@@ -123,7 +123,7 @@ func _enter_state(new_state: State) -> void:
 	match new_state:
 		State.IDLE:
 			velocity.x = 0
-			if is_on_floor(): sprite.play("iddle")
+			if is_on_floor(): sprite.play("idle")
 			idle_timer = randf_range(1.0, 2.5) 
 			
 		State.PATROL:
@@ -134,7 +134,7 @@ func _enter_state(new_state: State) -> void:
 			
 		State.PREPARE_DASH:
 			velocity.x = 0
-			sprite.play("iddle")
+			sprite.play("idle")
 			sprite.modulate = Color(1.0, 0.4, 0.4) # Feedback visual de carga
 			dash_timer = 0.5 
 			

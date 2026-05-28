@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://3c114tdyce3j"
-path="res://.godot/imported/iddle.png-9f0e2b6296cc7355fe3ef289e8d51a92.ctex"
+uid="uid://d2ioxj38qr1er"
+path="res://.godot/imported/idle_sheet.png-00ea712e4b747dac202252d1acc6c976.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/corredor_magma/iddle.png"
-dest_files=["res://.godot/imported/iddle.png-9f0e2b6296cc7355fe3ef289e8d51a92.ctex"]
+source_file="res://assets/enemies/common/corredor_magma/idle_sheet.png"
+dest_files=["res://.godot/imported/idle_sheet.png-00ea712e4b747dac202252d1acc6c976.ctex"]
 
 [params]
 
