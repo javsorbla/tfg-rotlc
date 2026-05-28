@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3 uid="uid://drrq8f3eyl4ae"]
+
+[ext_resource type="PackedScene" uid="uid://cwt4p3bufkke5" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="1_base"]
+[ext_resource type="Theme" uid="uid://dtpn5omjjunlh" path="res://ui/menus/main_menu/main_menu_shell_theme.tres" id="2_shell"]
+
+[node name="ConfirmationOverlaidWindowRotlc" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(420, 200)
+theme = ExtResource("2_shell")
+confirm_button_text = "Confirmar"
+exclusive_background_color = Color(0, 0, 0, 0.62)
+close_button_text = "Cancelar"
+
+[node name="TitleLabel" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer" index="0"]
+theme_override_colors/font_color = Color(0.95, 0.96, 0.99, 1)
+theme_override_font_sizes/font_size = 20
+text = "¿Estás seguro?"
+
+[node name="DescriptionLabel" parent="ContentContainer/BoxContainer/BodyMargin" index="0"]
+theme_override_font_sizes/normal_font_size = 15
+
+[node name="MenuButtons" parent="ContentContainer/BoxContainer/MenuButtonsMargin" index="0"]
+theme_override_constants/separation = 20
+
+[node name="CloseButton" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="0"]
+text = "Cancelar"
+
+[node name="ConfirmButton" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="1"]
+text = "Confirmar"

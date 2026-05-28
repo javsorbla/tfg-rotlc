@@ -1,0 +1,307 @@
+extends CharacterBody2D
+
+const MAX_HEALTH: int = 3
+const DAMAGE: int = 1
+
+const STUN_DURATION: float  = 0.8
+const IDLE_DISTANCE: float = 250.0
+const LOSE_DISTANCE: float = 275.0
+const GRAVITY: float = 700.0
+
+const TELEPORT_DISTANCE: float = 120.0      # Distancia mínima con el jugador
+const TELEPORT_MIN_DIST: float = 200.0      # Distancia mínima tras teletransporte
+const TELEPORT_MAX_DIST: float = 250.0      # Distancia máxima tras teletransporte
+const TELEPORT_ATTEMPTS: int = 20           # Intentos para encontrar posición válida
+const TELEPORT_HALF_WIDTH: float = 14.0
+const TELEPORT_SAFETY_MARGIN: float = 40.0
+const SHOOT_COOLDOWN: float = 2.0
+
+enum State { IDLE, ATTACK, STUNNED, DEAD }
+
+var current_state: State = State.IDLE
+var current_health: int = MAX_HEALTH
+var player: Node2D = null
+var stun_timer: float = 0.0
+var shoot_timer: float = 0.0
+var death_timer: float = -1.0
+
+var teleporting: bool = false
+var teleport_target: Vector2 = Vector2.ZERO
+var attack_fired: bool = false
+
+var spawn_position = Vector2.ZERO
+var _combat_reset_state: Dictionary = {}
+
+@onready var attack_scene = preload("res://enemies/common/inquisidor_tenebroso/AtaqueInquisidor.tscn")
+
+
+func _ready() -> void:
+	current_health = MAX_HEALTH
+	player = get_tree().get_first_node_in_group("player")
+	spawn_position = global_position
+	GameState.level_reset.connect(_on_level_reset)
+	
+	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
+		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
+	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
+		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
+
+	_enter_state(State.IDLE)
+
+
+func _physics_process(delta: float) -> void:
+	
+	if not is_on_floor():
+		velocity.y += GRAVITY * delta
+	else:
+		velocity.y = 0
+
+	if shoot_timer > 0.0:
+		shoot_timer -= delta
+
+	match current_state:
+		State.IDLE:
+			_state_idle()
+		State.ATTACK:
+			_state_attack()
+		State.STUNNED:
+			_state_stunned(delta)
+		State.DEAD:
+			if death_timer > 0:
+				death_timer -= delta
+				if death_timer <= 0.0:
+					_despawn_dead_instance()
+
+	move_and_slide()
+
+func _on_level_reset():
+	set_physics_process(true)
+	visible = true
+	current_health = MAX_HEALTH
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	death_timer = -1.0
+	shoot_timer = 0.0
+	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	_enter_state(State.IDLE)
+
+
+func _despawn_dead_instance() -> void:
+	velocity = Vector2.ZERO
+	EnemyResetUtils.despawn(self)
+
+func _enter_state(new_state: State) -> void:
+	current_state = new_state
+
+	match new_state:
+		State.IDLE:
+			$AnimatedSprite2D.play("idle")
+
+		State.ATTACK:
+			$AnimatedSprite2D.play("idle")
+		
+		State.STUNNED:
+			$AnimatedSprite2D.play("stunned")
+
+		State.DEAD:
+			$AnimatedSprite2D.play("dead")
+			if $EnemyHitbox:
+				$EnemyHitbox.set_deferred("monitoring", false)
+				$EnemyHitbox.set_deferred("monitorable", false)
+				$EnemyHitbox.set_deferred("collision_layer", 0)
+				$EnemyHitbox.set_deferred("collision_mask", 0)
+			if $EnemyHurtbox:
+				$EnemyHurtbox.set_deferred("monitoring", false)
+				$EnemyHurtbox.set_deferred("monitorable", false)
+				$EnemyHurtbox.set_deferred("collision_layer", 0)
+				$EnemyHurtbox.set_deferred("collision_mask", 0)
+			velocity = Vector2.ZERO
+			
+			death_timer = 0.7
+
+func _state_idle() -> void:
+	velocity.x = 0
+
+	if player and global_position.distance_to(player.global_position) <= IDLE_DISTANCE:
+		_enter_state(State.ATTACK)
+
+
+func _state_attack() -> void:
+	if teleporting:
+		return
+		
+	velocity.x = 0
+	
+	if not player:
+		_enter_state(State.IDLE)
+		return
+		
+	var dist = global_position.distance_to(player.global_position)
+	if dist > LOSE_DISTANCE:
+		_enter_state(State.IDLE)
+		return
+		
+	# Si el jugador se acerca demasiado, el enemigo se teletransporta de manera aleatoria
+	if dist < TELEPORT_DISTANCE:
+		if _should_teleport():
+			_teleport_away()
+		return
+
+	# Disparar si el cooldown ha terminado
+	if shoot_timer <= 0.0:
+		_shoot()
+		shoot_timer = SHOOT_COOLDOWN
+		
+	$AnimatedSprite2D.flip_h = player.global_position.x > global_position.x
+
+
+func _shoot() -> void:
+	attack_fired = false
+	$AnimatedSprite2D.play("attack")
+	if not $AnimatedSprite2D.frame_changed.is_connected(_on_attack_frame_changed):
+		$AnimatedSprite2D.frame_changed.connect(_on_attack_frame_changed)
+	$AnimatedSprite2D.animation_finished.connect(_on_attack_finished, CONNECT_ONE_SHOT)
+
+
+func _on_attack_frame_changed() -> void:
+	if $AnimatedSprite2D.frame == 4 and not attack_fired:
+		attack_fired = true
+		if not player:
+			return
+		var attack = attack_scene.instantiate()
+		attack.source_enemy = self
+		get_tree().current_scene.add_child(attack)
+		attack.global_position = global_position
+		attack.direction = global_position.direction_to(player.global_position)
+
+
+func _on_attack_finished() -> void:
+	$AnimatedSprite2D.frame_changed.disconnect(_on_attack_frame_changed)
+	$AnimatedSprite2D.play("idle")
+
+
+func _should_teleport() -> bool:
+	var space_state = get_world_2d().direct_space_state
+	var ray = PhysicsRayQueryParameters2D.create(
+		global_position - Vector2(0, 10),
+		player.global_position - Vector2(0, 10)
+	)
+	ray.exclude = [self.get_rid(), player.get_rid()]
+	var result = space_state.intersect_ray(ray)
+
+	if not result:
+		return true
+
+	# Si hay muro vertical, no detecta al jugador
+	var is_horizontal_wall = abs(result.normal.y) > abs(result.normal.x)
+	var player_is_below = player.global_position.y > global_position.y
+	return is_horizontal_wall and player_is_below
+
+
+func _raycast(space_state: PhysicsDirectSpaceState2D, from: Vector2, to: Vector2) -> Dictionary:
+	var ray = PhysicsRayQueryParameters2D.create(from, to)
+	ray.exclude = [self.get_rid()]
+	return space_state.intersect_ray(ray)
+
+
+func _teleport_away() -> void:
+	var space_state = get_world_2d().direct_space_state
+
+	for i in TELEPORT_ATTEMPTS:
+		var angle = randf() * TAU
+		var distance = randf_range(TELEPORT_MIN_DIST, TELEPORT_MAX_DIST)
+		var candidate = player.global_position + Vector2(cos(angle), sin(angle)) * distance
+
+		var shape = CircleShape2D.new()
+		shape.radius = 8.0
+		var shape_query = PhysicsShapeQueryParameters2D.new()
+		shape_query.shape = shape
+		shape_query.transform = Transform2D(0, candidate)
+		shape_query.exclude = [self.get_rid()]
+		if space_state.intersect_shape(shape_query, 1).size() > 0:
+			continue
+
+		# Raycast para encontrar suelo
+		var ground_result = _raycast(space_state, candidate, candidate + Vector2(0, 500))
+		if not ground_result:
+			continue
+		var ground_y = ground_result.position.y
+		var landing_pos = Vector2(candidate.x, ground_y - 1.0)
+
+		# Comprobar que el suelo no se acaba justo en el borde del enemigo
+		var grounded := true
+		for x in [-TELEPORT_HALF_WIDTH, TELEPORT_HALF_WIDTH]:
+			var origin = Vector2(landing_pos.x + x, ground_y - 5.0)
+			if not _raycast(space_state, origin, origin + Vector2(0, 20)):
+				grounded = false
+				break
+		if not grounded:
+			continue
+			
+		# Comprobar que no hay vacío total más allá del enemigo
+		for x in [-TELEPORT_SAFETY_MARGIN, TELEPORT_SAFETY_MARGIN]:
+			var origin = Vector2(landing_pos.x + x, ground_y - 100.0)
+			if not _raycast(space_state, origin, origin + Vector2(0, 600)):
+				grounded = false
+				break
+		if not grounded:
+			continue
+
+		# Espacio libre para el enemigo
+		if _raycast(space_state, landing_pos, landing_pos - Vector2(0, 80)):
+			continue
+
+		# Distancia mínima de teletrasnporte respecto al jugador
+		if landing_pos.distance_to(player.global_position) < TELEPORT_MIN_DIST:
+			continue
+
+		teleport_target = landing_pos
+		velocity = Vector2.ZERO
+		teleporting = true
+		$AnimatedSprite2D.speed_scale = 1.5
+		$AnimatedSprite2D.play("teleport")
+		$AnimatedSprite2D.animation_finished.connect(_on_teleport_disappear, CONNECT_ONE_SHOT)
+		return
+
+func _on_teleport_disappear() -> void:
+	global_position = teleport_target
+	$AnimatedSprite2D.play("teleport")
+	$AnimatedSprite2D.animation_finished.connect(_on_teleport_finished, CONNECT_ONE_SHOT)
+
+func _on_teleport_finished() -> void:
+	teleporting = false
+	$AnimatedSprite2D.speed_scale = 1.0
+	$AnimatedSprite2D.play("idle")
+
+func _state_stunned(delta):
+	stun_timer -= delta
+	velocity.x = 0
+
+	if stun_timer <= 0:
+		_enter_state(State.IDLE)
+
+
+func _on_enemy_hitbox_area_entered(area: Area2D): 
+	if area.is_in_group("player_hurtbox"): 
+		var target = area.get_parent() 
+		if target.has_method("take_damage"): 
+			target.take_damage(DAMAGE) 
+
+
+func _on_enemy_hurtbox_area_entered(area: Area2D):
+	if area.is_in_group("player_hitbox"): 
+		take_damage(1)
+
+
+func take_damage(amount: int) -> void:
+	if current_state == State.DEAD:
+		return
+
+	current_health -= amount
+	if current_health <= 0:
+		_enter_state(State.DEAD)
+		return
+
+	stun_timer = STUN_DURATION
+	_enter_state(State.STUNNED)

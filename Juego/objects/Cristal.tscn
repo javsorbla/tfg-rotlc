@@ -1,0 +1,63 @@
+[gd_scene load_steps=9 format=3 uid="uid://boopduuep25rb"]
+
+[ext_resource type="Script" path="res://objects/cristal.gd" id="1_t2fin"]
+[ext_resource type="Texture2D" uid="uid://cy5kokuo5k5xv" path="res://assets/objects/cristal_celeste.png" id="2_d8lcw"]
+[ext_resource type="Texture2D" uid="uid://cwmqh0v8ocnoc" path="res://assets/objects/cristal_rojo.png" id="3_s3dw8"]
+[ext_resource type="Texture2D" uid="uid://dpgpvmnjkdjpw" path="res://assets/objects/cristal_amarillo.png" id="4_6ajcj"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_rn2mn"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_d8lcw")
+}],
+"loop": true,
+"name": &"cyan",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_s3dw8")
+}],
+"loop": true,
+"name": &"red",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_6ajcj")
+}],
+"loop": true,
+"name": &"yellow",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mk7n6"]
+radius = 11.0
+height = 26.0
+
+[sub_resource type="Gradient" id="Gradient_crystal_glow"]
+offsets = PackedFloat32Array(0, 0.6)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_crystal_glow"]
+gradient = SubResource("Gradient_crystal_glow")
+fill = 1
+fill_from = Vector2(0.52, 0.52)
+
+[node name="Cristal" type="Area2D"]
+collision_mask = 4
+script = ExtResource("1_t2fin")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(0.625, 0.617188)
+sprite_frames = SubResource("SpriteFrames_rn2mn")
+animation = &"cyan"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_mk7n6")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.558801, 0.845454, 0.985056, 1)
+energy = 0.75
+texture = SubResource("GradientTexture2D_crystal_glow")

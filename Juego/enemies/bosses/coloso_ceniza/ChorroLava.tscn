@@ -1,0 +1,118 @@
+[gd_scene load_steps=17 format=3 uid="uid://dg0dx0p4ei711"]
+
+[ext_resource type="Script" path="res://enemies/bosses/coloso_ceniza/chorro_lava.gd" id="1_l1g2d"]
+[ext_resource type="Texture2D" uid="uid://bhtma8tcx47nu" path="res://assets/enemies/bosses/coloso_ceniza/lava_base_sheet.png" id="2_7kvwe"]
+[ext_resource type="Texture2D" uid="uid://cfo85x75h3y5d" path="res://assets/enemies/bosses/coloso_ceniza/lava_sheet.png" id="3_47ck6"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8j1ic"]
+atlas = ExtResource("2_7kvwe")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sr42m"]
+atlas = ExtResource("2_7kvwe")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jskrp"]
+atlas = ExtResource("2_7kvwe")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_emonq"]
+atlas = ExtResource("3_47ck6")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nvixg"]
+atlas = ExtResource("3_47ck6")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_m0tm3"]
+atlas = ExtResource("3_47ck6")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6er66"]
+atlas = ExtResource("3_47ck6")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7e7wv"]
+atlas = ExtResource("3_47ck6")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p1g4u"]
+atlas = ExtResource("3_47ck6")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pssc7"]
+atlas = ExtResource("3_47ck6")
+region = Rect2(384, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_44jbu"]
+atlas = ExtResource("3_47ck6")
+region = Rect2(448, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t5u6f"]
+atlas = ExtResource("3_47ck6")
+region = Rect2(512, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_i1id6"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8j1ic")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sr42m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jskrp")
+}],
+"loop": false,
+"name": &"base",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_emonq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nvixg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m0tm3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6er66")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7e7wv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p1g4u")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pssc7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_44jbu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t5u6f")
+}],
+"loop": false,
+"name": &"eruption",
+"speed": 9.0
+}]
+
+[node name="ChorroLava" type="Area2D"]
+collision_layer = 16
+collision_mask = 4
+script = ExtResource("1_l1g2d")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -67)
+scale = Vector2(1.53125, 3.125)
+sprite_frames = SubResource("SpriteFrames_i1id6")
+animation = &"base"
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+position = Vector2(-1, -37)
+scale = Vector2(2.19118, 2.56019)
+polygon = PackedVector2Array(0.912752, -49.6058, -2.73826, -47.2622, -7.75839, 11.7179, -11.8658, 18.7486, 0.912752, 28.123, 12.3221, 18.358, 8.67114, 11.7179, 7.30201, -9.76492, 3.65101, -47.2622)

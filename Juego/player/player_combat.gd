@@ -16,6 +16,7 @@ var hitstop_timer = 0.0
 
 func _ready():
 	hitbox.monitoring = false
+	hitbox.monitorable = false
 	hitbox.visible = false
 	hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
 
@@ -29,13 +30,15 @@ func _handle_attack(delta):
 		if attack_timer <= 0:
 			is_attacking = false
 			hitbox.monitoring = false
+			hitbox.monitorable = false
 			hitbox.visible = false
 		return
 
-	if Input.is_action_just_pressed("attack"):
+	if Input.is_action_just_pressed("attack") and player.can_attack:
 		is_attacking = true
 		attack_timer = ATTACK_DURATION
 		hitbox.monitoring = true
+		hitbox.monitorable = true
 		hitbox.visible = true
 		if Input.is_action_pressed("aim_up"):
 			hitbox.position = Vector2(0, -HITBOX_OFFSET_Y)
@@ -62,8 +65,15 @@ func spawn_hit_particles(pos: Vector2):
 	particles.play()
 
 func _on_attack_hitbox_area_entered(area: Area2D) -> void:
-	if area.is_in_group("enemy_hitbox"):
-		var damage = int(1 * player.damage_multiplier)
+	if area.is_in_group("boss_core"):
+		var damage = int(player.damage_multiplier)
 		area.get_parent().take_damage(damage)
+		spawn_hit_particles(area.global_position)
+		hitstop_timer = HITSTOP_DURATION
+	elif area.is_in_group("enemy_hurtbox"):
+		var target := area.get_parent()
+		if target != null and target.is_in_group("umbra_boss") and target.has_method("take_damage"):
+			var umbra_damage := maxi(1, int(round(float(player.damage_multiplier))))
+			target.take_damage(umbra_damage)
 		spawn_hit_particles(area.global_position)
 		hitstop_timer = HITSTOP_DURATION

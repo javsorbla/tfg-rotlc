@@ -64,6 +64,23 @@ func process(delta):
 	if current_state:
 		current_state.process(delta)
 	_handle_input()
+	
+	Hud.update_cooldowns(cooldown_timers, active_power, unlocked, power_timer)
+	_update_shader_states()
+
+
+func _update_shader_states() -> void:
+	var mat = player.get_node("AnimatedSprite2D").material
+	if not mat:
+		return
+	
+	# Parpadeo cuando queden menos de 2 segundos de poder
+	var low_power = power_active and power_timer < 2.0
+	mat.set_shader_parameter("low_power", low_power)
+	
+	var health = player.get_node("Health")
+	var low_health = health.current_health <= 1
+	mat.set_shader_parameter("low_health", low_health)
 
 func _start_cooldown(power: String):
 	cooldown_timers[power] = POWER_COOLDOWNS[power]
@@ -97,6 +114,9 @@ func _update_sprite_color(primary: Color, secondary: Color):
 		mat.set_shader_parameter("color_secondary", secondary)
 
 func change_state(new_state):
+	if active_power != "":
+		_start_cooldown(active_power)
+	
 	if current_state:
 		current_state.exit()
 	current_state = new_state
@@ -140,5 +160,43 @@ func change_state(new_state):
 			Color(0.925, 0.910, 0.910) # blanco secundario
 		)
 
+	Hud.update_powers(active_power, unlocked)
+	
+	
 func unlock_power(color: String):
+	if GameState.has_method("unlock_power"):
+		GameState.unlock_power(color)
+		apply_unlocked_powers(GameState.get_unlocked_powers())
+		return
 	unlocked[color] = true
+	Hud.update_powers(active_power, unlocked)
+
+
+func apply_unlocked_powers(saved_unlocked: Dictionary) -> void:
+	if typeof(saved_unlocked) != TYPE_DICTIONARY:
+		return
+	for key in unlocked.keys():
+		if saved_unlocked.has(key):
+			unlocked[key] = bool(saved_unlocked[key])
+	Hud.update_powers(active_power, unlocked)
+
+
+func reset_for_respawn() -> void:
+	if current_state != neutral_state:
+		change_state(neutral_state)
+	else:
+		neutral_state.enter()
+
+	active_power = ""
+	power_timer = 0.0
+	power_active = false
+
+	for power in cooldown_timers.keys():
+		cooldown_timers[power] = 0.0
+
+	_update_sprite_color(
+		Color(1.0, 1.0, 1.0),
+		Color(0.925, 0.910, 0.910)
+	)
+	Hud.update_powers(active_power, unlocked)
+	Hud.update_cooldowns(cooldown_timers, active_power, unlocked, power_timer)

@@ -1,14 +1,297 @@
 extends CanvasLayer
 
-@onready var hearts = [$Hearts/Heart1, $Hearts/Heart2, $Hearts/Heart3]
+var hearts = []
+var heart_container: HBoxContainer
+var heart_template: TextureRect
+var power_nodes = {}
+var power_overlays = {}
+var heart_full: Texture2D = preload("res://assets/ui/heart.png")
+var heart_empty: Texture2D = preload("res://assets/ui/heart_empty.png")
+var duration_bars = {}
+var save_indicator: AnimatedSprite2D
+var _save_tween: Tween
+var _save_shader: Shader = preload("res://ui/shaders/save_icon_replace.gdshader")
 
-var heart_full: Texture2D = preload("res://assets//ui/heart.png")
-var heart_empty: Texture2D = preload("res://assets//ui/heart_empty.png")
+const MAX_DURATIONS = {
+	"cyan": 6.0,
+	"red": 5.0,
+	"yellow": 3.0
+}
+
+const MAX_COOLDOWNS = {
+	"cyan": 3.0,
+	"red": 5.0,
+	"yellow": 7.0
+}
+
+
+func _ready():
+	heart_container = $Control/Hearts
+	heart_template = $Control/Hearts/Heart1
+	save_indicator = $SaveIndicator
+	hearts = [heart_template]
+	for i in range(2, 4):
+		var existing_heart := heart_container.get_node_or_null("Heart%d" % i)
+		if existing_heart != null:
+			hearts.append(existing_heart)
+	for heart in hearts:
+		if heart != null:
+			heart.texture = heart_full
+	power_nodes = {
+		"cyan": $Control/Powers/Cyan/RechargeBar,
+		"red": $Control/Powers/Red/RechargeBar,
+		"yellow": $Control/Powers/Yellow/RechargeBar
+	}
+	power_overlays = power_nodes
+	show()
+	update_hearts(GameState.get_player_max_health(), GameState.get_player_max_health())
+	for power in power_overlays:
+		power_overlays[power].visible = false
+
+	duration_bars = {
+		"cyan": $Control/Powers/Cyan/DurationBar,
+		"red": $Control/Powers/Red/DurationBar,
+		"yellow": $Control/Powers/Yellow/DurationBar
+	}
+	for power in duration_bars:
+		duration_bars[power].visible = false
+	if has_node("/root/GameState"):
+		var game_state := get_node("/root/GameState")
+		if game_state.has_signal("save_started"):
+			game_state.save_started.connect(_on_save_started)
+		if game_state.has_signal("save_finished"):
+			game_state.save_finished.connect(_on_save_finished)
+		if game_state.has_signal("player_progress_reset"):
+			game_state.player_progress_reset.connect(_on_player_progress_reset)
+
+	if save_indicator != null and _save_shader != null:
+		var mat := ShaderMaterial.new()
+		mat.shader = _save_shader
+		save_indicator.material = mat
+		_update_save_icon_color()
+	hide()
+
+
+func show_hud():
+	reset_for_respawn()
+	show()
+	_update_save_icon_color()
+
+
+func _on_player_progress_reset() -> void:
+	reset_for_respawn()
+	if has_node("/root/GameState"):
+		var unlocked = get_node("/root/GameState").get_unlocked_powers()
+		update_powers("", unlocked)
+
+
+func hide_hud():
+	hide()
+
 
 func update_hearts(current: int, maximum: int):
+	_ensure_heart_slots(maximum)
 	for i in hearts.size():
-		if i < hearts.size() and hearts[i] != null:
-			if i < current:
+		if hearts[i] != null:
+			var was_full = hearts[i].texture == heart_full
+			var is_full = i < current
+			if was_full and not is_full:
+				var lose_particles = hearts[i].get_node_or_null("ParticlesLose")
+				if lose_particles != null:
+					lose_particles.restart()
+			elif not was_full and is_full:
+				var gain_particles = hearts[i].get_node_or_null("ParticlesGain")
+				if gain_particles != null:
+					gain_particles.restart()
+			if is_full:
 				hearts[i].texture = heart_full
 			else:
 				hearts[i].texture = heart_empty
+
+
+func reset_for_respawn() -> void:
+	var max_health := GameState.get_player_max_health()
+	update_hearts(max_health, max_health)
+	for power in power_overlays:
+		if power_overlays[power] != null:
+			power_overlays[power].visible = false
+	for power in duration_bars:
+		if duration_bars[power] != null:
+			duration_bars[power].visible = false
+	_hide_save_indicator()
+
+
+func _ensure_heart_slots(maximum: int) -> void:
+	if heart_container == null or heart_template == null:
+		return
+
+	var target := maxi(1, maximum)
+	while hearts.size() < target:
+		var new_heart := heart_template.duplicate(DUPLICATE_SIGNALS | DUPLICATE_GROUPS | DUPLICATE_SCRIPTS)
+		new_heart.name = "Heart%d" % (hearts.size() + 1)
+		heart_container.add_child(new_heart)
+		hearts.append(new_heart)
+
+	while hearts.size() > target:
+		var removed_heart = hearts.pop_back()
+		if removed_heart != null:
+			removed_heart.queue_free()
+
+
+func update_powers(active_power: String, unlocked: Dictionary):
+	for power in power_nodes:
+		if power_nodes[power] != null:
+			if not unlocked[power]:
+				power_nodes[power].modulate = Color(0.3, 0.3, 0.3, 1)
+			elif active_power == power:
+				power_nodes[power].modulate = Color(1, 1, 1, 1)
+			else:
+				power_nodes[power].modulate = Color(0.2, 0.2, 0.2, 1)
+
+
+func update_cooldowns(cooldown_timers: Dictionary, active_power: String, unlocked: Dictionary, power_timer: float = 0.0):
+	for power in power_nodes:
+		if power_nodes[power] == null:
+			continue
+		if not unlocked[power]:
+			continue
+		var remaining = cooldown_timers[power]
+		var ratio = 1.0 - (remaining / MAX_COOLDOWNS[power])
+		
+		if active_power == power:
+			# Usando: icono brilla y barra vaciandose para indicar tiempo restante
+			var duration_ratio = power_timer / MAX_DURATIONS[power]
+			power_nodes[power].modulate = Color(1, 1, 1, 1)
+			power_overlays[power].visible = true
+			power_overlays[power].value = duration_ratio
+			power_overlays[power].modulate = Color(1.2, 1.2, 1.2, 1)
+			duration_bars[power].visible = false
+		elif remaining > 0:
+			# Cooldown: icono transparente y barra subiendo
+			power_nodes[power].modulate = Color(1, 1, 1, 1)
+			power_overlays[power].visible = true
+			power_overlays[power].value = ratio
+			power_overlays[power].modulate = Color(0.6, 0.6, 0.6, 1)
+			duration_bars[power].visible = false
+		else:
+			# Sin usar: icono apagado
+			power_nodes[power].modulate = Color(1, 1, 1, 1)
+			power_overlays[power].visible = true
+			power_overlays[power].value = 1.0
+			power_overlays[power].modulate = Color(0.6, 0.6, 0.6, 1)
+			duration_bars[power].visible = false
+
+
+func _on_save_started(_reason: String) -> void:
+	_set_saving(true)
+
+
+func _on_save_finished(success: bool) -> void:
+	if success:
+		_show_save_indicator(0.6)
+	else:
+		_set_saving(false)
+
+
+func _set_saving(active: bool) -> void:
+	if save_indicator == null:
+		return
+	if active:
+		_stop_save_tween()
+		save_indicator.visible = true
+		save_indicator.modulate.a = 0.9
+		save_indicator.scale = Vector2.ONE
+		save_indicator.animation = "save"
+		save_indicator.play()
+		_save_tween = create_tween().set_loops()
+		_save_tween.tween_property(save_indicator, "scale", Vector2(1.15, 1.15), 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_save_tween.tween_property(save_indicator, "scale", Vector2(1.0, 1.0), 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		return
+	_hide_save_indicator()
+
+
+func _show_save_indicator(duration: float) -> void:
+	if save_indicator == null:
+		return
+	_stop_save_tween()
+	save_indicator.visible = true
+	save_indicator.modulate.a = 1.0
+	save_indicator.scale = Vector2(1.2, 1.2)
+	_save_tween = create_tween()
+	_save_tween.tween_property(save_indicator, "scale", Vector2(1.0, 1.0), 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	if duration > 0.0:
+		_save_tween.tween_interval(duration)
+	_save_tween.tween_property(save_indicator, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	save_indicator.play()
+	_save_tween.finished.connect(_hide_save_indicator, CONNECT_ONE_SHOT)
+
+
+func _hide_save_indicator() -> void:
+	_stop_save_tween()
+	if save_indicator == null:
+		return
+	save_indicator.visible = false
+	save_indicator.modulate.a = 0.0
+	save_indicator.scale = Vector2.ONE
+
+
+func _update_save_icon_color() -> void:
+	var level_name := ""
+	if has_node("/root/GameState"):
+		var gs := get_node("/root/GameState")
+		if gs.has_method("get_current_level"):
+			level_name = str(gs.get_current_level())
+		elif typeof(gs) == TYPE_OBJECT and gs.get("current_level") != null:
+			var prop_val = gs.get("current_level")
+			if prop_val != null:
+				level_name = str(prop_val)
+		else:
+			level_name = str(gs)
+	level_name = level_name.to_lower()
+
+	var target := Color(1, 1, 1, 1)
+	if level_name.is_valid_int():
+		var idx = int(level_name)
+		match idx:
+			0:
+				target = Color(0.6, 0.6, 0.6, 1.0) # tutorial
+			1:
+				target = Color(0.36, 0.72, 0.97, 1.0) # campos zafiro
+			2:
+				target = Color(1.0, 0.2, 0.2, 1.0) # montanas de ceniza
+			3:
+				target = Color(1.0, 0.9, 0.0, 1.0) # costa ambar
+			_:
+				target = Color(0.6, 0.2, 0.8, 1.0) # nivel final
+	else:
+		if level_name.find("tutorial") >= 0:
+			target = Color(0.6, 0.6, 0.6, 1.0)
+		elif level_name.find("zafiro") >= 0:
+			target = Color(0.36, 0.72, 0.97, 1.0)
+		elif level_name.find("mont") >= 0 or level_name.find("ceniza") >= 0:
+			target = Color(1.0, 0.2, 0.2, 1.0)
+		elif level_name.find("costa") >= 0 or level_name.find("ambar") >= 0:
+			target = Color(1.0, 0.9, 0.0, 1.0)
+		elif level_name.find("ultimo") >= 0 or level_name.find("final") >= 0 or level_name.find("boss") >= 0:
+			target = Color(0.6, 0.2, 0.8, 1.0)
+
+	if save_indicator != null:
+		if save_indicator.material != null and save_indicator.material is ShaderMaterial:
+			save_indicator.material.set_shader_parameter("target_color", target)
+			save_indicator.material.set_shader_parameter("force_tint", 1.0)
+			save_indicator.modulate = target
+		else:
+			var mat = ShaderMaterial.new()
+			mat.shader = _save_shader
+			save_indicator.material = mat
+			save_indicator.material.set_shader_parameter("target_color", target)
+			save_indicator.material.set_shader_parameter("force_tint", 1.0)
+			save_indicator.modulate = target
+	else:
+		print("HUD: save_indicator is null, cannot set shader")
+
+
+func _stop_save_tween() -> void:
+	if _save_tween != null and _save_tween.is_running():
+		_save_tween.kill()
+	_save_tween = null

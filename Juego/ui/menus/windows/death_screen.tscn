@@ -1,0 +1,52 @@
+[gd_scene load_steps=4 format=3 uid="uid://cmkvxoluvxcr"]
+
+[ext_resource type="Script" path="res://ui/menus/windows/death_screen.gd" id="1_death"]
+[ext_resource type="PackedScene" path="res://addons/maaacks_menus_template/base/nodes/windows/overlaid_window.tscn" id="2_ow"]
+[ext_resource type="Theme" path="res://ui/menus/main_menu/main_menu_shell_theme.tres" id="4_shell"]
+
+[node name="DeathScreen" instance=ExtResource("2_ow")]
+custom_minimum_size = Vector2(320, 240)
+script = ExtResource("1_death")
+theme = ExtResource("4_shell")
+pauses_game = true
+exclusive_background_color = Color(0, 0, 0, 0.7)
+
+[node name="TitleMargin" parent="ContentContainer/BoxContainer" index="0"]
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 8
+
+[node name="TitleLabel" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer" index="0"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.95, 0.96, 0.99, 1)
+text = "Has muerto"
+horizontal_alignment = 1
+
+[node name="MenuButtonsMargin" parent="ContentContainer/BoxContainer" index="1"]
+theme_override_constants/margin_top = 8
+
+[node name="MenuButtons" parent="ContentContainer/BoxContainer/MenuButtonsMargin" index="0"]
+unique_name_in_owner = true
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+alignment = 1
+vertical = true
+
+[node name="CloseButton" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
+visible = false
+text = ""
+
+[node name="RetryButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reintentar"
+
+[node name="MainMenuButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Menú Principal"
+
+[connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/RetryButton" to="." method="_on_retry_button_pressed"]
+[connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
