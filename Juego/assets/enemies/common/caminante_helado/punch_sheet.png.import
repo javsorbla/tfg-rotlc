@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dxbfdmj5acc7c"
-path="res://.godot/imported/iddle-gemini-front.PNG-54183d5a97b39a060dda973b0483d5c9.ctex"
+uid="uid://bxkgnme66ivb4"
+path="res://.godot/imported/punch_sheet.png-59943f79a4378e17e071a16fa1b7add9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/caminante_helado/iddle-gemini-front.PNG"
-dest_files=["res://.godot/imported/iddle-gemini-front.PNG-54183d5a97b39a060dda973b0483d5c9.ctex"]
+source_file="res://assets/enemies/common/caminante_helado/punch_sheet.png"
+dest_files=["res://.godot/imported/punch_sheet.png-59943f79a4378e17e071a16fa1b7add9.ctex"]
 
 [params]
 

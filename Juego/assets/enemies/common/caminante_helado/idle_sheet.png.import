@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://do068ppbehv1u"
-path="res://.godot/imported/iddle.png-f39aeb8626ed0162a1be532937842f14.ctex"
+uid="uid://c7afpogbehf0e"
+path="res://.godot/imported/idle_sheet.png-2806488cf5a7b8b8eca4ff30b023651d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/caminante_helado/iddle.png"
-dest_files=["res://.godot/imported/iddle.png-f39aeb8626ed0162a1be532937842f14.ctex"]
+source_file="res://assets/enemies/common/caminante_helado/idle_sheet.png"
+dest_files=["res://.godot/imported/idle_sheet.png-2806488cf5a7b8b8eca4ff30b023651d.ctex"]
 
 [params]
 

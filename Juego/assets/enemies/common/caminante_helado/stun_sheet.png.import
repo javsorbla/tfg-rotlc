@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dokursj1w1p42"
-path="res://.godot/imported/dead.png-8916ce8613b98ee2c851ece213c6aa39.ctex"
+uid="uid://0qwimds6g0jw"
+path="res://.godot/imported/stun_sheet.png-730d3ea273d69edb2bc4b117e42d6d79.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/caminante_helado/dead.png"
-dest_files=["res://.godot/imported/dead.png-8916ce8613b98ee2c851ece213c6aa39.ctex"]
+source_file="res://assets/enemies/common/caminante_helado/stun_sheet.png"
+dest_files=["res://.godot/imported/stun_sheet.png-730d3ea273d69edb2bc4b117e42d6d79.ctex"]
 
 [params]
 
