@@ -1,6 +1,9 @@
 extends Node
 
 signal level_reset
+signal save_started(reason: String)
+signal save_finished(success: bool)
+signal player_progress_reset
 
 var spawn_position = Vector2.ZERO
 var checkpoint_activated = false
@@ -17,6 +20,10 @@ const UMBRA_FINETUNE_JOBS_LOG_PATH := "user://umbra_finetune_jobs.jsonl"
 const UMBRA_FINETUNE_MAX_DURATION_MSEC := 180000
 const UMBRA_HEADLESS_ENV_PATH := ""
 const EDITOR_DISABLE_PLAYER_PROGRESS_PERSISTENCE := true
+const SAVE_DATA_VERSION := 1
+const SAVE_PATH := "user://savegame.json"
+const SAVE_TMP_PATH := "user://savegame.json.tmp"
+const SAVE_BAK_PATH := "user://savegame.json.bak"
 
 const DEFAULT_UMBRA_PLAYER_METRICS := {
 	"avg_distance": 200.0,
@@ -36,6 +43,18 @@ var current_level: int = 0
 var cleared_boss_rooms: Dictionary = {}
 var current_level_path: String = ""
 
+const LEVEL_ORDER := [
+	"res://scenes/Tutorial.tscn",
+	"res://scenes/CamposDeZafiro.tscn",
+	"res://scenes/MontañasDeCeniza.tscn",
+	"res://scenes/CostaAmbar.tscn",
+]
+
+# Mapping of levels to their default boss power (extend as needed)
+const LEVEL_DEFAULT_POWER := {
+	2: "cyan" # MontañasDeCeniza -> cyan (Ice Guardian)
+}
+
 var _finetuning_process_id: int = -1
 var is_finetuning := false
 var _finetune_job_started_msec: int = 0
@@ -51,7 +70,16 @@ func _make_default_player_progress() -> Dictionary:
 	return {
 		"max_health_bonus": 0,
 		"prism_core_collected": false,
-		"prism_core_collected_levels": {}
+		"prism_core_collected_levels": {},
+		"unlocked_powers": _make_default_unlocked_powers()
+	}
+
+
+func _make_default_unlocked_powers() -> Dictionary:
+	return {
+		"cyan": false,
+		"red": false,
+		"yellow": false
 	}
 
 
@@ -103,6 +131,8 @@ func _load_player_progress() -> void:
 	if typeof(player_progress.get("prism_core_collected_levels", {})) != TYPE_DICTIONARY:
 		player_progress["prism_core_collected_levels"] = {}
 
+	_ensure_unlocked_powers_defaults()
+
 	# Evita estados inconsistentes si el bonus existe pero la bandera no.
 	if int(player_progress.get("max_health_bonus", 0)) > 0:
 		player_progress["prism_core_collected"] = true
@@ -130,6 +160,88 @@ func _save_player_progress() -> void:
 	file.close()
 
 
+func has_save() -> bool:
+	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(SAVE_BAK_PATH)
+
+
+func save_game(reason := "") -> bool:
+	emit_signal("save_started", reason)
+	_ensure_unlocked_powers_defaults()
+	var payload := _build_save_payload()
+	var wrapper := _wrap_save_payload(payload)
+	var json_text := JSON.stringify(wrapper, "\t")
+	var success := _write_save_file(json_text)
+	emit_signal("save_finished", success)
+	return success
+
+
+func reset_for_new_game() -> void:
+	# Remove existing save files and reset in-memory progress to defaults.
+	if FileAccess.file_exists(SAVE_PATH):
+		var abs := ProjectSettings.globalize_path(SAVE_PATH)
+		DirAccess.remove_absolute(abs)
+	if FileAccess.file_exists(SAVE_BAK_PATH):
+		var abs_bak := ProjectSettings.globalize_path(SAVE_BAK_PATH)
+		DirAccess.remove_absolute(abs_bak)
+	if FileAccess.file_exists(PLAYER_PROGRESS_PATH):
+		var abs_pp := ProjectSettings.globalize_path(PLAYER_PROGRESS_PATH)
+		DirAccess.remove_absolute(abs_pp)
+	if FileAccess.file_exists(UMBRA_SAVE_PATH):
+		var abs_umbra := ProjectSettings.globalize_path(UMBRA_SAVE_PATH)
+		DirAccess.remove_absolute(abs_umbra)
+
+	player_progress = _make_default_player_progress()
+	umbra_progress = _make_default_umbra_progress()
+	current_level = 0
+	current_level_path = ""
+	spawn_position = Vector2.ZERO
+	checkpoint_activated = false
+
+	# Persist cleared player progress (so has_save() returns false)
+	_save_player_progress()
+
+	# Notify listeners (HUD, player) that progress was reset
+	emit_signal("player_progress_reset")
+
+
+func load_game() -> bool:
+	var loaded := _load_game_from_path(SAVE_PATH)
+	if loaded:
+		return true
+	return _load_game_from_path(SAVE_BAK_PATH)
+
+
+func activate_checkpoint(position: Vector2, reason := "checkpoint") -> bool:
+	if position == spawn_position and checkpoint_activated:
+		return false
+	spawn_position = position
+	checkpoint_activated = true
+	save_game(reason)
+	return true
+
+
+func get_unlocked_powers() -> Dictionary:
+	var unlocked_var: Variant = player_progress.get("unlocked_powers", _make_default_unlocked_powers())
+	if typeof(unlocked_var) != TYPE_DICTIONARY:
+		unlocked_var = _make_default_unlocked_powers()
+	var unlocked: Dictionary = unlocked_var
+	return unlocked.duplicate(true)
+
+
+func unlock_power(color: String, save := true) -> bool:
+	var unlocked := get_unlocked_powers()
+	if not unlocked.has(color):
+		return false
+	if unlocked[color]:
+		return false
+	unlocked[color] = true
+	player_progress["unlocked_powers"] = unlocked
+	if save:
+		_save_player_progress()
+		save_game("unlock_power")
+	return true
+
+
 func _is_editor_ephemeral_player_progress_enabled() -> bool:
 	return EDITOR_DISABLE_PLAYER_PROGRESS_PERSISTENCE and OS.has_feature("editor")
 
@@ -155,6 +267,47 @@ func collect_prism_core(level_id: int = -1) -> bool:
 	player_progress["prism_core_collected_levels"] = collected_levels
 	_recompute_player_bonus_from_levels()
 	_save_player_progress()
+	save_game("prism_core")
+	return true
+
+
+func has_boss_crystal(level_id: int = -1, variant: int = 0) -> bool:
+	var resolved: int = level_id if level_id > 0 else current_level
+	var collected_var: Variant = player_progress.get("boss_crystals", {})
+	if typeof(collected_var) != TYPE_DICTIONARY:
+		return false
+	var collected: Dictionary = collected_var as Dictionary
+	var level_dict_var: Variant = collected.get(str(resolved), {})
+	if typeof(level_dict_var) != TYPE_DICTIONARY:
+		return false
+	var level_dict: Dictionary = level_dict_var as Dictionary
+	return bool(level_dict.get(str(variant), false))
+
+
+func collect_boss_crystal(level_id: int = -1, variant: int = 0) -> bool:
+	var resolved: int = level_id if level_id > 0 else current_level
+	if has_boss_crystal(resolved, variant):
+		return false
+	var collected_var: Variant = player_progress.get("boss_crystals", {})
+	var collected: Dictionary
+	if typeof(collected_var) != TYPE_DICTIONARY:
+		collected = {}
+	else:
+		collected = collected_var as Dictionary
+
+	var level_key: String = str(resolved)
+	var level_dict_var: Variant = collected.get(level_key, {})
+	var level_dict: Dictionary
+	if typeof(level_dict_var) != TYPE_DICTIONARY:
+		level_dict = {}
+	else:
+		level_dict = level_dict_var as Dictionary
+
+	level_dict[str(variant)] = true
+	collected[level_key] = level_dict
+	player_progress["boss_crystals"] = collected
+	_save_player_progress()
+	save_game("boss_crystal")
 	return true
 
 
@@ -163,11 +316,163 @@ func _resolve_prism_core_level(level_id: int) -> int:
 		return level_id
 	return maxi(1, current_level)
 
-
 func _recompute_player_bonus_from_levels() -> void:
 	var collected_levels: Dictionary = player_progress.get("prism_core_collected_levels", {})
 	player_progress["max_health_bonus"] = collected_levels.size()
 	player_progress["prism_core_collected"] = collected_levels.size() > 0
+	_ensure_unlocked_powers_defaults()
+
+
+func _ensure_unlocked_powers_defaults() -> void:
+	var unlocked_var: Variant = player_progress.get("unlocked_powers", _make_default_unlocked_powers())
+	if typeof(unlocked_var) != TYPE_DICTIONARY:
+		unlocked_var = _make_default_unlocked_powers()
+	var unlocked: Dictionary = unlocked_var
+	for key in _make_default_unlocked_powers().keys():
+		if not unlocked.has(key):
+			unlocked[key] = false
+	player_progress["unlocked_powers"] = unlocked
+
+
+func _build_save_payload() -> Dictionary:
+	return {
+		"version": SAVE_DATA_VERSION,
+		"saved_at_msec": Time.get_ticks_msec(),
+		"current_level": current_level,
+		"current_level_path": current_level_path,
+		"spawn_position": {
+			"x": spawn_position.x,
+			"y": spawn_position.y
+		},
+		"checkpoint_activated": checkpoint_activated,
+		"player_progress": player_progress.duplicate(true)
+	}
+
+
+func auto_unlock_power_for_level(level_id: int = -1) -> bool:
+	var resolved: int = level_id if level_id > 0 else current_level
+	if not LEVEL_DEFAULT_POWER.has(resolved):
+		return false
+	var color: String = LEVEL_DEFAULT_POWER[resolved]
+	var unlocked := get_unlocked_powers()
+	if unlocked.get(color, false):
+		return false
+	# Unlock and persist
+	var did := unlock_power(color)
+	# Apply to player ColorManager if present so effect is immediate
+	var player = get_tree().get_first_node_in_group("player")
+	if player != null:
+		var cm = player.get_node_or_null("ColorManager")
+		if cm != null and cm.has_method("apply_unlocked_powers"):
+			cm.apply_unlocked_powers(get_unlocked_powers())
+			if cm.has_method("change_state"):
+				match color:
+					"cyan":
+						if cm.cyan_state != null:
+							cm.change_state(cm.cyan_state)
+					"red":
+						if cm.red_state != null:
+							cm.change_state(cm.red_state)
+					"yellow":
+						if cm.yellow_state != null:
+							cm.change_state(cm.yellow_state)
+	return did
+
+
+func _wrap_save_payload(payload: Dictionary) -> Dictionary:
+	var payload_text := JSON.stringify(payload)
+	return {
+		"checksum": _compute_checksum(payload_text),
+		"payload": payload
+	}
+
+
+func _compute_checksum(text: String) -> String:
+	var context := HashingContext.new()
+	context.start(HashingContext.HASH_SHA256)
+	context.update(text.to_utf8_buffer())
+	return context.finish().hex_encode()
+
+
+func _write_save_file(json_text: String) -> bool:
+	var tmp := FileAccess.open(SAVE_TMP_PATH, FileAccess.WRITE)
+	if tmp == null:
+		push_warning("No se pudo abrir el archivo temporal de guardado")
+		return false
+	tmp.store_string(json_text)
+	tmp.close()
+
+	if FileAccess.file_exists(SAVE_PATH):
+		_copy_file(SAVE_PATH, SAVE_BAK_PATH)
+
+	var tmp_abs := ProjectSettings.globalize_path(SAVE_TMP_PATH)
+	var save_abs := ProjectSettings.globalize_path(SAVE_PATH)
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(save_abs)
+	var err := DirAccess.rename_absolute(tmp_abs, save_abs)
+	if err != OK:
+		push_warning("No se pudo completar el guardado: %s" % err)
+		return false
+	return true
+
+
+func _copy_file(source_path: String, target_path: String) -> void:
+	var bytes := FileAccess.get_file_as_bytes(source_path)
+	if bytes.is_empty():
+		return
+	var file := FileAccess.open(target_path, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_buffer(bytes)
+	file.close()
+
+
+func _load_game_from_path(path: String) -> bool:
+	if not FileAccess.file_exists(path):
+		return false
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return false
+	if not _validate_save_wrapper(parsed):
+		return false
+	var payload_var: Variant = parsed.get("payload", {})
+	if typeof(payload_var) != TYPE_DICTIONARY:
+		return false
+	var payload: Dictionary = payload_var
+	_apply_loaded_state(payload)
+	return true
+
+
+func _validate_save_wrapper(wrapper: Dictionary) -> bool:
+	if not wrapper.has("checksum") or not wrapper.has("payload"):
+		return false
+	if typeof(wrapper["payload"]) != TYPE_DICTIONARY:
+		return false
+	var payload_text := JSON.stringify(wrapper["payload"])
+	var checksum := str(wrapper.get("checksum", ""))
+	return checksum == _compute_checksum(payload_text)
+
+
+func _apply_loaded_state(payload: Dictionary) -> void:
+	current_level = int(payload.get("current_level", current_level))
+	current_level_path = str(payload.get("current_level_path", current_level_path))
+	checkpoint_activated = bool(payload.get("checkpoint_activated", checkpoint_activated))
+	var spawn_var: Variant = payload.get("spawn_position", {})
+	if typeof(spawn_var) == TYPE_DICTIONARY:
+		var spawn: Dictionary = spawn_var
+		spawn_position = Vector2(float(spawn.get("x", spawn_position.x)), float(spawn.get("y", spawn_position.y)))
+	var progress_var: Variant = payload.get("player_progress", {})
+	if typeof(progress_var) == TYPE_DICTIONARY:
+		var progress: Dictionary = progress_var
+		player_progress = _make_default_player_progress()
+		for key in player_progress.keys():
+			if progress.has(key):
+				player_progress[key] = progress[key]
+		_recompute_player_bonus_from_levels()
 
 
 func _load_umbra_progress() -> void:
@@ -531,6 +836,14 @@ func _resolve_headless_env_absolute() -> String:
 	return UMBRA_HEADLESS_ENV_PATH
 
 
+func get_next_level_scene() -> String:
+	# Return the scene path for the next level in LEVEL_ORDER based on current_level
+	var next_index := int(current_level) + 1
+	if next_index >= 0 and next_index < LEVEL_ORDER.size():
+		return LEVEL_ORDER[next_index]
+	return ""
+
+
 func _append_finetune_job_log(payload: Dictionary) -> void:
 	var file := FileAccess.open(UMBRA_FINETUNE_JOBS_LOG_PATH, FileAccess.WRITE_READ)
 	if file == null:
@@ -540,6 +853,22 @@ func _append_finetune_job_log(payload: Dictionary) -> void:
 	payload["timestamp_unix"] = Time.get_unix_time_from_system()
 	file.store_line(JSON.stringify(payload))
 	file.close()
+
+
+func request_level_change(next_scene: String) -> void:
+	if next_scene == "":
+		# try to resolve next scene from level order
+		var resolved := get_next_level_scene()
+		if resolved == "":
+			push_warning("request_level_change called with empty next_scene and no next level available")
+			return
+		next_scene = resolved
+	# mark that we're coming from a transition so respawn logic can adapt
+	coming_from_transition = true
+	# persist current state before changing (small save)
+	save_game("level_change")
+	# change scene
+	get_tree().change_scene(next_scene)
 
 
 func get_umbra_bootstrap_data() -> Dictionary:

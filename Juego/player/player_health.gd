@@ -133,6 +133,14 @@ func heal(amount: int):
 		heal_particles.restart()
 
 
+func heal_to_full() -> void:
+	current_health = MAX_HEALTH
+	Hud.update_hearts(current_health, MAX_HEALTH)
+	if heal_particles:
+		heal_particles.restart()
+
+
+
 func apply_prism_core_upgrade() -> bool:
 	var was_collected := GameState.collect_prism_core(GameState.current_level)
 	_sync_max_health_from_progress()
@@ -140,6 +148,10 @@ func apply_prism_core_upgrade() -> bool:
 	Hud.update_hearts(current_health, MAX_HEALTH)
 	if heal_particles:
 		heal_particles.restart()
+	# Play obtain animation only when collecting the prism core and not while shielding
+	if was_collected and player and player.has_method("play_obtain_animation"):
+		if not player.is_shielding:
+			player.play_obtain_animation()
 	return was_collected
 
 

@@ -8,9 +8,11 @@ const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
 func _ready() -> void:
 	GameState.current_level = 0
 	GameState.current_level_path = "res://scenes/Tutorial.tscn"
+
+	if GameState.has_method("auto_unlock_power_for_level"):
+		GameState.auto_unlock_power_for_level()
 	_ensure_pause_menu_layer()
 	_ensure_death_screen()
-	Hud.show_hud()
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
 
@@ -56,7 +58,6 @@ func _mover_player() -> void:
 			if camera.has_method("reset_smoothing"):
 				camera.reset_smoothing()
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	pass
 

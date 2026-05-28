@@ -31,6 +31,8 @@ var current_speed: float = CHASE_SPEED_SHIELD
 
 var patrol_dir: float = 1.0
 var patrol_origin: Vector2 = Vector2.ZERO
+var hit_wall: bool = false
+var breaking_shield: bool = false
 var spawn_position = Vector2.ZERO
 
 func _ready() -> void:
@@ -80,20 +82,25 @@ func _enter_state(new_state: State) -> void:
 		State.PATROL:
 			velocity = Vector2.ZERO
 			$EnemyHitbox.add_to_group("enemy_hitbox")
-			$AnimatedSprite2D.play("shield" if shield_active else "damaged")
+			if $AnimatedSprite2D.animation != "break_shield":
+				$AnimatedSprite2D.play("shield" if shield_active else "damaged")
 
 		State.ATTACK:
 			turn_timer = 0.0
 			$EnemyHitbox.add_to_group("enemy_hitbox")
+			if hit_wall:
+				$AnimatedSprite2D.play("shield_idle" if shield_active else "damaged_idle")
+				hit_wall = false
 			if player:
 				is_facing_right = player.global_position.x > global_position.x
 			current_speed = CHASE_SPEED_SHIELD if shield_active else CHASE_SPEED_NO_SHIELD
 			velocity.x = current_speed * (1 if is_facing_right else -1)
-			$AnimatedSprite2D.play("shield" if shield_active else "damaged")
+			if $AnimatedSprite2D.animation != "break_shield":
+				$AnimatedSprite2D.play("shield" if shield_active else "damaged")
 
 		State.STUNNED:
 			velocity = Vector2.ZERO
-			$AnimatedSprite2D.play("stunned")
+			$AnimatedSprite2D.play("shield_stun" if shield_active else "damaged_stun")
 			
 		State.FAINTED:
 			velocity = Vector2.ZERO
@@ -103,6 +110,10 @@ func _enter_state(new_state: State) -> void:
 
 
 func _state_patrol() -> void:
+	if breaking_shield:
+		velocity = Vector2.ZERO
+		return
+		
 	var space_state = get_world_2d().direct_space_state
 	var edge_check_pos = global_position + Vector2(patrol_dir * EDGE_CHECK_DISTANCE, 0)
 	var query = PhysicsRayQueryParameters2D.create(
@@ -125,6 +136,10 @@ func _state_patrol() -> void:
 	elif global_position.x <= patrol_origin.x - PATROL_X_RANGE:
 		patrol_dir = 1.0
 		patrol_origin = global_position
+		
+	var correct_anim = "shield" if shield_active else "damaged"
+	if $AnimatedSprite2D.animation != correct_anim:
+		$AnimatedSprite2D.play(correct_anim)
 
 	if player:
 		$Vision.target_position = player.global_position - global_position
@@ -136,6 +151,10 @@ func _state_patrol() -> void:
 
 
 func _state_attack(delta: float) -> void:
+	if breaking_shield:
+		velocity = Vector2.ZERO
+		return
+		
 	if not player:
 		_enter_state(State.PATROL)
 		return
@@ -156,6 +175,8 @@ func _state_attack(delta: float) -> void:
 
 	if not turning and (global_position.distance_to(player.global_position) > LOSE_DISTANCE \
 			or $Vision.is_colliding() or is_on_wall() or not space_state.intersect_ray(query)):
+		
+		hit_wall = is_on_wall()
 		patrol_dir = -chase_dir
 		patrol_origin = global_position
 		_enter_state(State.PATROL)
@@ -172,6 +193,14 @@ func _state_attack(delta: float) -> void:
 
 	current_speed = lerp(current_speed, CHASE_SPEED_SHIELD if shield_active else CHASE_SPEED_NO_SHIELD, delta * 2.0)
 	velocity.x = current_speed * (1 if is_facing_right else -1)
+
+	var real_vel = get_real_velocity()
+	if is_on_wall() or (abs(real_vel.x) < 5.0 and abs(velocity.x) > 5.0):
+		$AnimatedSprite2D.play("shield_idle" if shield_active else "damaged_idle")
+	elif $AnimatedSprite2D.animation != "break_shield":
+		var correct_anim = "shield" if shield_active else "damaged"
+		if $AnimatedSprite2D.animation != correct_anim:
+			$AnimatedSprite2D.play(correct_anim)
 	
 
 func _state_stunned(delta: float) -> void:
@@ -185,16 +214,20 @@ func _state_stunned(delta: float) -> void:
 
 
 func _state_fainted(delta: float) -> void:
-	# El enemigo no muere, tras unos segundos revive sin escudo
 	velocity = Vector2.ZERO
 	revive_timer -= delta
 	if revive_timer <= 0:
 		current_health = MAX_HEALTH
 		shield_active = false
-		if player and global_position.distance_to(player.global_position) <= DETECT_DISTANCE:
-			_enter_state(State.ATTACK)
-		else:
-			_enter_state(State.PATROL)
+		$AnimatedSprite2D.play("revive")
+		$AnimatedSprite2D.animation_finished.connect(_on_revive_finished, CONNECT_ONE_SHOT)
+
+
+func _on_revive_finished() -> void:
+	if player and global_position.distance_to(player.global_position) <= DETECT_DISTANCE:
+		_enter_state(State.ATTACK)
+	else:
+		_enter_state(State.PATROL)
 
 
 func _is_hit_from_behind() -> bool:
@@ -202,7 +235,6 @@ func _is_hit_from_behind() -> bool:
 		return false
 	var facing = Vector2(1.0 if is_facing_right else -1.0, 0.0)
 	return facing.dot((player.global_position - global_position).normalized()) < 0.0
-
 	
 	
 func take_damage(amount: int) -> void:
@@ -218,7 +250,10 @@ func take_damage(amount: int) -> void:
 	if shield_active:
 		if not from_behind and has_red_power:
 			shield_active = false
-			$AnimatedSprite2D.play("damaged")
+			breaking_shield = true
+			$AnimatedSprite2D.play("break_shield")
+			$AnimatedSprite2D.animation_finished.connect(_on_break_shield_finished, CONNECT_ONE_SHOT)
+			return
 		if not from_behind:
 			if player and player is CharacterBody2D:
 				var dir = sign(player.global_position.x - global_position.x)
@@ -234,6 +269,11 @@ func take_damage(amount: int) -> void:
 	stun_timer = STUN_DURATION
 	_enter_state(State.STUNNED)
 
+
+func _on_break_shield_finished() -> void:
+	breaking_shield = false
+	$AnimatedSprite2D.play("damaged")
+	
 
 func _on_enemy_hitbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player_hurtbox"):

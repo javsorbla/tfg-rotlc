@@ -1,5 +1,6 @@
-﻿extends Node2D
+extends Node2D
 
+const MONTANAS_SCENE := "res://scenes/MontañasDeCeniza.tscn"
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
 
@@ -8,9 +9,11 @@ const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
 func _ready() -> void:
 	GameState.current_level = 1
 	GameState.current_level_path = "res://scenes/CamposDeZafiro.tscn"
+
+	if GameState.has_method("auto_unlock_power_for_level"):
+		GameState.auto_unlock_power_for_level()
 	_ensure_pause_menu_layer()
 	_ensure_death_screen()
-	Hud.show_hud()
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
 
@@ -65,6 +68,11 @@ func _mover_player() -> void:
 			camera.global_position = player.global_position + Vector2(30, -10)
 			if camera.has_method("reset_smoothing"):
 				camera.reset_smoothing()
+
+func _on_final_body_entered(body) -> void:
+	if body is CharacterBody2D:
+		GameState.coming_from_transition = true
+		get_tree().call_deferred("change_scene_to_file", MONTANAS_SCENE)
 
 func _on_player_died(_owner: Node) -> void:
 	var death_screen = get_node_or_null("DeathScreenLayer/DeathScreen")

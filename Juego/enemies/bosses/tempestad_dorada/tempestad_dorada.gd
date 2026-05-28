@@ -131,6 +131,33 @@ var hit_cooldown: float = 0.0
 @onready var hurricane_scene = preload("res://enemies/bosses/tempestad_dorada/Huracan.tscn")
 @onready var storm_scene = preload("res://enemies/bosses/tempestad_dorada/Tormenta.tscn")
 
+const CRYSTAL_SCENE: PackedScene = preload("res://objects/Cristal.tscn")
+
+func _spawn_final_boss_crystal(variant_idx: int = 2, offset := Vector2(0, -34)) -> void:
+	if CRYSTAL_SCENE == null:
+		return
+	# no spawnear si ya se recogio en este nivel
+	if GameState.has_boss_crystal(GameState.current_level, variant_idx):
+		return
+	# evitar en modo sync/control remoto
+	var sync_node = get_tree().get_first_node_in_group("sync_node")
+	if sync_node != null and int(sync_node.control_mode) == 1:
+		return
+	# evitar duplicados en escena
+	if get_tree().get_nodes_in_group("boss_crystal").size() > 0:
+		return
+
+	var scene_root = get_tree().root.get_child(0)
+	if scene_root == null:
+		return
+
+	var crystal = CRYSTAL_SCENE.instantiate()
+	crystal.global_position = global_position + offset
+	crystal.visual_variant = variant_idx
+	crystal.level_id = GameState.current_level
+	crystal.add_to_group("boss_crystal")
+	scene_root.call_deferred("add_child", crystal)
+
 func _set_dive_shapes(diving: bool):
 	body_patrol.set_deferred("disabled", diving)
 	body_dive.set_deferred("disabled", not diving)
@@ -166,12 +193,30 @@ func _ready():
 	
 	_set_dive_shapes(false)
 
+
+func _get_closest_boss_room() -> Node:
+	var boss_rooms = get_tree().get_nodes_in_group("boss_room")
+	var closest_room: Node = null
+	var closest_dist := INF
+
+	for room in boss_rooms:
+		var room_node := room as Node2D
+		if room_node == null:
+			continue
+
+		var dist := global_position.distance_to(room_node.global_position)
+		if dist < closest_dist:
+			closest_dist = dist
+			closest_room = room_node
+
+	return closest_room
+
 func _physics_process(delta):
 	if not is_active:
 		return
 
 	if room_right_limit == 0.0:
-		var boss_room = get_tree().get_first_node_in_group("boss_room")
+		var boss_room = _get_closest_boss_room()
 		if boss_room:
 			room_left_limit = boss_room.get_node("LimiteIzquierda").global_position.x
 			room_right_limit = boss_room.get_node("LimiteDerecha").global_position.x
@@ -721,7 +766,8 @@ func is_hurting() -> bool:
 
 func die():
 	current_state = State.PATROL
-	var boss_room = get_tree().get_first_node_in_group("boss_room")
+	_spawn_final_boss_crystal(2)
+	var boss_room = _get_closest_boss_room()
 	if boss_room:
 		boss_room.on_boss_defeated()
 	queue_free()
