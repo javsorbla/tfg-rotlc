@@ -4,15 +4,17 @@ signal advance_requested
 
 @export var default_duration: float = 3.0
 @export var intro_action: String = "ui_accept"
+@export var skip_action: String = "ui_cancel"
 
 @onready var label: Label = get_node_or_null("TutorialMessageLayer/MessageLabel")
 @onready var anim: AnimationPlayer = get_node_or_null("MessageAnim")
 @onready var backdrop: ColorRect = get_node_or_null("TutorialMessageLayer/Backdrop")
 @onready var pulse_node: ColorRect = get_node_or_null("TutorialMessageLayer/Pulse")
+@onready var particles: GPUParticles2D = get_node_or_null("MessageLabelParticles")
 
 @export var intro_color: Color = Color(1, 1, 1, 1)        # blanco para la intro
 @export var zone_color: Color = Color(1, 0.82, 0.27, 1)   # dorado para las zonas
-@export var zone_message_offset: Vector2 = Vector2(0, 100)
+@export var zone_message_offset: Vector2 = Vector2(0, -180)
 @export var intro_fade_in_duration: float = 0.8
 @export var intro_fade_out_duration: float = 0.5
 @export var zone_fade_in_duration: float = 0.3
@@ -24,11 +26,13 @@ var _queue: Array[Dictionary] = []
 var _is_showing := false
 var _sequence_active := false
 var _waiting_for_input := false
+var _skip_requested := false
 
 var _celestial_material: ShaderMaterial = null
 
 func _ready() -> void:
 	add_to_group("tutorial_message_manager")
+	set_process(true)
 	if label != null:
 		_default_offset = Vector2(label.offset_left, label.offset_top)
 		_celestial_material = label.material
@@ -42,7 +46,6 @@ func _ready() -> void:
 		if sm != null:
 			sm.set_shader_parameter("ring_radius", 0.0)
 			sm.set_shader_parameter("pulse_color", Color(1.0, 1.0, 1.0, 0.0))
-
 func show_message(text: String, duration: float = -1.0, wait_for_input: bool = false) -> void:
 	_queue.append({
 		"text": text,
@@ -53,9 +56,12 @@ func show_message(text: String, duration: float = -1.0, wait_for_input: bool = f
 		call_deferred("_play_next")
 
 func play_intro_sequence(texts: Array) -> void:
+	_skip_requested = false
 	_sequence_active = true
 	_set_backdrop(true)
 	for text in texts:
+		if _skip_requested:
+			break
 		await _show_message_blocking(text, -1.0, true, true)
 	_set_backdrop(false)
 	_sequence_active = false
@@ -78,6 +84,10 @@ func _play_next() -> void:
 
 func _show_message_blocking(text: String, duration: float, wait_for_input: bool, is_intro: bool = false) -> void:
 	_is_showing = true
+	# If skip was requested, only skip intro messages — allow zone messages to show
+	if _skip_requested and is_intro:
+		_is_showing = false
+		return
 	if label == null:
 		_is_showing = false
 		return
@@ -108,6 +118,14 @@ func _show_message_blocking(text: String, duration: float, wait_for_input: bool,
 	var fade_out_speed := (1.0 / intro_fade_out_duration) if is_intro else (1.0 / zone_fade_out_duration)
 
 	if anim != null and anim.has_animation("fade_in"):
+		# Start particles when label fades in
+		if particles != null:
+			# Position particles at the label's global position so emission aligns with text
+			if label != null:
+				particles.global_position = label.global_position
+			particles.visible = true
+			particles.emitting = true
+			particles.z_index = 200
 		anim.speed_scale = fade_in_speed
 		anim.play("fade_in")
 		await get_tree().process_frame
@@ -118,6 +136,9 @@ func _show_message_blocking(text: String, duration: float, wait_for_input: bool,
 		label.visible = true
 		if label is CanvasItem:
 			label.raise()
+		if particles != null:
+			particles.visible = true
+			particles.emitting = true
 		await get_tree().process_frame
 
 	if wait_for_input:
@@ -134,22 +155,69 @@ func _show_message_blocking(text: String, duration: float, wait_for_input: bool,
 		await get_tree().process_frame
 		await anim.animation_finished
 		label.modulate = Color(1, 1, 1, 0)
+		if particles != null:
+			particles.emitting = false
+			particles.visible = false
 		anim.speed_scale = 1.0
 	else:
 		label.modulate.a = 0.0
+		if particles != null:
+			particles.emitting = false
+			particles.visible = false
 		await get_tree().process_frame
 
 func _wait_for_advance() -> void:
 	await advance_requested
 
 func _unhandled_input(event: InputEvent) -> void:
+	print("[TMM] _unhandled_input event:", event)
+	if event.is_action_pressed(skip_action):
+		print("[TMM] skip_action pressed via _unhandled_input")
+		get_viewport().set_input_as_handled()
+		_skip_intro()
+		return
 	if not _waiting_for_input:
 		return
 	if event.is_action_pressed(intro_action):
+		print("[TMM] intro_action pressed")
 		get_viewport().set_input_as_handled()
 		_waiting_for_input = false  # evita doble input mientras espera el pulso
+		# Debug: report particle state and force emit if not emitting
+		if particles != null:
+			print("[TMM] debug before pulse: particles.emitting=", particles.emitting, " visible=", particles.visible)
+			if not particles.emitting:
+				particles.visible = true
+				particles.emitting = true
+				print("[TMM] debug: forced particles.emitting -> true")
 		await _trigger_pulse()
 		emit_signal("advance_requested")
+		return
+	return
+
+func _skip_intro() -> void:
+	_queue.clear()
+	_sequence_active = false
+	_is_showing = false
+	_waiting_for_input = false
+	_skip_requested = true
+	if anim != null:
+		anim.stop()
+	if label != null:
+		label.modulate = Color(1,1,1,0)
+		label.visible = false
+	_set_backdrop(false)
+	if pulse_node != null:
+		pulse_node.visible = false
+		var mat: ShaderMaterial = pulse_node.material as ShaderMaterial
+		if mat != null:
+			mat.set_shader_parameter("pulse_color", Color(1,1,1,0.0))
+	if particles != null:
+		particles.emitting = false
+		particles.visible = false
+	for p in get_tree().get_nodes_in_group("player"):
+		if p != null and p.has_method("set_input_enabled"):
+			p.set_input_enabled(true)
+	emit_signal("advance_requested")
 
 func _set_backdrop(visible: bool) -> void:
 	if backdrop != null:
@@ -193,3 +261,7 @@ func _trigger_pulse() -> void:
 
 	pulse_node.visible = false
 	mat.set_shader_parameter("pulse_color", Color(1.0, 1.0, 1.0, 0.0))
+
+func _process(delta: float) -> void:
+	if Input.is_action_just_pressed(skip_action):
+		_skip_intro()
