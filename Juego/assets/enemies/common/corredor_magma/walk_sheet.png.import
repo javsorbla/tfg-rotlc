@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://g6425rh2okeu"
-path="res://.godot/imported/dead.png-1779b840bc71d5558182d9adef0e8085.ctex"
+uid="uid://db7ojkd7fexst"
+path="res://.godot/imported/walk_sheet.png-df44ef47c46130e6802db6a7f2d094f7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/corredor_magma/dead.png"
-dest_files=["res://.godot/imported/dead.png-1779b840bc71d5558182d9adef0e8085.ctex"]
+source_file="res://assets/enemies/common/corredor_magma/walk_sheet.png"
+dest_files=["res://.godot/imported/walk_sheet.png-df44ef47c46130e6802db6a7f2d094f7.ctex"]
 
 [params]
 
