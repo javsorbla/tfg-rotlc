@@ -17,7 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://brsnap3ngcjrq" path="res://enemies/common/corredor_magma/CorredorMagma.tscn" id="9_jgd2x"]
 [ext_resource type="PackedScene" uid="uid://de81d3hggbewt" path="res://scenes/enviroment/ZonaLluvia.tscn" id="10_g7adb"]
 [ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="11_w2q40"]
-[ext_resource type="PackedScene" path="res://scenes/enviroment/Checkpoint.tscn" id="11_xrm0j"]
+[ext_resource type="PackedScene" uid="uid://do0au5ur218xe" path="res://scenes/enviroment/Checkpoint.tscn" id="11_xrm0j"]
 [ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="12_qblky"]
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="14_7tadn"]
 [ext_resource type="PackedScene" uid="uid://btspr1ib0d52y" path="res://enemies/bosses/tempestad_dorada/TempestadDorada.tscn" id="19_ac78p"]

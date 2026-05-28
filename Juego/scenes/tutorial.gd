@@ -4,7 +4,8 @@ const CAMPOS_SCENE := "res://scenes/CamposDeZafiro.tscn"
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
 
-# Called when the node enters the scene tree for the first time.
+@onready var message_manager: Node = get_node_or_null("TutorialMessageManager")
+
 func _ready() -> void:
 	GameState.current_level = 0
 	GameState.current_level_path = "res://scenes/Tutorial.tscn"
@@ -15,6 +16,22 @@ func _ready() -> void:
 	_ensure_death_screen()
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
+	call_deferred("_start_intro_sequence")
+
+func _start_intro_sequence() -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	if player != null and player.has_method("set_input_enabled"):
+		player.set_input_enabled(false)
+	if message_manager != null and message_manager.has_method("play_intro_sequence"):
+		await message_manager.play_intro_sequence([
+			"Despierta...",
+			"Los colores han sido robados",
+			"No queda mucho tiempo, Chromia te necesita",
+			"Yo te guiaré ante el mal",
+			"Iris"
+		])
+	if player != null and player.has_method("set_input_enabled"):
+		player.set_input_enabled(true)
 
 func _ensure_pause_menu_layer() -> void:
 	if get_node_or_null("PauseMenuLayer") != null:

@@ -39,6 +39,7 @@ var _obtain_playing = false
 var _shield_anim_playing = false
 var _shield_anim_in_progress = false
 var _prev_is_shielding = false
+var input_enabled = true
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -71,7 +72,25 @@ func _ready():
 	if sprite:
 		sprite.animation_finished.connect(Callable(self, "_on_sprite_animation_finished"))
 
+func set_input_enabled(enabled: bool) -> void:
+	input_enabled = enabled
+	if not input_enabled:
+		velocity = Vector2.ZERO
+
 func _physics_process(delta: float) -> void:
+	if not input_enabled:
+		if not is_on_floor():
+			velocity += get_gravity() * delta
+		else:
+			velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
+		move_and_slide()
+		_check_checkpoints()
+		health.process(delta)
+		combat.process(delta)
+		color_manager.process(delta)
+		_update_animation(delta)
+		_prev_combat_attacking = combat.is_attacking
+		return
 	if dash_cooldown_timer > 0:
 		dash_cooldown_timer -= delta
 
