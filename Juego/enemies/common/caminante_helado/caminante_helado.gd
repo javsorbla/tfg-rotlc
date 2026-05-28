@@ -8,7 +8,7 @@ const CHASE_SPEED: float = 60.0
 const DETECTION_DISTANCE: float = 220.0 
 const PATROL_X_RANGE: float = 48.0
 const STUN_DURATION: float = 0.5
-const HIT_PAUSE_DURATION: float = 1.1
+const HIT_PAUSE_DURATION: float = 0.7
 const DEAD_VISIBLE_TIME: float = 1.1
 
 # --- ESTADOS ---
@@ -134,7 +134,7 @@ func _enter_state(new_state: State) -> void:
 			pass 
 			
 		State.ATTACK_PAUSE:
-			sprite.play("idle") 
+			sprite.play("punch") 
 			sprite.flip_h = (facing_dir > 0)
 			velocity.x = 0
 			
