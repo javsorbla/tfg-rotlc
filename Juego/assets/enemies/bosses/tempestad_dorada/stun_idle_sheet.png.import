@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://da8ydomgn18mu"
-path="res://.godot/imported/idle.png-5cb48e95af70cecaa71113e64af55680.ctex"
+uid="uid://cyvwcxyvf4hts"
+path="res://.godot/imported/stun_idle_sheet.png-d0dea67f98d8eb89fd1e95fb54339ade.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/tempestad_dorada/idle.png"
-dest_files=["res://.godot/imported/idle.png-5cb48e95af70cecaa71113e64af55680.ctex"]
+source_file="res://assets/enemies/bosses/tempestad_dorada/stun_idle_sheet.png"
+dest_files=["res://.godot/imported/stun_idle_sheet.png-d0dea67f98d8eb89fd1e95fb54339ade.ctex"]
 
 [params]
 

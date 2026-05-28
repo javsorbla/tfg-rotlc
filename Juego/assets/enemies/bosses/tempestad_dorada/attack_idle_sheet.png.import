@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgm1xjh34qyb0"
-path="res://.godot/imported/attack.png-6eab310986ba8d58ac5a3b3d81a9f131.ctex"
+uid="uid://4fpnwa5iukwn"
+path="res://.godot/imported/attack_idle_sheet.png-64184ea04307b13a05d58bec8e4f6a94.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/tempestad_dorada/attack.png"
-dest_files=["res://.godot/imported/attack.png-6eab310986ba8d58ac5a3b3d81a9f131.ctex"]
+source_file="res://assets/enemies/bosses/tempestad_dorada/attack_idle_sheet.png"
+dest_files=["res://.godot/imported/attack_idle_sheet.png-64184ea04307b13a05d58bec8e4f6a94.ctex"]
 
 [params]
 

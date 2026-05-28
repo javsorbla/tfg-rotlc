@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://2uecjcfs2c1e"
-path="res://.godot/imported/stun.png-edf83fbb2f993dda7d7f0a2df3195f99.ctex"
+uid="uid://djvs4irghf0ni"
+path="res://.godot/imported/charge_sheet.png-02abd7159f57b42c4533902a37b17bce.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/tempestad_dorada/stun.png"
-dest_files=["res://.godot/imported/stun.png-edf83fbb2f993dda7d7f0a2df3195f99.ctex"]
+source_file="res://assets/enemies/bosses/tempestad_dorada/charge_sheet.png"
+dest_files=["res://.godot/imported/charge_sheet.png-02abd7159f57b42c4533902a37b17bce.ctex"]
 
 [params]
 

@@ -192,6 +192,20 @@ func _ready():
 	wing_hurtbox_2.area_entered.connect(_on_wing2_area_entered)
 	
 	_set_dive_shapes(false)
+	sprite.animation_finished.connect(_on_sprite_animation_finished)
+
+
+func _on_sprite_animation_finished():
+	match sprite.animation:
+		"attack":
+			if current_state == State.DIVE:
+				sprite.play("attack_idle")
+		"charging":
+			if ray_winding_up:
+				sprite.play("charging_idle")
+		"stun":
+			if current_state == State.STUNNED:
+				sprite.play("stun_idle")
 
 
 func _get_closest_boss_room() -> Node:
@@ -331,7 +345,7 @@ func _pause_state(delta):
 		if ray_duration_timer <= 0.0:
 			ray_instance.queue_free()
 			ray_instance = null
-			sprite.play("idle")
+			sprite.play("fly")
 			current_state = State.PATROL
 		return
 		
@@ -342,7 +356,8 @@ func _pause_state(delta):
 		position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 		if hurricane_duration_timer <= 0.0:
 			hurricane_active = false
-			sprite.play("idle")
+			sprite.speed_scale = 1.0
+			sprite.play("fly")
 			current_state = State.PATROL
 		return
 
@@ -356,6 +371,8 @@ func _pause_state(delta):
 			hurricane_duration_timer = HURRICANE_DURATION
 			hurricane_timer = HURRICANE_COOLDOWN
 			_start_hurricane()
+			sprite.speed_scale = 1.5
+			sprite.play("fly")
 		elif ray_cooldown_timer <= 0.0:
 			ray_end = player.global_position
 			ray_winding_up = true
@@ -364,6 +381,7 @@ func _pause_state(delta):
 			sprite.play("charging")
 		else:
 			current_state = State.PATROL
+
 
 func _dive_state(delta):
 	if dive_winding_up:
@@ -393,7 +411,7 @@ func _dive_state(delta):
 			body_hitbox.monitorable = true
 			DAMAGE = 1
 			returning = true
-			sprite.play("idle")
+			sprite.play("fly")
 			_set_dive_shapes(false)
 			current_state = State.PATROL
 		return
@@ -523,7 +541,7 @@ func _stunned_state(delta):
 		is_stunned = false
 		returning = true
 		DAMAGE = 1
-		sprite.play("idle")
+		sprite.play("fly")
 		
 		body_hitbox.set_deferred("monitoring", true)
 		body_hitbox.set_deferred("monitorable", true)
@@ -604,7 +622,7 @@ func _enter_weak():
 	
 	body_hitbox.monitoring = false
 	_set_dive_shapes(false)
-	sprite.play("idle")
+	sprite.play("weak")
 
 func _exit_weak():
 	is_weak = false
@@ -612,7 +630,7 @@ func _exit_weak():
 	wing_health = WING_MAX_HEALTH
 	returning = true
 	current_state = State.PATROL
-	sprite.play("idle")
+	sprite.play("fly")
 
 func _update_flip(flipped: bool):
 	sprite.flip_h = flipped
@@ -681,7 +699,7 @@ func _reset_for_encounter(make_active: bool) -> void:
 	_update_flip(false)
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	if sprite:
-		sprite.play("idle")
+		sprite.play("fly")
 	is_active = make_active
 	
 	
