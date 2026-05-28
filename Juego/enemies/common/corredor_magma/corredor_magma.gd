@@ -89,9 +89,9 @@ func _physics_process(delta: float) -> void:
 	# Control global de animación de salto
 	if not is_on_floor():
 		if current_state not in [State.STUNNED, State.DEAD, State.DASH, State.PREPARE_DASH]:
-			sprite.play("jump")
+			sprite.play("run")
 	else:
-		if sprite.animation == "jump":
+		if sprite.animation == "run":
 			if current_state == State.IDLE:
 				sprite.play("idle")
 			elif current_state in [State.PATROL, State.CHASE]:
@@ -156,7 +156,7 @@ func _enter_state(new_state: State) -> void:
 				$EnemyHitbox.set_deferred("collision_mask", 0)
 			velocity.x = 0
 			
-			await get_tree().create_timer(0.7).timeout
+			await get_tree().create_timer(0.9).timeout
 			_despawn_dead_instance()
 
 
@@ -201,7 +201,7 @@ func _state_patrol(delta: float) -> void:
 	if _check_for_player(): return
 
 	velocity.x = facing_dir * PATROL_SPEED
-	if is_on_floor() and sprite.animation != "run": sprite.play("run")
+	if is_on_floor() and sprite.animation != "walk": sprite.play("walk")
 
 	patrol_timer -= delta
 	if patrol_timer <= 0 and is_on_floor():

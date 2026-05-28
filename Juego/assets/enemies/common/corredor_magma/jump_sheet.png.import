@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://br4j22ts4xiak"
-path="res://.godot/imported/jump.png-9101c9ec243b4399e461429e2de2a964.ctex"
+uid="uid://becvmmxib6ebf"
+path="res://.godot/imported/jump_sheet.png-1c42bfa58bc2115f537c895fc9c05bda.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/corredor_magma/jump.png"
-dest_files=["res://.godot/imported/jump.png-9101c9ec243b4399e461429e2de2a964.ctex"]
+source_file="res://assets/enemies/common/corredor_magma/jump_sheet.png"
+dest_files=["res://.godot/imported/jump_sheet.png-1c42bfa58bc2115f537c895fc9c05bda.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2mtcs34tdr6x"
-path="res://.godot/imported/stun.png-f4e9b532ad190c12a325d3d13c4c7be5.ctex"
+uid="uid://3nyd5dne0tok"
+path="res://.godot/imported/stun_sheet.png-40bc08131f4388a95cd186d3b22b2ab7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/common/corredor_magma/stun.png"
-dest_files=["res://.godot/imported/stun.png-f4e9b532ad190c12a325d3d13c4c7be5.ctex"]
+source_file="res://assets/enemies/common/corredor_magma/stun_sheet.png"
+dest_files=["res://.godot/imported/stun_sheet.png-40bc08131f4388a95cd186d3b22b2ab7.ctex"]
 
 [params]
 
