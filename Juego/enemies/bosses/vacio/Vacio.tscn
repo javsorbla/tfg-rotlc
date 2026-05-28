@@ -46,7 +46,7 @@ sprite_frames = SubResource("SpriteFrames_ovn4g")
 collision_layer = 16
 collision_mask = 4
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="AttactHitBox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttactHitBox" groups=["boss"]]
 position = Vector2(1.5, 8.5)
 shape = SubResource("RectangleShape2D_cktqs")
 debug_color = Color(0.969172, 0.154044, 0.220914, 0.42)
