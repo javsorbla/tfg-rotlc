@@ -22,7 +22,7 @@ func shake():
 
 func _ready():
 	position_smoothing_enabled = true
-	position_smoothing_speed = 8.0
+	position_smoothing_speed = 8.0	
 	zoom = Vector2(2.25, 2.25)
 
 func _process(delta):

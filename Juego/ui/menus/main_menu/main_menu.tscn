@@ -142,6 +142,26 @@ texture = ExtResource("10_72cm0")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="ContinueButton" type="Button" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Continuar"
+script = ExtResource("9_ekh3p")
+
+[node name="Arrow" type="TextureRect" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/ContinueButton"]
+visible = false
+layout_mode = 0
+offset_left = -30.0
+offset_top = 13.0
+offset_right = -8.0
+offset_bottom = 43.0
+mouse_filter = 2
+texture = ExtResource("10_72cm0")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="OptionsButton" type="Button" parent="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 56)
@@ -213,7 +233,20 @@ offset_right = 150.0
 offset_bottom = 80.0
 ui_cancel_closes = false
 text = "¿Seguro que quieres salir del juego?"
-title_visible = false
+title = "Confirmar Salida"
+
+[node name="NewGameConfirmation" parent="." instance=ExtResource("8_cs2jt")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(320, 160)
+layout_mode = 1
+offset_left = -160.0
+offset_top = -80.0
+offset_right = 160.0
+offset_bottom = 80.0
+ui_cancel_closes = false
+text = "¿Iniciar nueva partida? Se sobrescribirá el progreso guardado."
+title = "Confirmar Nueva Partida"
 
 [node name="EntryFadeCanvasLayer" type="CanvasLayer" parent="."]
 layer = 10
@@ -228,7 +261,9 @@ mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
 [connection signal="pressed" from="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/NewGameButton" to="." method="_on_new_game_button_pressed"]
+[connection signal="pressed" from="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]
 [connection signal="pressed" from="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/OptionsButton" to="." method="_on_options_button_pressed"]
 [connection signal="pressed" from="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/CreditsButton" to="." method="_on_credits_button_pressed"]
 [connection signal="pressed" from="MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
 [connection signal="confirmed" from="ExitConfirmation" to="." method="_on_exit_confirmation_confirmed"]
+[connection signal="confirmed" from="NewGameConfirmation" to="." method="_on_new_game_confirmation_confirmed"]

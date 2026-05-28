@@ -77,6 +77,33 @@ var phase_two: bool = false
 @onready var pincho_scene = preload("res://enemies/bosses/coloso_ceniza/PinchosMagma.tscn")
 @onready var lava_scene = preload("res://enemies/bosses/coloso_ceniza/ChorroLava.tscn")
 
+const CRYSTAL_SCENE: PackedScene = preload("res://objects/Cristal.tscn")
+
+func _spawn_final_boss_crystal(variant_idx: int = 1, offset := Vector2(0, -34)) -> void:
+	if CRYSTAL_SCENE == null:
+		return
+	# no spawnear si ya se recogio en este nivel
+	if GameState.has_boss_crystal(GameState.current_level, variant_idx):
+		return
+	# evitar en modo sync/control remoto
+	var sync_node = get_tree().get_first_node_in_group("sync_node")
+	if sync_node != null and int(sync_node.control_mode) == 1:
+		return
+	# evitar duplicados en escena
+	if get_tree().get_nodes_in_group("boss_crystal").size() > 0:
+		return
+
+	var scene_root = get_tree().root.get_child(0)
+	if scene_root == null:
+		return
+
+	var crystal = CRYSTAL_SCENE.instantiate()
+	crystal.global_position = global_position + offset
+	crystal.visual_variant = variant_idx
+	crystal.level_id = GameState.current_level
+	crystal.add_to_group("boss_crystal")
+	scene_root.call_deferred("add_child", crystal)
+
 func _ready():
 	player = get_tree().get_first_node_in_group("player")
 	spawn_position = global_position
@@ -653,6 +680,7 @@ func _on_attack_hitbox_area_entered(area: Area2D):
 func die():
 	current_state = State.DEAD
 	is_active = false
+	_spawn_final_boss_crystal(1)
 	
 	body_hitbox.set_deferred("monitoring", false)
 	body_hitbox.set_deferred("monitorable", false)

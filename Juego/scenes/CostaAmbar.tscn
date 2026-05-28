@@ -1,4 +1,4 @@
-[gd_scene load_steps=68 format=4 uid="uid://dv7tvh0rknvv6"]
+[gd_scene load_steps=69 format=4 uid="uid://dv7tvh0rknvv6"]
 
 [ext_resource type="Texture2D" uid="uid://ckrlk2kf8xtpa" path="res://assets/tilesets/costa_ambar/coast-tileset.png" id="1_c0y7m"]
 [ext_resource type="Script" path="res://scenes/costa_ambar.gd" id="1_db77e"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://brsnap3ngcjrq" path="res://enemies/common/corredor_magma/CorredorMagma.tscn" id="9_jgd2x"]
 [ext_resource type="PackedScene" uid="uid://de81d3hggbewt" path="res://scenes/enviroment/ZonaLluvia.tscn" id="10_g7adb"]
 [ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="11_w2q40"]
+[ext_resource type="PackedScene" path="res://scenes/enviroment/Checkpoint.tscn" id="11_xrm0j"]
 [ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="12_qblky"]
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="14_7tadn"]
 [ext_resource type="PackedScene" uid="uid://btspr1ib0d52y" path="res://enemies/bosses/tempestad_dorada/TempestadDorada.tscn" id="19_ac78p"]
@@ -1270,17 +1271,20 @@ position = Vector2(11547, -705)
 
 [node name="Checkpoints" type="Node2D" parent="."]
 
-[node name="Checkpoint1" type="Marker2D" parent="Checkpoints" groups=["checkpoint"]]
-position = Vector2(5422, -6)
+[node name="Checkpoint" parent="Checkpoints" instance=ExtResource("11_xrm0j")]
+position = Vector2(5422, -11)
 
-[node name="Checkpoint2" type="Marker2D" parent="Checkpoints" groups=["checkpoint"]]
-position = Vector2(6135, 902)
+[node name="Checkpoint2" parent="Checkpoints" instance=ExtResource("11_xrm0j")]
+position = Vector2(6211, 902)
 
-[node name="Checkpoint3" type="Marker2D" parent="Checkpoints" groups=["checkpoint"]]
-position = Vector2(10737, 438)
+[node name="Checkpoint3" parent="Checkpoints" instance=ExtResource("11_xrm0j")]
+position = Vector2(10736, 437)
 
-[node name="Checkpoint4" type="Marker2D" parent="Checkpoints" groups=["checkpoint"]]
-position = Vector2(12032, -691)
+[node name="Checkpoint4" parent="Checkpoints" instance=ExtResource("11_xrm0j")]
+position = Vector2(12032, -683)
+
+[node name="Checkpoint5" parent="Checkpoints" instance=ExtResource("11_xrm0j")]
+position = Vector2(0, -11)
 
 [node name="Entorno" type="Node2D" parent="."]
 

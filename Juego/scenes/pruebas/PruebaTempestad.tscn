@@ -1,6 +1,6 @@
 [gd_scene load_steps=12 format=4 uid="uid://bfsrt3ngt1yiy"]
 
-[ext_resource type="Texture2D" uid="uid://b81m3ahfsjjqg" path="res://assets/tilesets/costa_ambar/coast-tileset.png" id="1_x4sr8"]
+[ext_resource type="Texture2D" uid="uid://ckrlk2kf8xtpa" path="res://assets/tilesets/costa_ambar/coast-tileset.png" id="1_x4sr8"]
 [ext_resource type="PackedScene" uid="uid://btspr1ib0d52y" path="res://enemies/bosses/tempestad_dorada/TempestadDorada.tscn" id="2_aay0i"]
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="2_tbsn1"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="3_vu31f"]

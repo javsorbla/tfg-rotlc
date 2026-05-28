@@ -695,7 +695,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"run",
-"speed": 5.0
+"speed": 8.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -750,7 +750,7 @@ material = SubResource("ShaderMaterial_eqlrx")
 position = Vector2(1.90735e-06, 2)
 scale = Vector2(0.609375, 0.5625)
 sprite_frames = SubResource("SpriteFrames_1o3aa")
-animation = &"obtain"
+animation = &"run"
 
 [node name="AttackHitbox" type="Area2D" parent="." groups=["player_hitbox"]]
 collision_layer = 4

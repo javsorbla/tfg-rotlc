@@ -133,6 +133,13 @@ func heal(amount: int):
 		heal_particles.restart()
 
 
+func heal_to_full() -> void:
+	current_health = MAX_HEALTH
+	Hud.update_hearts(current_health, MAX_HEALTH)
+	if heal_particles:
+		heal_particles.restart()
+
+
 
 func apply_prism_core_upgrade() -> bool:
 	var was_collected := GameState.collect_prism_core(GameState.current_level)
