@@ -34,14 +34,13 @@ func _ready():
 	target_zoom = DEFAULT_ZOOM
 
 func _process(delta):
-	# Interpolación de zoom
-	zoom = lerp(zoom, target_zoom, ZOOM_SPEED)
-
 	if boss_room_mode:
 		global_position = lerp(global_position, boss_room_target, 0.02)
 		return
 		
 	if is_fixed:
+		# Interpolación de zoom
+		zoom = lerp(zoom, target_zoom, ZOOM_SPEED)
 		global_position = lerp(global_position, fixed_target_pos, FIXED_FOLLOW_SPEED)
 		return
 	
