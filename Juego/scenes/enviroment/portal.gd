@@ -6,6 +6,7 @@ extends Area2D
 signal activated(body)
 
 @onready var anim: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D")
+@onready var light2d: PointLight2D = get_node_or_null("PointLight2D")
 @onready var sfx: AudioStreamPlayer2D = get_node_or_null("AudioStreamPlayer2D")
 var is_transitioning: bool = false
 var _entered_body: Node = null
@@ -24,8 +25,14 @@ func _ready() -> void:
 		else:
 			anim.stop()
 
+	_apply_portal_light()
+
 
 func _get_portal_animation_name() -> String:
+	return _get_portal_level_name()
+
+
+func _get_portal_level_name() -> String:
 	var level := 0
 	if has_node("/root/GameState"):
 		var game_state := get_node("/root/GameState")
@@ -45,6 +52,27 @@ func _get_portal_animation_name() -> String:
 			return "purple"
 		_:
 			return "cyan"
+
+
+func _get_portal_light_color() -> Color:
+	match _get_portal_level_name():
+		"cyan":
+			return Color.html("#49adff")
+		"red":
+			return Color.html("#ff4b4b")
+		"yellow":
+			return Color.html("#ffd94a")
+		"purple":
+			return Color.html("#b66bff")
+		_:
+			return Color.html("#49adff")
+
+
+func _apply_portal_light() -> void:
+	if light2d == null:
+		return
+	light2d.color = _get_portal_light_color()
+	light2d.energy = 1.0
 
 func _on_body_entered(body: Node) -> void:
 	if is_transitioning:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://xgvqki0gryl3"]
+[gd_scene load_steps=41 format=3 uid="uid://xgvqki0gryl3"]
 
 [ext_resource type="Texture2D" uid="uid://bjs80i1jkobyt" path="res://assets/environment/portal_sheet.png" id="1_wsu3u"]
 [ext_resource type="Script" path="res://scenes/enviroment/portal.gd" id="2_scrip"]
@@ -245,6 +245,17 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="Gradient" id="Gradient_portal_light"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_portal_light"]
+gradient = SubResource("Gradient_portal_light")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_b3mjx"]
 size = Vector2(21, 39)
 
@@ -255,6 +266,10 @@ script = ExtResource("2_scrip")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_s240g")
 animation = &"yellow"
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(0, 0.5)
+texture = SubResource("GradientTexture2D_portal_light")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0.5, -1.5)
