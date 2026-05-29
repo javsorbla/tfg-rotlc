@@ -30,9 +30,9 @@ func _start_intro_sequence() -> void:
 	if message_manager != null and message_manager.has_method("play_intro_sequence"):
 		await message_manager.play_intro_sequence([
 			"Despierta...",
-			"Los colores han sido robados",
+			"Los colores están siendo absorbidos por El Vacío",
 			"No queda mucho tiempo, Chromia te necesita",
-			"Yo te guiaré ante el mal",
+			"Abréte paso usando el poder de los colores, yo seré tu guía",
 			"Iris"
 		])
 	if player != null and player.has_method("set_input_enabled"):
