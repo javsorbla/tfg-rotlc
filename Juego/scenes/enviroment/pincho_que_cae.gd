@@ -1,7 +1,7 @@
 extends Area2D
 
 @export var velocidad_caida: float = 400.0
-@export var dano: int = 1
+@export var dano: int = 7
 @export var distancia_maxima: float = 500.0 # Distancia a recorrer antes de destruirse
 
 var posicion_inicial_y: float = 0.0
