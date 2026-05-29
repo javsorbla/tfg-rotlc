@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://sgyjw0t82rmd"]
+
+[ext_resource type="Script" path="res://scenes/enviroment/generador_pinchos.gd" id="1_hlrh1"]
+[ext_resource type="PackedScene" uid="uid://de3l4ucej6p1t" path="res://scenes/enviroment/pincho_que_cae.tscn" id="2_qvrep"]
+
+[node name="GeneradorPinchos" type="Node2D"]
+script = ExtResource("1_hlrh1")
+tiempo_entre_pinchos = 9.0
+
+[node name="Timer" type="Timer" parent="."]
+autostart = true
+
+[node name="PinchoQueCae" parent="." instance=ExtResource("2_qvrep")]
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

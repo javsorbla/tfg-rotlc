@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://de3l4ucej6p1t"]
+
+[ext_resource type="Script" path="res://scenes/enviroment/pincho_que_cae.gd" id="1_fjosb"]
+[ext_resource type="Texture2D" uid="uid://dv4vvt7xg4rio" path="res://assets/traps/pincho.png" id="2_mxas3"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_53mj8"]
+size = Vector2(16, 15)
+
+[node name="PinchoQueCae" type="Area2D"]
+rotation = 3.14159
+collision_mask = 4
+script = ExtResource("1_fjosb")
+velocidad_caida = 200.0
+distancia_maxima = 370.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_mxas3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 0.5)
+shape = SubResource("RectangleShape2D_53mj8")
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
+[connection signal="screen_exited" from="VisibleOnScreenNotifier2D" to="." method="_on_visible_on_screen_notifier_2d_screen_exited"]
