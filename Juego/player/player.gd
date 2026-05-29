@@ -255,8 +255,6 @@ func _update_animation(delta: float):
 			var aim_up := Input.is_action_pressed("aim_up")
 			var aim_down := Input.is_action_pressed("aim_down")
 			if attack_just_started:
-				var previous_animation = sprite.animation
-				var previous_frame = sprite.frame
 				if aim_down and sprite.sprite_frames.has_animation("attack_down_run"):
 					sprite.play("attack_down_run")
 					sprite.speed_scale = 1.0
@@ -272,12 +270,9 @@ func _update_animation(delta: float):
 				else:
 					sprite.play("attack_run")
 					sprite.speed_scale = 1.0
+					sprite.frame = 0
 					_attack_anim_playing = true
 					_attack_anim_name = "attack_run"
-					if previous_animation == "run" or previous_animation == "attack_run":
-						var attack_run_frames = sprite.sprite_frames.get_frame_count("attack_run")
-						if attack_run_frames > 0:
-							sprite.frame = (previous_frame + 1) % attack_run_frames
 			elif sprite.animation == "attack_run" or sprite.animation == "attack_up_run" or sprite.animation == "attack_down_run":
 				sprite.speed_scale = 1.0
 			if velocity.x != 0:
