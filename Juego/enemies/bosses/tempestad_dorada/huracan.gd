@@ -69,6 +69,7 @@ func _physics_process(delta):
 	active_time += delta
 	var active_duration = LIFETIME - WARNING_TIME
 	move_speed = lerp(MOVE_SPEED_START, MOVE_SPEED_MAX, active_time / active_duration)
+	sprite.speed_scale = lerp(1.0, 1.5, active_time / active_duration)
 
 	var to_player_x = player.global_position.x - global_position.x
 	var dist_x = abs(to_player_x)

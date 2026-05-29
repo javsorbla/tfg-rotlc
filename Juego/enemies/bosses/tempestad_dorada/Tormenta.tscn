@@ -1,15 +1,33 @@
-[gd_scene load_steps=7 format=3 uid="uid://vik3mgkolkj7"]
+[gd_scene load_steps=10 format=3 uid="uid://vik3mgkolkj7"]
 
 [ext_resource type="Script" path="res://enemies/bosses/tempestad_dorada/tormenta.gd" id="1_3arpu"]
-[ext_resource type="Texture2D" uid="uid://d21jpguv4d8dc" path="res://assets/enemies/bosses/tempestad_dorada/rayos1.png" id="1_drfac"]
-[ext_resource type="Texture2D" uid="uid://dh5a1syr6byx8" path="res://assets/enemies/bosses/tempestad_dorada/rayos_inicio.png" id="2_i6qeb"]
-[ext_resource type="Texture2D" uid="uid://bpblt3ahop05f" path="res://assets/enemies/bosses/tempestad_dorada/rayos2.png" id="2_s8rko"]
+[ext_resource type="Texture2D" uid="uid://gn40yrawo4x0" path="res://assets/enemies/bosses/tempestad_dorada/tormenta_inicio_sheet.png" id="2_1rc8a"]
+[ext_resource type="Texture2D" uid="uid://q77navrqmtix" path="res://assets/enemies/bosses/tempestad_dorada/tormenta_sheet.png" id="3_m6pp8"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ldh0i"]
+atlas = ExtResource("2_1rc8a")
+region = Rect2(0, 0, 48, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kkpwr"]
+atlas = ExtResource("2_1rc8a")
+region = Rect2(48, 0, 48, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8cp3t"]
+atlas = ExtResource("3_m6pp8")
+region = Rect2(0, 0, 48, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gqwko"]
+atlas = ExtResource("3_m6pp8")
+region = Rect2(48, 0, 48, 512)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_f4qvs"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("2_i6qeb")
+"texture": SubResource("AtlasTexture_ldh0i")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kkpwr")
 }],
 "loop": true,
 "name": &"inicio",
@@ -17,14 +35,14 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_drfac")
+"texture": SubResource("AtlasTexture_8cp3t")
 }, {
 "duration": 1.0,
-"texture": ExtResource("2_s8rko")
+"texture": SubResource("AtlasTexture_gqwko")
 }],
 "loop": true,
-"name": &"rayo",
-"speed": 5.0
+"name": &"tormenta",
+"speed": 10.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_jywwb"]

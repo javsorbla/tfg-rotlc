@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bpblt3ahop05f"
-path="res://.godot/imported/rayos2.png-4cd2f184592cf832e2739dec16e97cff.ctex"
+uid="uid://dp3l83qnetr0q"
+path="res://.godot/imported/rayo_sheet.png-a87d26ba6af16f4db290052c77337203.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/tempestad_dorada/rayos2.png"
-dest_files=["res://.godot/imported/rayos2.png-4cd2f184592cf832e2739dec16e97cff.ctex"]
+source_file="res://assets/enemies/bosses/tempestad_dorada/rayo_sheet.png"
+dest_files=["res://.godot/imported/rayo_sheet.png-a87d26ba6af16f4db290052c77337203.ctex"]
 
 [params]
 

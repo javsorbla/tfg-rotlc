@@ -354,7 +354,6 @@ func _pause_state(delta):
 
 	if ray_instance:
 		ray_duration_timer -= delta
-		_update_ray()
 		if ray_duration_timer <= 0.0:
 			ray_instance.queue_free()
 			ray_instance = null
@@ -475,14 +474,16 @@ func _shoot_ray():
 	if inicio:
 		inicio.visible = false
 		if inicio.sprite_frames:
-			var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+			var tex = inicio.sprite_frames.get_frame_texture("rayo", 0)
 			if tex:
 				inicio.offset.x = tex.get_width() / 2.0
 
 	ray_duration_timer = RAY_DURATION
-	_update_ray()
+	_build_ray_tiles()
+	if ray_instance.has_method("update_hitbox"):
+		ray_instance.update_hitbox(ray_spawn.global_position, ray_end)
 
-func _update_ray():
+func _build_ray_tiles():
 	if not ray_instance or not player:
 		return
 
@@ -494,18 +495,14 @@ func _update_ray():
 	ray_instance.global_position = Vector2.ZERO
 	ray_instance.rotation = 0.0
 
-	for child in ray_instance.get_children():
-		if child.name.begins_with("RayTile"):
-			child.free()
-
 	var inicio = ray_instance.get_node_or_null("Inicio")
+	var fin = ray_instance.get_node_or_null("Fin")
 	if not inicio or not inicio.sprite_frames:
 		return
-	var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+	var tex = inicio.sprite_frames.get_frame_texture("rayo", 0)
 	if not tex:
 		return
 	var tile_width = float(tex.get_width())
-
 	var distance = diff.length()
 	var num_tiles = int(ceil(distance / tile_width)) + 7
 
@@ -513,16 +510,14 @@ func _update_ray():
 		var tile = AnimatedSprite2D.new()
 		tile.name = "RayTile" + str(i)
 		tile.sprite_frames = inicio.sprite_frames
-		tile.animation = "default"
-		tile.play("default")
+		tile.animation = "rayo"
+		tile.play("rayo")
 		tile.offset = inicio.offset
 		tile.scale = Vector2(1.0, 0.8)
 		tile.global_position = start + diff.normalized() * (tile_width * i + tile_width * 0.2)
 		tile.rotation = angle
+		tile.flip_h = diff.x < 0
 		ray_instance.add_child(tile)
-	
-	if ray_instance.has_method("update_hitbox"):
-		ray_instance.update_hitbox(ray_spawn.global_position, ray_end)
 
 func _start_hurricane():
 	var p = get_tree().get_first_node_in_group("player")
