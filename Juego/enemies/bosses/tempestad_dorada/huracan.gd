@@ -45,8 +45,12 @@ func _ready():
 	
 	active = false
 	player = get_tree().get_first_node_in_group("player")
+	sprite.animation_finished.connect(_on_sprite_animation_finished)
 	_start_attack_sequence()
 
+func _on_sprite_animation_finished():
+	if sprite.animation == "huracan":
+		sprite.play("huracan_idle")
 
 func _start_attack_sequence():
 	await get_tree().create_timer(WARNING_TIME).timeout
@@ -65,6 +69,7 @@ func _physics_process(delta):
 	active_time += delta
 	var active_duration = LIFETIME - WARNING_TIME
 	move_speed = lerp(MOVE_SPEED_START, MOVE_SPEED_MAX, active_time / active_duration)
+	sprite.speed_scale = lerp(1.0, 1.5, active_time / active_duration)
 
 	var to_player_x = player.global_position.x - global_position.x
 	var dist_x = abs(to_player_x)

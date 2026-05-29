@@ -21,7 +21,7 @@ func _ready():
 func _start_sequence():
 	await get_tree().create_timer(WARNING_TIME).timeout
 	active = true
-	sprite.play("rayo")
+	sprite.play("tormenta")
 	if collision:
 		collision.disabled = false
 	await get_tree().create_timer(LIFETIME - WARNING_TIME).timeout

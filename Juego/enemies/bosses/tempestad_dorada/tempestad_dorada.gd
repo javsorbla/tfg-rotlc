@@ -105,6 +105,9 @@ var room_right_limit = 0.0
 var room_top_limit = 0.0
 var room_bottom_limit = 0.0
 
+var is_dying: bool = false
+var dying_anim_done: bool = false
+
 var player = null
 var shapes = []
 var original_pos_x = []
@@ -192,6 +195,22 @@ func _ready():
 	wing_hurtbox_2.area_entered.connect(_on_wing2_area_entered)
 	
 	_set_dive_shapes(false)
+	sprite.animation_finished.connect(_on_sprite_animation_finished)
+
+
+func _on_sprite_animation_finished():
+	match sprite.animation:
+		"attack":
+			if current_state == State.DIVE:
+				sprite.play("attack_idle")
+		"charging":
+			if ray_winding_up:
+				sprite.play("charging_idle")
+		"stun":
+			if current_state == State.STUNNED:
+				sprite.play("stun_idle")
+		"dead", "dead_attack":
+			dying_anim_done = true
 
 
 func _get_closest_boss_room() -> Node:
@@ -212,6 +231,14 @@ func _get_closest_boss_room() -> Node:
 	return closest_room
 
 func _physics_process(delta):
+	if is_dying:
+		position.y += STUN_FALL_SPEED * delta
+		if position.y >= room_bottom_limit - 40.0:
+			position.y = room_bottom_limit - 40.0
+			if dying_anim_done:
+				queue_free()
+		return
+	
 	if not is_active:
 		return
 
@@ -327,11 +354,10 @@ func _pause_state(delta):
 
 	if ray_instance:
 		ray_duration_timer -= delta
-		_update_ray()
 		if ray_duration_timer <= 0.0:
 			ray_instance.queue_free()
 			ray_instance = null
-			sprite.play("idle")
+			sprite.play("fly")
 			current_state = State.PATROL
 		return
 		
@@ -342,7 +368,8 @@ func _pause_state(delta):
 		position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 		if hurricane_duration_timer <= 0.0:
 			hurricane_active = false
-			sprite.play("idle")
+			sprite.speed_scale = 1.0
+			sprite.play("fly")
 			current_state = State.PATROL
 		return
 
@@ -356,6 +383,8 @@ func _pause_state(delta):
 			hurricane_duration_timer = HURRICANE_DURATION
 			hurricane_timer = HURRICANE_COOLDOWN
 			_start_hurricane()
+			sprite.speed_scale = 1.5
+			sprite.play("fly")
 		elif ray_cooldown_timer <= 0.0:
 			ray_end = player.global_position
 			ray_winding_up = true
@@ -364,6 +393,7 @@ func _pause_state(delta):
 			sprite.play("charging")
 		else:
 			current_state = State.PATROL
+
 
 func _dive_state(delta):
 	if dive_winding_up:
@@ -393,7 +423,7 @@ func _dive_state(delta):
 			body_hitbox.monitorable = true
 			DAMAGE = 1
 			returning = true
-			sprite.play("idle")
+			sprite.play("fly")
 			_set_dive_shapes(false)
 			current_state = State.PATROL
 		return
@@ -444,14 +474,16 @@ func _shoot_ray():
 	if inicio:
 		inicio.visible = false
 		if inicio.sprite_frames:
-			var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+			var tex = inicio.sprite_frames.get_frame_texture("rayo", 0)
 			if tex:
 				inicio.offset.x = tex.get_width() / 2.0
 
 	ray_duration_timer = RAY_DURATION
-	_update_ray()
+	_build_ray_tiles()
+	if ray_instance.has_method("update_hitbox"):
+		ray_instance.update_hitbox(ray_spawn.global_position, ray_end)
 
-func _update_ray():
+func _build_ray_tiles():
 	if not ray_instance or not player:
 		return
 
@@ -463,18 +495,14 @@ func _update_ray():
 	ray_instance.global_position = Vector2.ZERO
 	ray_instance.rotation = 0.0
 
-	for child in ray_instance.get_children():
-		if child.name.begins_with("RayTile"):
-			child.free()
-
 	var inicio = ray_instance.get_node_or_null("Inicio")
+	var fin = ray_instance.get_node_or_null("Fin")
 	if not inicio or not inicio.sprite_frames:
 		return
-	var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+	var tex = inicio.sprite_frames.get_frame_texture("rayo", 0)
 	if not tex:
 		return
 	var tile_width = float(tex.get_width())
-
 	var distance = diff.length()
 	var num_tiles = int(ceil(distance / tile_width)) + 7
 
@@ -482,16 +510,14 @@ func _update_ray():
 		var tile = AnimatedSprite2D.new()
 		tile.name = "RayTile" + str(i)
 		tile.sprite_frames = inicio.sprite_frames
-		tile.animation = "default"
-		tile.play("default")
+		tile.animation = "rayo"
+		tile.play("rayo")
 		tile.offset = inicio.offset
 		tile.scale = Vector2(1.0, 0.8)
 		tile.global_position = start + diff.normalized() * (tile_width * i + tile_width * 0.2)
 		tile.rotation = angle
+		tile.flip_h = diff.x < 0
 		ray_instance.add_child(tile)
-	
-	if ray_instance.has_method("update_hitbox"):
-		ray_instance.update_hitbox(ray_spawn.global_position, ray_end)
 
 func _start_hurricane():
 	var p = get_tree().get_first_node_in_group("player")
@@ -523,7 +549,7 @@ func _stunned_state(delta):
 		is_stunned = false
 		returning = true
 		DAMAGE = 1
-		sprite.play("idle")
+		sprite.play("fly")
 		
 		body_hitbox.set_deferred("monitoring", true)
 		body_hitbox.set_deferred("monitorable", true)
@@ -604,7 +630,7 @@ func _enter_weak():
 	
 	body_hitbox.monitoring = false
 	_set_dive_shapes(false)
-	sprite.play("idle")
+	sprite.play("weak")
 
 func _exit_weak():
 	is_weak = false
@@ -612,7 +638,7 @@ func _exit_weak():
 	wing_health = WING_MAX_HEALTH
 	returning = true
 	current_state = State.PATROL
-	sprite.play("idle")
+	sprite.play("fly")
 
 func _update_flip(flipped: bool):
 	sprite.flip_h = flipped
@@ -681,7 +707,7 @@ func _reset_for_encounter(make_active: bool) -> void:
 	_update_flip(false)
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	if sprite:
-		sprite.play("idle")
+		sprite.play("fly")
 	is_active = make_active
 	
 	
@@ -715,6 +741,9 @@ func _handle_wing_hit(area: Area2D):
 	if wing_health <= 0:
 		wing_health = 0
 		_enter_weak()
+		return
+
+	if is_dying:
 		return
 
 	if current_state == State.DIVE and not dive_winding_up and not is_stunned:
@@ -751,6 +780,10 @@ func take_damage(amount: int):
 
 	if current_health <= 0:
 		die()
+		return
+	
+	if is_dying:
+		return
 
 func _play_damage_flash():
 	if not sprite:
@@ -765,9 +798,22 @@ func is_hurting() -> bool:
 	return false
 
 func die():
-	current_state = State.PATROL
+	var died_in_dive = (current_state == State.DIVE)
+	is_dying = true
+	is_active = false
+
+	if ray_instance:
+		ray_instance.queue_free()
+		ray_instance = null
+	for node in get_tree().get_nodes_in_group("hurricane"):
+		node.queue_free()
+
+	if current_state == State.DIVE:
+		sprite.play("dead_attack")
+	else:
+		sprite.play("dead")
+
 	_spawn_final_boss_crystal(2)
 	var boss_room = _get_closest_boss_room()
 	if boss_room:
 		boss_room.on_boss_defeated()
-	queue_free()

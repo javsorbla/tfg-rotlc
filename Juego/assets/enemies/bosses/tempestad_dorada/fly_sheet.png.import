@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://2uecjcfs2c1e"
-path="res://.godot/imported/stun.png-edf83fbb2f993dda7d7f0a2df3195f99.ctex"
+uid="uid://cyj2tm64wt120"
+path="res://.godot/imported/fly_sheet.png-0283a6a547b7ed1ee5ccf3059ca81578.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/tempestad_dorada/stun.png"
-dest_files=["res://.godot/imported/stun.png-edf83fbb2f993dda7d7f0a2df3195f99.ctex"]
+source_file="res://assets/enemies/bosses/tempestad_dorada/fly_sheet.png"
+dest_files=["res://.godot/imported/fly_sheet.png-0283a6a547b7ed1ee5ccf3059ca81578.ctex"]
 
 [params]
 
