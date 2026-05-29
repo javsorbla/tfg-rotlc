@@ -105,6 +105,9 @@ var room_right_limit = 0.0
 var room_top_limit = 0.0
 var room_bottom_limit = 0.0
 
+var is_dying: bool = false
+var dying_anim_done: bool = false
+
 var player = null
 var shapes = []
 var original_pos_x = []
@@ -206,6 +209,8 @@ func _on_sprite_animation_finished():
 		"stun":
 			if current_state == State.STUNNED:
 				sprite.play("stun_idle")
+		"dead", "dead_attack":
+			dying_anim_done = true
 
 
 func _get_closest_boss_room() -> Node:
@@ -226,6 +231,14 @@ func _get_closest_boss_room() -> Node:
 	return closest_room
 
 func _physics_process(delta):
+	if is_dying:
+		position.y += STUN_FALL_SPEED * delta
+		if position.y >= room_bottom_limit - 40.0:
+			position.y = room_bottom_limit - 40.0
+			if dying_anim_done:
+				queue_free()
+		return
+	
 	if not is_active:
 		return
 
@@ -735,6 +748,9 @@ func _handle_wing_hit(area: Area2D):
 		_enter_weak()
 		return
 
+	if is_dying:
+		return
+
 	if current_state == State.DIVE and not dive_winding_up and not is_stunned:
 		_enter_stun()
 
@@ -769,6 +785,10 @@ func take_damage(amount: int):
 
 	if current_health <= 0:
 		die()
+		return
+	
+	if is_dying:
+		return
 
 func _play_damage_flash():
 	if not sprite:
@@ -783,9 +803,22 @@ func is_hurting() -> bool:
 	return false
 
 func die():
-	current_state = State.PATROL
+	var died_in_dive = (current_state == State.DIVE)
+	is_dying = true
+	is_active = false
+
+	if ray_instance:
+		ray_instance.queue_free()
+		ray_instance = null
+	for node in get_tree().get_nodes_in_group("hurricane"):
+		node.queue_free()
+
+	if current_state == State.DIVE:
+		sprite.play("dead_attack")
+	else:
+		sprite.play("dead")
+
 	_spawn_final_boss_crystal(2)
 	var boss_room = _get_closest_boss_room()
 	if boss_room:
 		boss_room.on_boss_defeated()
-	queue_free()

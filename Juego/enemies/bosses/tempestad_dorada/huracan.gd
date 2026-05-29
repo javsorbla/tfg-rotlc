@@ -45,8 +45,12 @@ func _ready():
 	
 	active = false
 	player = get_tree().get_first_node_in_group("player")
+	sprite.animation_finished.connect(_on_sprite_animation_finished)
 	_start_attack_sequence()
 
+func _on_sprite_animation_finished():
+	if sprite.animation == "huracan":
+		sprite.play("huracan_idle")
 
 func _start_attack_sequence():
 	await get_tree().create_timer(WARNING_TIME).timeout
