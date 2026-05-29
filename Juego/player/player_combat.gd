@@ -75,5 +75,7 @@ func _on_attack_hitbox_area_entered(area: Area2D) -> void:
 		if target != null and target.is_in_group("umbra_boss") and target.has_method("take_damage"):
 			var umbra_damage := maxi(1, int(round(float(player.damage_multiplier))))
 			target.take_damage(umbra_damage)
+		var delay = 0.05
+		await get_tree().create_timer(delay).timeout
 		spawn_hit_particles(area.global_position)
 		hitstop_timer = HITSTOP_DURATION

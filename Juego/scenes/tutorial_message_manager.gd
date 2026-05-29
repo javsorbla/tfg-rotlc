@@ -96,7 +96,6 @@ func _show_message_blocking(text: String, duration: float, wait_for_input: bool,
 	if label == null:
 		_is_showing = false
 		return
-	# If intro was skipped, label may have been hidden.
 	label.visible = true
 
 	# Aplicar color según tipo

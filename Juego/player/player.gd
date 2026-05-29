@@ -58,7 +58,7 @@ func _ready():
 
 	# Asegurar en tiempo de ejecución que las animaciones de ataque no loopen
 	if sprite and sprite.sprite_frames:
-		var attack_names = ["attack", "attack_up", "attack_up_jump", "attack_up_run", "attack_down", "attack_down_jump", "attack_down_run"]
+		var attack_names = ["attack", "attack_run", "attack_up", "attack_up_jump", "attack_up_run", "attack_down", "attack_down_jump", "attack_down_run"]
 		for name in attack_names:
 			if sprite.sprite_frames.has_animation(name):
 				sprite.sprite_frames.set_animation_loop(name, false)
@@ -81,18 +81,9 @@ func _physics_process(delta: float) -> void:
 	if not input_enabled:
 		if not is_on_floor():
 			velocity += get_gravity() * delta
-		else:
-			velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
-		move_and_slide()
-		_check_checkpoints()
-		health.process(delta)
-		combat.process(delta)
-		color_manager.process(delta)
-		_update_animation(delta)
-		_prev_combat_attacking = combat.is_attacking
-		return
-	if dash_cooldown_timer > 0:
-		dash_cooldown_timer -= delta
+
+	# Reducir cooldown del dash siempre, no solo cuando la entrada está deshabilitada
+	dash_cooldown_timer -= delta
 
 	if is_on_floor():
 		air_dash_used = false

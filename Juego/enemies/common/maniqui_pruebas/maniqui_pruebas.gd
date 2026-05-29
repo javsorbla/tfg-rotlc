@@ -20,7 +20,7 @@ var _original_sprite_color: Color = Color.WHITE
 
 func _ready() -> void:
 	_original_sprite_color = sprite.modulate
-	var hurtbox := get_node_or_null("EnemyHurtbox")
+	var hurtbox = get_node_or_null("EnemyHurtbox")
 	if hurtbox:
 		if not hurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
 			hurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
@@ -80,14 +80,14 @@ func _on_animation_finished() -> void:
 func _on_enemy_hurtbox_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player_hitbox"):
 		var player_node = get_tree().get_first_node_in_group("player")
-		var multiplier := 1.0
+		var multiplier: float = 1.0
 		if player_node and "damage_multiplier" in player_node:
 			multiplier = player_node.damage_multiplier
 		take_damage(int(1 * multiplier))
 
 func _play_damage_feedback() -> void:
+	# Only flash here; particles will be spawned by the attacker after a short delay
 	_play_damage_flash()
-	_spawn_hit_particles()
 
 func _play_damage_flash() -> void:
 	if damage_flash_tween:
