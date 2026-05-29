@@ -461,14 +461,24 @@ func _spawn_afterimage(tex):
 	si.global_position = global_position
 	si.flip_h = sprite.flip_h
 	si.scale = sprite.scale
-	si.z_index = sprite.z_index - 1
+	# Dibujar detrás del player pero por delante de fondo/tiles.
+	# Usamos el mismo z_index del player y lo colocamos justo antes del nodo Player en el árbol.
+	si.z_as_relative = z_as_relative
+	si.z_index = z_index
 	var pcol := Color(1, 1, 1, 0.85)
 	if sprite.material != null and sprite.material.has_method("get_shader_parameter"):
 		var sc = sprite.material.get_shader_parameter("color_primary")
 		if sc != null:
 			pcol = Color(sc.r, sc.g, sc.b, 0.85)
 	si.modulate = pcol
-	get_parent().add_child(si)
+	var parent_node := get_parent()
+	if parent_node:
+		parent_node.add_child(si)
+		# Insertar la after-image antes del player para que no tape al sprite del jugador.
+		var player_index: int = get_index()
+		parent_node.move_child(si, player_index)
+	else:
+		add_child(si)
 	var tw = si.create_tween()
 	tw.tween_property(si, "modulate:a", 0.0, AFTERIMAGE_LIFETIME)
 	tw.tween_property(si, "scale", si.scale * 0.85, AFTERIMAGE_LIFETIME)

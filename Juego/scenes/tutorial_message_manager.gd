@@ -10,7 +10,7 @@ signal advance_requested
 @onready var anim: AnimationPlayer = get_node_or_null("MessageAnim")
 @onready var backdrop: ColorRect = get_node_or_null("TutorialMessageLayer/Backdrop")
 @onready var pulse_node: ColorRect = get_node_or_null("TutorialMessageLayer/Pulse")
-@onready var particles: GPUParticles2D = get_node_or_null("MessageLabelParticles")
+@onready var particles: GPUParticles2D = get_node_or_null("TutorialMessageLayer/Particles")
 
 @export var intro_color: Color = Color(1, 1, 1, 1)        # blanco para la intro
 @export var zone_color: Color = Color(1, 0.82, 0.27, 1)   # dorado para las zonas
@@ -27,6 +27,7 @@ var _is_showing := false
 var _sequence_active := false
 var _waiting_for_input := false
 var _skip_requested := false
+var _cancel_token: int = 0
 
 var _celestial_material: ShaderMaterial = null
 
@@ -36,6 +37,7 @@ func _ready() -> void:
 	if label != null:
 		_default_offset = Vector2(label.offset_left, label.offset_top)
 		_celestial_material = label.material
+		label.material = null  # <- fix
 		label.modulate.a = 0.0
 		label.visible = true
 	if backdrop != null:
@@ -46,6 +48,10 @@ func _ready() -> void:
 		if sm != null:
 			sm.set_shader_parameter("ring_radius", 0.0)
 			sm.set_shader_parameter("pulse_color", Color(1.0, 1.0, 1.0, 0.0))
+	if particles != null:
+		particles.emitting = false
+		particles.visible = false
+
 func show_message(text: String, duration: float = -1.0, wait_for_input: bool = false) -> void:
 	_queue.append({
 		"text": text,
@@ -84,13 +90,14 @@ func _play_next() -> void:
 
 func _show_message_blocking(text: String, duration: float, wait_for_input: bool, is_intro: bool = false) -> void:
 	_is_showing = true
-	# If skip was requested, only skip intro messages — allow zone messages to show
 	if _skip_requested and is_intro:
 		_is_showing = false
 		return
 	if label == null:
 		_is_showing = false
 		return
+	# If intro was skipped, label may have been hidden.
+	label.visible = true
 
 	# Aplicar color según tipo
 	var settings := label.label_settings
@@ -112,31 +119,41 @@ func _show_message_blocking(text: String, duration: float, wait_for_input: bool,
 		label.material = _celestial_material
 
 	label.text = text
-
+	# Ensure text isn't blacked out by modulate RGB (tscn defaults to black).
+	label.modulate = Color(1, 1, 1, 0)
+	
 	# Velocidad de fade según tipo
 	var fade_in_speed := (1.0 / intro_fade_in_duration) if is_intro else (1.0 / zone_fade_in_duration)
 	var fade_out_speed := (1.0 / intro_fade_out_duration) if is_intro else (1.0 / zone_fade_out_duration)
 
+	var my_token := _cancel_token
 	if anim != null and anim.has_animation("fade_in"):
-		# Start particles when label fades in
-		if particles != null:
-			# Position particles at the label's global position so emission aligns with text
+		if particles != null and not is_intro:
 			if label != null:
 				particles.global_position = label.global_position
+			var viewport_size := get_viewport().get_visible_rect().size
+			particles.position = Vector2(viewport_size.x / 2.0, viewport_size.y / 2.0 + zone_message_offset.y)
 			particles.visible = true
 			particles.emitting = true
 			particles.z_index = 200
 		anim.speed_scale = fade_in_speed
 		anim.play("fade_in")
 		await get_tree().process_frame
-		await anim.animation_finished
+		while anim.is_playing():
+			if is_intro and _skip_requested:
+				anim.stop()
+				break
+			if my_token != _cancel_token:
+				anim.stop()
+				break
+			await get_tree().process_frame
 		label.modulate = Color(1, 1, 1, 1)
 	else:
 		label.modulate = Color(1, 1, 1, 1)
 		label.visible = true
 		if label is CanvasItem:
 			label.raise()
-		if particles != null:
+		if particles != null and not is_intro:
 			particles.visible = true
 			particles.emitting = true
 		await get_tree().process_frame
@@ -147,13 +164,27 @@ func _show_message_blocking(text: String, duration: float, wait_for_input: bool,
 		_waiting_for_input = false
 	else:
 		var wait_time := duration if duration > 0.0 else default_duration
-		await get_tree().create_timer(wait_time).timeout
+		# If intro was skipped while waiting, don't block.
+		var timer := get_tree().create_timer(wait_time)
+		while timer.time_left > 0.0:
+			if is_intro and _skip_requested:
+				break
+			if my_token != _cancel_token:
+				break
+			await get_tree().process_frame
 
 	if anim != null and anim.has_animation("fade_out"):
 		anim.speed_scale = fade_out_speed
 		anim.play("fade_out")
 		await get_tree().process_frame
-		await anim.animation_finished
+		while anim.is_playing():
+			if is_intro and _skip_requested:
+				anim.stop()
+				break
+			if my_token != _cancel_token:
+				anim.stop()
+				break
+			await get_tree().process_frame
 		label.modulate = Color(1, 1, 1, 0)
 		if particles != null:
 			particles.emitting = false
@@ -170,25 +201,21 @@ func _wait_for_advance() -> void:
 	await advance_requested
 
 func _unhandled_input(event: InputEvent) -> void:
-	print("[TMM] _unhandled_input event:", event)
 	if event.is_action_pressed(skip_action):
-		print("[TMM] skip_action pressed via _unhandled_input")
 		get_viewport().set_input_as_handled()
 		_skip_intro()
+		return
+	if not _sequence_active:
 		return
 	if not _waiting_for_input:
 		return
 	if event.is_action_pressed(intro_action):
-		print("[TMM] intro_action pressed")
 		get_viewport().set_input_as_handled()
 		_waiting_for_input = false  # evita doble input mientras espera el pulso
-		# Debug: report particle state and force emit if not emitting
 		if particles != null:
-			print("[TMM] debug before pulse: particles.emitting=", particles.emitting, " visible=", particles.visible)
 			if not particles.emitting:
 				particles.visible = true
 				particles.emitting = true
-				print("[TMM] debug: forced particles.emitting -> true")
 		await _trigger_pulse()
 		emit_signal("advance_requested")
 		return
@@ -200,6 +227,7 @@ func _skip_intro() -> void:
 	_is_showing = false
 	_waiting_for_input = false
 	_skip_requested = true
+	_cancel_token += 1
 	if anim != null:
 		anim.stop()
 	if label != null:
@@ -236,6 +264,9 @@ func _trigger_pulse() -> void:
 	var mat: ShaderMaterial = pulse_node.material as ShaderMaterial
 	if mat == null:
 		return
+	var my_token := _cancel_token
+	if _skip_requested:
+		return
 
 	pulse_node.visible = true
 	
@@ -250,6 +281,10 @@ func _trigger_pulse() -> void:
 	var step_time := duration / float(steps)
 
 	for i in range(steps + 1):
+		if my_token != _cancel_token or _skip_requested:
+			pulse_node.visible = false
+			mat.set_shader_parameter("pulse_color", Color(1.0, 1.0, 1.0, 0.0))
+			return
 		var t := float(i) / float(steps)
 		var ease_t := 1.0 - pow(1.0 - t, 2.0)
 		
@@ -263,5 +298,5 @@ func _trigger_pulse() -> void:
 	mat.set_shader_parameter("pulse_color", Color(1.0, 1.0, 1.0, 0.0))
 
 func _process(delta: float) -> void:
-	if Input.is_action_just_pressed(skip_action):
+	if _sequence_active and Input.is_action_just_pressed(skip_action):
 		_skip_intro()

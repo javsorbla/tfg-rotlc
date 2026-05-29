@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://br25vh2hmmm1h"]
+[gd_scene load_steps=15 format=3 uid="uid://br25vh2hmmm1h"]
 
 [ext_resource type="Script" path="res://scenes/tutorial_message_manager.gd" id="1_3mfyy"]
 [ext_resource type="FontFile" uid="uid://bf7avxherdbol" path="res://fonts/Press_Start_2P/PressStart2P-Regular.ttf" id="2_5xw2w"]
@@ -16,7 +16,10 @@ shader = ExtResource("3_lp08d")
 shader_parameter/speed = 1.0
 shader_parameter/base_color = Color(1, 0.82, 0.27, 1)
 shader_parameter/shimmer_color = Color(1, 1, 0.85, 1)
-shader_parameter/shimmer_width = 0.15
+shader_parameter/shimmer_width = 0.141
+shader_parameter/sparkle_count = 20
+shader_parameter/sparkle_size = 0.05
+shader_parameter/sparkle_speed = 4.0
 
 [sub_resource type="LabelSettings" id="LabelSettings_message"]
 font = ExtResource("2_5xw2w")
@@ -74,6 +77,21 @@ _data = {
 "fade_out": SubResource("Animation_fade_out")
 }
 
+[sub_resource type="Gradient" id="Gradient_wqiwa"]
+colors = PackedColorArray(1, 0.82, 0.27, 1, 1, 0.9, 0.5, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_vojmy"]
+gradient = SubResource("Gradient_wqiwa")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_qj8pw"]
+particle_flag_disable_z = true
+direction = Vector3(0, -1, 0)
+initial_velocity_min = 3.0
+initial_velocity_max = 8.0
+gravity = Vector3(0, -5, 0)
+scale_max = 2.0
+color_ramp = SubResource("GradientTexture1D_vojmy")
+
 [node name="TutorialMessageManager" type="Node"]
 script = ExtResource("1_3mfyy")
 
@@ -109,13 +127,17 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="MessageLabelParticles" type="GPUParticles2D" parent="."]
-visible = false
-emitting = false
-amount = 20
-lifetime = 2.0
-
 [node name="MessageAnim" type="AnimationPlayer" parent="."]
 libraries = {
 "": SubResource("AnimationLibrary_mpokp")
 }
+
+[node name="Particles" type="GPUParticles2D" parent="."]
+visible = false
+emitting = false
+amount = 20
+process_material = SubResource("ParticleProcessMaterial_qj8pw")
+lifetime = 3.0
+speed_scale = 0.5
+visibility_rect = Rect2(-300, -60, 600, 120)
+local_coords = true
