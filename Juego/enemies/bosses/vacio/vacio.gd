@@ -88,6 +88,8 @@ func _enter_state(new_state: State) -> void:
 	match new_state:
 		State.IDLE:
 			is_active = false
+			if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("default"):
+				sprite.play("default")
 		State.CHASE:
 			modulate.a = 1.0
 			current_size = 1.0
