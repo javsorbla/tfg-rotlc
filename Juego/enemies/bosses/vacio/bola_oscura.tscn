@@ -1,7 +1,57 @@
-[gd_scene load_steps=4 format=3 uid="uid://dcxw5esr7td0d"]
+[gd_scene load_steps=11 format=3 uid="uid://dcxw5esr7td0d"]
 
 [ext_resource type="Script" path="res://enemies/bosses/vacio/bola_oscura.gd" id="1_gxebh"]
-[ext_resource type="Texture2D" uid="uid://btl7m8pf8fdh0" path="res://assets/enemies/bosses/vacio/bolaOscuraReducida.png" id="1_mpaaq"]
+[ext_resource type="Texture2D" uid="uid://de7jxvm5iuejc" path="res://assets/enemies/bosses/vacio/bola_oscura_idle.png" id="2_1jcw6"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ll6um"]
+atlas = ExtResource("2_1jcw6")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ognbb"]
+atlas = ExtResource("2_1jcw6")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_treif"]
+atlas = ExtResource("2_1jcw6")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x6eux"]
+atlas = ExtResource("2_1jcw6")
+region = Rect2(0, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ucah2"]
+atlas = ExtResource("2_1jcw6")
+region = Rect2(128, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d4i6k"]
+atlas = ExtResource("2_1jcw6")
+region = Rect2(256, 128, 128, 128)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_im5gr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ll6um")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ognbb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_treif")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x6eux")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ucah2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d4i6k")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_0saex"]
 radius = 34.1321
@@ -11,8 +61,10 @@ collision_layer = 2
 collision_mask = 28
 script = ExtResource("1_gxebh")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("1_mpaaq")
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_im5gr")
+frame = 3
+frame_progress = 0.322209
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_0saex")
