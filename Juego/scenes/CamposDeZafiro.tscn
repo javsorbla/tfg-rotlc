@@ -16,8 +16,8 @@
 [ext_resource type="PackedScene" uid="uid://cpm34f5c602i5" path="res://enemies/bosses/umbra/Umbra.tscn" id="14_3sfkm"]
 [ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="14_g5mn7"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="15_ct6xk"]
-[ext_resource type="PackedScene" path="res://scenes/enviroment/Checkpoint.tscn" id="17_qbu25"]
-[ext_resource type="PackedScene" path="res://scenes/enviroment/Portal.tscn" id="18_byghq"]
+[ext_resource type="PackedScene" uid="uid://do0au5ur218xe" path="res://scenes/enviroment/Checkpoint.tscn" id="17_qbu25"]
+[ext_resource type="PackedScene" uid="uid://xgvqki0gryl3" path="res://scenes/enviroment/Portal.tscn" id="18_byghq"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k56g7"]
 texture = ExtResource("1_kj2pu")

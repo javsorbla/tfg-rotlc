@@ -110,7 +110,10 @@ func _on_body_entered(body: Node2D) -> void:
 	if player_node == null:
 		return
 
-	var resolved_level := level_id if level_id > 0 else GameState.current_level
+	var resolved_level: int = level_id if level_id > 0 else GameState.current_level
+	var _color_names: Array[String] = ["cyan", "red", "yellow"]
+	var _color_idx: int = int(clamp(visual_variant, 0, _color_names.size() - 1))
+	var color_name: String = _color_names[_color_idx]
 
 	if is_persistent:
 		if GameState.has_boss_crystal(resolved_level, visual_variant):
@@ -119,9 +122,6 @@ func _on_body_entered(body: Node2D) -> void:
 		GameState.collect_boss_crystal(resolved_level, visual_variant)
 
 		# Desbloquear el poder correspondiente al cristal
-		var color_names: Array[String] = ["cyan", "red", "yellow"]
-		var color_idx: int = int(clamp(visual_variant, 0, color_names.size() - 1))
-		var color_name: String = color_names[color_idx]
 		var color_manager = player_node.get_node_or_null("ColorManager")
 		if color_manager != null and color_manager.has_method("unlock_power"):
 			color_manager.unlock_power(color_name)
@@ -154,7 +154,7 @@ func _on_body_entered(body: Node2D) -> void:
 								if cm2.yellow_state != null:
 									cm2.change_state(cm2.yellow_state)
 
-	if player_node.has_method("play_obtain_animation"):
+	if player_node.has_method("play_obtain_animation") and color_name != "yellow":
 		player_node.call_deferred("play_obtain_animation")
 
 	emit_signal("collected", resolved_level, visual_variant, player_node)

@@ -39,6 +39,7 @@ var _obtain_playing = false
 var _shield_anim_playing = false
 var _shield_anim_in_progress = false
 var _prev_is_shielding = false
+var input_enabled = true
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -57,7 +58,7 @@ func _ready():
 
 	# Asegurar en tiempo de ejecución que las animaciones de ataque no loopen
 	if sprite and sprite.sprite_frames:
-		var attack_names = ["attack", "attack_up", "attack_up_jump", "attack_up_run", "attack_down", "attack_down_jump", "attack_down_run"]
+		var attack_names = ["attack", "attack_run", "attack_up", "attack_up_jump", "attack_up_run", "attack_down", "attack_down_jump", "attack_down_run"]
 		for name in attack_names:
 			if sprite.sprite_frames.has_animation(name):
 				sprite.sprite_frames.set_animation_loop(name, false)
@@ -71,9 +72,18 @@ func _ready():
 	if sprite:
 		sprite.animation_finished.connect(Callable(self, "_on_sprite_animation_finished"))
 
+func set_input_enabled(enabled: bool) -> void:
+	input_enabled = enabled
+	if not input_enabled:
+		velocity = Vector2.ZERO
+
 func _physics_process(delta: float) -> void:
-	if dash_cooldown_timer > 0:
-		dash_cooldown_timer -= delta
+	if not input_enabled:
+		if not is_on_floor():
+			velocity += get_gravity() * delta
+
+	# Reducir cooldown del dash siempre, no solo cuando la entrada está deshabilitada
+	dash_cooldown_timer -= delta
 
 	if is_on_floor():
 		air_dash_used = false
@@ -245,8 +255,6 @@ func _update_animation(delta: float):
 			var aim_up := Input.is_action_pressed("aim_up")
 			var aim_down := Input.is_action_pressed("aim_down")
 			if attack_just_started:
-				var previous_animation = sprite.animation
-				var previous_frame = sprite.frame
 				if aim_down and sprite.sprite_frames.has_animation("attack_down_run"):
 					sprite.play("attack_down_run")
 					sprite.speed_scale = 1.0
@@ -262,12 +270,9 @@ func _update_animation(delta: float):
 				else:
 					sprite.play("attack_run")
 					sprite.speed_scale = 1.0
+					sprite.frame = 0
 					_attack_anim_playing = true
 					_attack_anim_name = "attack_run"
-					if previous_animation == "run" or previous_animation == "attack_run":
-						var attack_run_frames = sprite.sprite_frames.get_frame_count("attack_run")
-						if attack_run_frames > 0:
-							sprite.frame = (previous_frame + 1) % attack_run_frames
 			elif sprite.animation == "attack_run" or sprite.animation == "attack_up_run" or sprite.animation == "attack_down_run":
 				sprite.speed_scale = 1.0
 			if velocity.x != 0:
@@ -442,14 +447,24 @@ func _spawn_afterimage(tex):
 	si.global_position = global_position
 	si.flip_h = sprite.flip_h
 	si.scale = sprite.scale
-	si.z_index = sprite.z_index - 1
+	# Dibujar detrás del player pero por delante de fondo/tiles.
+	# Usamos el mismo z_index del player y lo colocamos justo antes del nodo Player en el árbol.
+	si.z_as_relative = z_as_relative
+	si.z_index = z_index
 	var pcol := Color(1, 1, 1, 0.85)
 	if sprite.material != null and sprite.material.has_method("get_shader_parameter"):
 		var sc = sprite.material.get_shader_parameter("color_primary")
 		if sc != null:
 			pcol = Color(sc.r, sc.g, sc.b, 0.85)
 	si.modulate = pcol
-	get_parent().add_child(si)
+	var parent_node := get_parent()
+	if parent_node:
+		parent_node.add_child(si)
+		# Insertar la after-image antes del player para que no tape al sprite del jugador.
+		var player_index: int = get_index()
+		parent_node.move_child(si, player_index)
+	else:
+		add_child(si)
 	var tw = si.create_tween()
 	tw.tween_property(si, "modulate:a", 0.0, AFTERIMAGE_LIFETIME)
 	tw.tween_property(si, "scale", si.scale * 0.85, AFTERIMAGE_LIFETIME)
