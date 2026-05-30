@@ -20,7 +20,6 @@ func _ready() -> void:
 
 func _start_intro_sequence() -> void:
 	var player = get_tree().get_first_node_in_group("player")
-	# If we're resuming from a checkpoint, do not replay the intro.
 	if GameState.checkpoint_activated:
 		if player != null and player.has_method("set_input_enabled"):
 			player.set_input_enabled(true)
