@@ -38,10 +38,3 @@ func _respawn():
 	sprite.visible = true
 	collision.disabled = false
 	global_position = original_position
-
-
-func _on_detector_body_entered(body: Node2D) -> void:
-	if body.is_in_group("player") and not is_shaking:
-		is_shaking = true
-		shake_timer = SHAKE_DURATION
-		sprite.position.x = 0

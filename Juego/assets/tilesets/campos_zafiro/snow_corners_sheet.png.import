@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://k13rjfq2n5wc"
-path="res://.godot/imported/snow-tileset.png-1097156f40b42acd7647522fca1e48ec.ctex"
+uid="uid://c2axfd5ympyvo"
+path="res://.godot/imported/snow_corners_sheet.png-642a85b72efe240a99765e094f194829.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/snow-tileset.png"
-dest_files=["res://.godot/imported/snow-tileset.png-1097156f40b42acd7647522fca1e48ec.ctex"]
+source_file="res://assets/tilesets/campos_zafiro/snow_corners_sheet.png"
+dest_files=["res://.godot/imported/snow_corners_sheet.png-642a85b72efe240a99765e094f194829.ctex"]
 
 [params]
 
