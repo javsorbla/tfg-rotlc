@@ -59,3 +59,5 @@ animation = &"inicio"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_jywwb")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
