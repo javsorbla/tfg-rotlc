@@ -14,6 +14,10 @@ const FLOAT_SPEED = 60.0
 const CHARGE_SPEED = 200.0
 const CHARGE_COOLDOWN = 3.0
 const PROJECTILE_COOLDOWN = 4.0
+const CHARGE_RECOVER_TIME = 0.2
+const CHARGE_HOLD_FRAME = 4
+const CHARGE_RECOVER_FRAME = 5
+const SHOOT_FIRE_FRAME = 4
 
 # Fase 2
 const FLOAT_SPEED_P2 = 110.0
@@ -47,6 +51,10 @@ var projectile_timer = 0.0
 var jump_timer = 0.0
 var action_timer = 0.0
 var post_jump_recover_timer = 0.0
+var charge_hold_active = false
+var charge_recover_timer = 0.0
+var projectile_fired = false
+var jump_peak_active = false
 
 var jump_velocity = Vector2.ZERO
 var charge_direction = Vector2.ZERO
@@ -102,6 +110,8 @@ func _ready():
 	charge_timer = CHARGE_COOLDOWN
 	projectile_timer = PROJECTILE_COOLDOWN
 	spawn_position = global_position
+	_configure_sprite_animations()
+	_play_animation("idle")
 	GameState.level_reset.connect(_on_level_reset)
 	original_y = position.y
 	core_hurtbox_base_x = abs(core_hurtbox_shape.position.x)
@@ -151,6 +161,7 @@ func _enter_phase_two():
 		attack_hitbox.monitorable = false
 		jump_velocity = Vector2.ZERO
 		action_timer = FURY_CENTER_MOVE_TIME + FURY_SUMMON_PAUSE + FURY_SUMMON_STAGGER
+		_play_animation("change_phase")
 		_start_fury_transition_async()
 
 func _start_fury_transition_async():
@@ -227,6 +238,8 @@ func _start_charge():
 	attack_hitbox.monitorable = true
 	action_timer = 1.5
 	charge_timer = CHARGE_COOLDOWN if current_phase == Phase.ONE else CHARGE_COOLDOWN_P2
+	charge_hold_active = false
+	charge_recover_timer = 0.0
 
 	if player:
 		charge_direction = (player.global_position - global_position).normalized()
@@ -234,29 +247,56 @@ func _start_charge():
 	else:
 		charge_direction = Vector2.LEFT if sprite.flip_h else Vector2.RIGHT
 
+	_play_animation("charge")
+
 func _charge_state(delta):
 	action_timer -= delta
 	var speed = CHARGE_SPEED if current_phase == Phase.ONE else CHARGE_SPEED_P2
-	position += charge_direction * speed * delta
+	if action_timer > 0.0:
+		position += charge_direction * speed * delta
 	position.x = clamp(position.x, room_left_limit + BOSS_HALF_WIDTH, room_right_limit - BOSS_HALF_WIDTH)
 	position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 
-	if action_timer <= 0:
-		charge_direction = Vector2.ZERO
-		attack_hitbox.monitoring = false
-		attack_hitbox.monitorable = false
-		current_state = State.IDLE
+	if not charge_hold_active and sprite.animation == "charge" and sprite.frame >= CHARGE_HOLD_FRAME:
+		charge_hold_active = true
+		sprite.frame = CHARGE_HOLD_FRAME
+		sprite.pause()
+
+	if action_timer <= 0.0 and charge_recover_timer <= 0.0:
+		charge_recover_timer = CHARGE_RECOVER_TIME
+		sprite.play("charge")
+		sprite.frame = CHARGE_RECOVER_FRAME
+
+	if charge_recover_timer > 0.0:
+		charge_recover_timer -= delta
+		if charge_recover_timer <= 0.0 or not sprite.is_playing():
+			charge_direction = Vector2.ZERO
+			attack_hitbox.monitoring = false
+			attack_hitbox.monitorable = false
+			current_state = State.IDLE
+			_play_animation("idle")
+			return
 
 func _start_projectile():
 	current_state = State.PROJECTILE
 	action_timer = 1.0
 	projectile_timer = PROJECTILE_COOLDOWN if current_phase == Phase.ONE else PROJECTILE_COOLDOWN_P2
+	projectile_fired = false
+	_play_animation("shoot")
 
 func _projectile_state(delta):
 	action_timer -= delta
-	if action_timer <= 0:
+	if not projectile_fired and sprite.animation == "shoot" and sprite.frame >= SHOOT_FIRE_FRAME:
 		_shoot_projectile()
+		projectile_fired = true
+
+	if action_timer <= 0.0 and not projectile_fired:
+		_shoot_projectile()
+		projectile_fired = true
+
+	if projectile_fired and not sprite.is_playing():
 		current_state = State.IDLE
+		_play_animation("idle")
 
 func _shoot_projectile():
 	if not player:
@@ -281,6 +321,7 @@ func _start_jump():
 	attack_hitbox.monitorable = true
 	jump_timer = JUMP_COOLDOWN
 	action_timer = 1.5
+	jump_peak_active = false
 
 	if player:
 		var delta_x: float = player.global_position.x - global_position.x
@@ -292,11 +333,21 @@ func _start_jump():
 			_update_flip(horizontal_speed < 0.0)
 		jump_velocity = Vector2(horizontal_speed, -400.0)
 
+	_play_animation("jump_ascent")
+
 func _jump_state(delta):
 	action_timer -= delta
 	jump_velocity.y += 600.0 * delta
 	position += jump_velocity * delta
 	position.x = clamp(position.x, room_left_limit + BOSS_HALF_WIDTH, room_right_limit - BOSS_HALF_WIDTH)
+
+	if jump_velocity.y < 0.0:
+		if sprite.animation != "jump_ascent":
+			_play_animation("jump_ascent")
+		jump_peak_active = false
+	elif not jump_peak_active:
+		jump_peak_active = true
+		_play_animation("jump_peak")
 
 	# Detectar contacto con el suelo durante la caida
 	if jump_velocity.y > 0.0:
@@ -365,6 +416,25 @@ func _update_flip(flipped: bool):
 	# Mantener la hurtbox del core alineada con la orientacion visual del boss.
 	core_hurtbox_shape.position.x = -core_hurtbox_base_x if flipped else core_hurtbox_base_x
 
+
+func _configure_sprite_animations() -> void:
+	if not sprite or not sprite.sprite_frames:
+		return
+	if sprite.sprite_frames.has_animation("idle"):
+		sprite.sprite_frames.set_animation_loop("idle", true)
+	for animation_name in ["change_phase", "charge", "jump_ascent", "jump_peak", "shoot"]:
+		if sprite.sprite_frames.has_animation(animation_name):
+			sprite.sprite_frames.set_animation_loop(animation_name, false)
+
+
+func _play_animation(animation_name: String) -> void:
+	if not sprite or not sprite.sprite_frames:
+		return
+	if not sprite.sprite_frames.has_animation(animation_name):
+		return
+	sprite.play(animation_name)
+	sprite.frame = 0
+
 func activate():
 	_reset_for_encounter(true)
 
@@ -389,11 +459,16 @@ func _reset_for_encounter(make_active: bool) -> void:
 	post_jump_recover_timer = 0.0
 	jump_velocity = Vector2.ZERO
 	charge_direction = Vector2.ZERO
+	charge_hold_active = false
+	charge_recover_timer = 0.0
+	projectile_fired = false
+	jump_peak_active = false
 	has_summoned_fury_walkers = false
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	_update_flip(false)
+	_play_animation("idle")
 	is_active = make_active
 
 func take_damage(amount: int):
