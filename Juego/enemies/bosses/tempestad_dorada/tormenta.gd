@@ -58,7 +58,6 @@ func _start_sequence():
 	
 	luz.energy = 2.5
 	
-	# Pulso mientras está activo
 	var tween = create_tween().set_loops()
 	tween.tween_property(luz, "energy", 5.0, 0.1).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(luz, "energy", 3.0, 0.1).set_trans(Tween.TRANS_SINE)
