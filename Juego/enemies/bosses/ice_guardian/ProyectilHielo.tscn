@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://cpr75bu1cybc5"]
+[gd_scene load_steps=7 format=3 uid="uid://cpr75bu1cybc5"]
 
 [ext_resource type="Texture2D" uid="uid://pqf344f7cycu" path="res://assets/enemies/bosses/ice_guardian/proyectil_hielo.png" id="1_0k2b5"]
 [ext_resource type="Script" path="res://enemies/bosses/ice_guardian/proyectil_hielo.gd" id="1_b3kg0"]
@@ -18,6 +18,17 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="Gradient" id="Gradient_mqrjc"]
+offsets = PackedFloat32Array(0, 0.480519)
+colors = PackedColorArray(0.530748, 0.752345, 0.897563, 1, 0.965, 0.965, 0.965, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ghupk"]
+gradient = SubResource("Gradient_mqrjc")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.504587, 0.486239)
+
 [node name="ProyectilHielo" type="Area2D"]
 collision_layer = 16
 collision_mask = 5
@@ -32,3 +43,8 @@ sprite_frames = SubResource("SpriteFrames_87dlv")
 
 [node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
 rotation = 0.911545
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.703149, 0.856702, 0.983565, 1)
+energy = 0.7
+texture = SubResource("GradientTexture2D_ghupk")

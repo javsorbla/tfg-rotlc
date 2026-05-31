@@ -42,12 +42,12 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="Gradient" id="Gradient_mqrjc"]
-offsets = PackedFloat32Array(0, 0.448052)
+[sub_resource type="Gradient" id="Gradient_e25hl"]
+offsets = PackedFloat32Array(0, 0.396104)
 colors = PackedColorArray(0.719434, 0.49495, 0.259124, 1, 0, 0, 0, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_rjcn1"]
-gradient = SubResource("Gradient_mqrjc")
+gradient = SubResource("Gradient_e25hl")
 width = 256
 height = 256
 fill = 1
