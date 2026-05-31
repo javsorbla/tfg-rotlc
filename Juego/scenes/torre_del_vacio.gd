@@ -1,11 +1,10 @@
 extends Node2D
 
+func _enter_tree() -> void:
+	GameState.current_level = 4
+	GameState.current_level_path = "res://scenes/TorreDelVacio.tscn"
 
-# Called when the node enters the scene tree for the first time.
+
 func _ready() -> void:
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+	if GameState.has_method("auto_unlock_power_for_level"):
+		GameState.auto_unlock_power_for_level()

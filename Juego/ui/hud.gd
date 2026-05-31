@@ -10,7 +10,10 @@ var heart_empty: Texture2D = preload("res://assets/ui/heart_empty.png")
 var duration_bars = {}
 var save_indicator: AnimatedSprite2D
 var _save_tween: Tween
+var _save_timeout_generation: int = 0
 var _save_shader: Shader = preload("res://ui/shaders/save_icon_replace.gdshader")
+
+const SAVE_INDICATOR_TIMEOUT = 8.0
 
 const MAX_DURATIONS = {
 	"cyan": 6.0,
@@ -198,6 +201,8 @@ func _set_saving(active: bool) -> void:
 		return
 	if active:
 		_stop_save_tween()
+		_save_timeout_generation += 1
+		var timeout_generation := _save_timeout_generation
 		save_indicator.visible = true
 		save_indicator.modulate.a = 0.9
 		save_indicator.scale = Vector2.ONE
@@ -206,6 +211,8 @@ func _set_saving(active: bool) -> void:
 		_save_tween = create_tween().set_loops()
 		_save_tween.tween_property(save_indicator, "scale", Vector2(1.15, 1.15), 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_save_tween.tween_property(save_indicator, "scale", Vector2(1.0, 1.0), 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		var timeout_timer := get_tree().create_timer(SAVE_INDICATOR_TIMEOUT)
+		timeout_timer.timeout.connect(Callable(self, "_on_save_indicator_timeout").bind(timeout_generation), CONNECT_ONE_SHOT)
 		return
 	_hide_save_indicator()
 
@@ -228,11 +235,18 @@ func _show_save_indicator(duration: float) -> void:
 
 func _hide_save_indicator() -> void:
 	_stop_save_tween()
+	_save_timeout_generation += 1
 	if save_indicator == null:
 		return
 	save_indicator.visible = false
 	save_indicator.modulate.a = 0.0
 	save_indicator.scale = Vector2.ONE
+
+
+func _on_save_indicator_timeout(timeout_generation: int) -> void:
+	if timeout_generation != _save_timeout_generation:
+		return
+	_hide_save_indicator()
 
 
 func _update_save_icon_color() -> void:
@@ -272,7 +286,7 @@ func _update_save_icon_color() -> void:
 			target = Color(1.0, 0.2, 0.2, 1.0)
 		elif level_name.find("costa") >= 0 or level_name.find("ambar") >= 0:
 			target = Color(1.0, 0.9, 0.0, 1.0)
-		elif level_name.find("ultimo") >= 0 or level_name.find("final") >= 0 or level_name.find("boss") >= 0:
+		elif level_name.find("torre") >= 0 or level_name.find("vacio") >= 0:
 			target = Color(0.6, 0.2, 0.8, 1.0)
 
 	if save_indicator != null:
