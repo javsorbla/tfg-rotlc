@@ -14,10 +14,12 @@ const FLOAT_SPEED = 60.0
 const CHARGE_SPEED = 200.0
 const CHARGE_COOLDOWN = 3.0
 const PROJECTILE_COOLDOWN = 4.0
-const CHARGE_RECOVER_TIME = 0.2
+const CHARGE_RECOVER_TIME = 1
 const CHARGE_HOLD_FRAME = 4
 const CHARGE_RECOVER_FRAME = 5
 const SHOOT_FIRE_FRAME = 4
+const PROJECTILE_PRIMARY_OFFSET = Vector2(56.0, -18.0)
+const PROJECTILE_SECONDARY_OFFSET = Vector2(32.0, -10.0)
 
 # Fase 2
 const FLOAT_SPEED_P2 = 110.0
@@ -115,6 +117,7 @@ func _ready():
 	GameState.level_reset.connect(_on_level_reset)
 	original_y = position.y
 	core_hurtbox_base_x = abs(core_hurtbox_shape.position.x)
+	_sync_projectile_spawn_position()
 	if not core_hurtbox.is_in_group("boss_core"):
 		core_hurtbox.add_to_group("boss_core")
 	if not attack_hitbox.is_in_group("enemy_hitbox"):
@@ -302,17 +305,20 @@ func _shoot_projectile():
 	if not player:
 		return
 
-	var base_dir: Vector2 = (player.global_position - projectile_spawn.global_position).normalized()
-	_spawn_projectile_with_direction(base_dir)
+	var primary_spawn_position: Vector2 = _get_projectile_spawn_global_position(false)
+	var base_dir: Vector2 = (player.global_position - primary_spawn_position).normalized()
+	_spawn_projectile_with_direction(base_dir, primary_spawn_position)
 
 	if current_phase == Phase.TWO:
 		var spread_angle := deg_to_rad(10.0)
-		_spawn_projectile_with_direction(base_dir.rotated(spread_angle))
+		var secondary_spawn_position: Vector2 = _get_projectile_spawn_global_position(true)
+		var secondary_dir: Vector2 = (player.global_position - secondary_spawn_position).normalized().rotated(spread_angle)
+		_spawn_projectile_with_direction(secondary_dir, secondary_spawn_position)
 
-func _spawn_projectile_with_direction(dir: Vector2):
+func _spawn_projectile_with_direction(dir: Vector2, spawn_position: Vector2):
 	var projectile = projectile_scene.instantiate()
 	get_parent().add_child(projectile)
-	projectile.global_position = projectile_spawn.global_position
+	projectile.global_position = spawn_position
 	projectile.init(dir)
 
 func _start_jump():
@@ -415,6 +421,24 @@ func _update_flip(flipped: bool):
 	sprite.flip_h = flipped
 	# Mantener la hurtbox del core alineada con la orientacion visual del boss.
 	core_hurtbox_shape.position.x = -core_hurtbox_base_x if flipped else core_hurtbox_base_x
+	_sync_projectile_spawn_position()
+
+
+func _sync_projectile_spawn_position() -> void:
+	if not projectile_spawn:
+		return
+	projectile_spawn.position = _get_projectile_spawn_offset(false)
+
+
+func _get_projectile_spawn_offset(secondary: bool) -> Vector2:
+	var offset := PROJECTILE_SECONDARY_OFFSET if secondary else PROJECTILE_PRIMARY_OFFSET
+	if sprite and sprite.flip_h:
+		offset.x = -offset.x
+	return offset
+
+
+func _get_projectile_spawn_global_position(secondary: bool) -> Vector2:
+	return global_position + _get_projectile_spawn_offset(secondary)
 
 
 func _configure_sprite_animations() -> void:
