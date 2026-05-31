@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://de3l4ucej6p1t"]
 
 [ext_resource type="Script" path="res://scenes/enviroment/pincho_que_cae.gd" id="1_fjosb"]
-[ext_resource type="Texture2D" uid="uid://dv4vvt7xg4rio" path="res://assets/traps/pincho.png" id="2_mxas3"]
+[ext_resource type="Texture2D" uid="uid://cqd832b1lds3o" path="res://assets/traps/pincho_vacio.png" id="2_gu35p"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_53mj8"]
 size = Vector2(16, 15)
@@ -14,7 +14,7 @@ velocidad_caida = 200.0
 distancia_maxima = 370.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_mxas3")
+texture = ExtResource("2_gu35p")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 0.5)

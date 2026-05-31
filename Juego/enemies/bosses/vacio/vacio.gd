@@ -31,6 +31,12 @@ var bolsa_ataques: Array = [] #
 
 var action_timer: float = 0.0
 var state_timer: float = 0.0
+var aoe_charge_timer: float = 0.0
+var aoe_charge_frame: int = 0
+var aoe_damage_done: bool = false
+var aoe_explosion_shown: bool = false
+var aoe_frame_8_shown: bool = false
+var aoe_frame_9_shown: bool = false
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var body_hitbox: Area2D = $AttactHitBox
@@ -88,6 +94,8 @@ func _enter_state(new_state: State) -> void:
 	match new_state:
 		State.IDLE:
 			is_active = false
+			if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("default"):
+				sprite.play("default")
 		State.CHASE:
 			modulate.a = 1.0
 			current_size = 1.0
@@ -143,6 +151,12 @@ func _on_level_reset() -> void:
 	_set_hitboxes_active(true)
 	is_active = false
 	is_invulnerable = false
+	aoe_charge_timer = 0.0
+	aoe_charge_frame = 0
+	aoe_damage_done = false
+	aoe_explosion_shown = false
+	aoe_frame_8_shown = false
+	aoe_frame_9_shown = false
 	_enter_state(State.IDLE)
 
 
@@ -253,6 +267,16 @@ func _state_phase_transition(delta: float) -> void:
 func _start_aoe_attack() -> void:
 	state_timer = 4.0 
 	_set_hitboxes_active(false) 
+	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("explosion"):
+		sprite.play("explosion")
+		sprite.stop()
+		sprite.frame = 0
+	aoe_charge_timer = 0.0
+	aoe_charge_frame = 0
+	aoe_damage_done = false
+	aoe_explosion_shown = false
+	aoe_frame_8_shown = false
+	aoe_frame_9_shown = false
 	var boss_room = get_tree().get_first_node_in_group("boss_room")
 	if boss_room and boss_room.has_node("LimiteIzquierda") and boss_room.has_node("LimiteDerecha"):
 		var left_limit = boss_room.get_node("LimiteIzquierda").global_position.x
@@ -266,9 +290,30 @@ func _start_aoe_attack() -> void:
 
 func _state_aoe(delta: float) -> void:
 	state_timer -= delta
-	if state_timer <= 1.5 and state_timer + delta > 1.5:
-		_execute_aoe_damage()
+	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("explosion"):
+		if state_timer > 1.5:
+			aoe_charge_timer += delta
+			if aoe_charge_timer >= 0.12:
+				aoe_charge_timer = 0.0
+				aoe_charge_frame = 1 if aoe_charge_frame == 0 else 0
+				sprite.frame = aoe_charge_frame
+		elif not aoe_damage_done:
+			sprite.frame = 6
+			_execute_aoe_damage()
+			aoe_damage_done = true
+		elif state_timer > 0.9:
+			sprite.frame = 7
+			aoe_explosion_shown = true
+		elif state_timer > 0.6:
+			sprite.frame = 8
+			aoe_frame_8_shown = true
+		elif state_timer > 0.3:
+			sprite.frame = 9
+			aoe_frame_9_shown = true
 	if state_timer <= 0:
+		if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("default"):
+			sprite.play("default")
+			sprite.frame = 0
 		if action_tween: action_tween.kill() 
 		action_tween = create_tween()
 		action_tween.tween_property(flash_pantalla, "color:a", 0.0, 0.5)
