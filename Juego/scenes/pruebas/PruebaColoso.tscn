@@ -1,7 +1,7 @@
 [gd_scene load_steps=12 format=4 uid="uid://shyldwrlc5so"]
 
 [ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_njwen"]
-[ext_resource type="PackedScene" uid="uid://b4xv5brfpegl" path="res://scenes/enviroment/PlataformaRompible.tscn" id="2_ideqb"]
+[ext_resource type="PackedScene" uid="uid://k7r8l2h9y1nqv" path="res://scenes/enviroment/PlataformaRompiblePorNivel.tscn" id="2_ideqb"]
 [ext_resource type="PackedScene" uid="uid://j3iq0wr4lk5y" path="res://enemies/bosses/coloso_ceniza/ColosoCeniza.tscn" id="3_etxhj"]
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="8_p7ef8"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="9_kmxla"]
