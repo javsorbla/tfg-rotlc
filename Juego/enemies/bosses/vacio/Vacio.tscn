@@ -1,9 +1,10 @@
-[gd_scene load_steps=18 format=3 uid="uid://c0ogqogypgm2j"]
+[gd_scene load_steps=29 format=3 uid="uid://c0ogqogypgm2j"]
 
 [ext_resource type="Script" path="res://enemies/bosses/vacio/vacio.gd" id="1_et7wl"]
 [ext_resource type="PackedScene" uid="uid://chl6qutwr0fwl" path="res://enemies/bosses/vacio/pincho_vacio.tscn" id="2_cgq4e"]
 [ext_resource type="PackedScene" uid="uid://dcxw5esr7td0d" path="res://enemies/bosses/vacio/bola_oscura.tscn" id="3_wxnae"]
 [ext_resource type="Texture2D" uid="uid://xrfu3ng2e28u" path="res://assets/enemies/bosses/vacio/vacio9_idle_sheet.png" id="4_gq4mc"]
+[ext_resource type="Texture2D" uid="uid://c3i0yya8u60m5" path="res://assets/enemies/bosses/vacio/vacio_explosion_final.png" id="5_ad7qt"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2oqqf"]
 atlas = ExtResource("4_gq4mc")
@@ -27,6 +28,46 @@ region = Rect2(128, 128, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0xl6h"]
 atlas = ExtResource("4_gq4mc")
+region = Rect2(256, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_45dc4"]
+atlas = ExtResource("5_ad7qt")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2y858"]
+atlas = ExtResource("5_ad7qt")
+region = Rect2(0, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r1x0u"]
+atlas = ExtResource("5_ad7qt")
+region = Rect2(0, 256, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n1ujv"]
+atlas = ExtResource("5_ad7qt")
+region = Rect2(0, 384, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4oar5"]
+atlas = ExtResource("5_ad7qt")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6htoj"]
+atlas = ExtResource("5_ad7qt")
+region = Rect2(128, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jn1h0"]
+atlas = ExtResource("5_ad7qt")
+region = Rect2(128, 256, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_onb7a"]
+atlas = ExtResource("5_ad7qt")
+region = Rect2(128, 384, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vkbob"]
+atlas = ExtResource("5_ad7qt")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u61eo"]
+atlas = ExtResource("5_ad7qt")
 region = Rect2(256, 128, 128, 128)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_ovn4g"]
@@ -53,6 +94,41 @@ animations = [{
 "loop": true,
 "name": &"default",
 "speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_45dc4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2y858")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r1x0u")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n1ujv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4oar5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6htoj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jn1h0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_onb7a")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vkbob")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u61eo")
+}],
+"loop": true,
+"name": &"explosion",
+"speed": 11.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cktqs"]
@@ -80,7 +156,7 @@ escena_bola = ExtResource("3_wxnae")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_ovn4g")
-frame_progress = 0.32952
+animation = &"explosion"
 
 [node name="AttactHitBox" type="Area2D" parent="." groups=["boss_hitbox"]]
 collision_layer = 16
