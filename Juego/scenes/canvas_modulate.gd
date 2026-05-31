@@ -8,7 +8,6 @@ var parallax: Node
 func _ready():
 	color_objetivo = color
 	parallax = get_tree().get_first_node_in_group("parallax")
-	print("Parallax encontrado: ", parallax)
 	
 func _process(delta):
 	color = color.lerp(color_objetivo, delta * velocidad_transicion)

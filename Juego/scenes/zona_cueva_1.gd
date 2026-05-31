@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var color_zona: Color = Color("#666666")
+@export var color_zona: Color = Color("#1a1a1a")
 var canvas_modulate: CanvasModulate
 
 func _ready():
