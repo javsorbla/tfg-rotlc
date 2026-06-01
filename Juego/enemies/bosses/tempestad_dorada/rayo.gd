@@ -29,8 +29,8 @@ func _crear_luz_segmento(start: Vector2, diff: Vector2):
 	l.rotation = diff.angle() + deg_to_rad(90.0)
 	l.scale = Vector2(0.8, diff.length() / 64.0 * 2)
 	var tween = create_tween().set_loops()
+	tween.tween_property(l, "energy", 6.0, 0.1).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(l, "energy", 4.0, 0.1).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(l, "energy", 2.5, 0.1).set_trans(Tween.TRANS_SINE)
 
 func _ready():
 	if not hitbox:
