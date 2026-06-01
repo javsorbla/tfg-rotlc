@@ -184,7 +184,7 @@ shape = SubResource("CapsuleShape2D_3vqq5")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(0.609375, 0.546875)
 sprite_frames = SubResource("SpriteFrames_wv3ce")
-animation = &"dead"
+animation = &"move"
 
 [node name="EnemyHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16
