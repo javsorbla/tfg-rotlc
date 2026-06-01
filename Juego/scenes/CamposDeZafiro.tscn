@@ -730,6 +730,9 @@ position = Vector2(392, -208)
 [node name="LimiteAbajo" parent="Entorno/ZonaJefe" index="7"]
 position = Vector2(440, 3)
 
+[node name="Suelo" type="Marker2D" parent="Entorno/ZonaJefe"]
+position = Vector2(315, 13)
+
 [node name="ZonaJefe2" parent="Entorno" instance=ExtResource("8_mqecc")]
 position = Vector2(6929, -740)
 

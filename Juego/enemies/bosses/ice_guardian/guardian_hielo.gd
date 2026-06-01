@@ -32,6 +32,8 @@ const JUMP_HORIZONTAL_DEADZONE = 24.0
 const FLOOR_RAY_MARGIN = 64.0
 const FLOOR_NEAR_BOTTOM_THRESHOLD = 24.0
 const POST_JUMP_RECOVER = 1.25
+const JUMP_DESCENT_HOLD_FRAME = 2
+const POST_LAND_HOLD_TIME = 2.0
 const DAMAGE_FLASH_TIME = 0.08
 const FURY_SUMMON_PAUSE = 2.4
 const WALKER_SPAWN_OFFSET_X = 96.0
@@ -57,6 +59,9 @@ var charge_hold_active = false
 var charge_recover_timer = 0.0
 var projectile_fired = false
 var jump_peak_active = false
+var jump_peak_y = 0.0
+var jump_descent_hold_active = false
+var post_land_timer = 0.0
 
 var jump_velocity = Vector2.ZERO
 var charge_direction = Vector2.ZERO
@@ -69,12 +74,14 @@ var room_left_limit = 0.0
 var room_right_limit = 0.0
 var room_top_limit = 0.0
 var room_bottom_limit = 0.0
+var room_suelo_y = 0.0
 
 @onready var sprite = $AnimatedSprite2D
 @onready var projectile_spawn = $SpawnProyectil
 @onready var core_hurtbox = $CoreHurtbox
 @onready var core_hurtbox_shape = $CoreHurtbox/CollisionShape2D
 @onready var attack_hitbox = $AttackHitbox
+@onready var descent_hit = $DescentHit
 @onready var projectile_scene = preload("res://enemies/bosses/ice_guardian/ProyectilHielo.tscn")
 @onready var shockwave_scene = preload("res://enemies/bosses/ice_guardian/OndaHielo.tscn")
 @onready var caminante_helado_scene = preload("res://enemies/common/caminante_helado/CaminanteHelado.tscn")
@@ -141,6 +148,7 @@ func _physics_process(delta):
 			room_right_limit = boss_room.get_node("LimiteDerecha").global_position.x
 			room_top_limit = boss_room.get_node("LimiteArriba").global_position.y
 			room_bottom_limit = boss_room.get_node("LimiteAbajo").global_position.y
+			room_suelo_y = boss_room.get_node("Suelo").global_position.y
 
 	if current_state == State.DEAD:
 		return
@@ -163,7 +171,7 @@ func _enter_phase_two():
 		attack_hitbox.monitoring = false
 		attack_hitbox.monitorable = false
 		jump_velocity = Vector2.ZERO
-		action_timer = FURY_CENTER_MOVE_TIME + FURY_SUMMON_PAUSE + FURY_SUMMON_STAGGER
+		action_timer = FURY_CENTER_MOVE_TIME + FURY_SUMMON_PAUSE + (10.0 / 12.0) + FURY_SUMMON_STAGGER
 		_play_animation("change_phase")
 		_start_fury_transition_async()
 
@@ -174,7 +182,11 @@ func _start_fury_transition_async():
 	var move_tween: Tween = create_tween()
 	move_tween.tween_property(self, "global_position", target_pos, FURY_CENTER_MOVE_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await move_tween.finished
+	_play_animation("summon")
 	_summon_fury_walkers_async()
+	await sprite.animation_finished
+	_play_animation("idle")
+	action_timer = 1.0
 
 func _get_bossroom_center_x() -> float:
 	var boss_room = get_tree().get_first_node_in_group("boss_room")
@@ -262,8 +274,7 @@ func _charge_state(delta):
 
 	if not charge_hold_active and sprite.animation == "charge" and sprite.frame >= CHARGE_HOLD_FRAME:
 		charge_hold_active = true
-		sprite.frame = CHARGE_HOLD_FRAME
-		sprite.pause()
+		_play_animation("charge_idle")
 
 	if action_timer <= 0.0 and charge_recover_timer <= 0.0:
 		charge_recover_timer = CHARGE_RECOVER_TIME
@@ -328,6 +339,9 @@ func _start_jump():
 	jump_timer = JUMP_COOLDOWN
 	action_timer = 1.5
 	jump_peak_active = false
+	jump_descent_hold_active = false
+	jump_peak_y = 0.0
+	post_land_timer = 0.0
 
 	if player:
 		var delta_x: float = player.global_position.x - global_position.x
@@ -342,7 +356,15 @@ func _start_jump():
 	_play_animation("jump_ascent")
 
 func _jump_state(delta):
+	if post_land_timer > 0.0:
+		post_land_timer -= delta
+		if post_land_timer <= 0.0:
+			current_state = State.IDLE
+			_play_animation("idle")
+		return
+
 	action_timer -= delta
+
 	jump_velocity.y += 600.0 * delta
 	position += jump_velocity * delta
 	position.x = clamp(position.x, room_left_limit + BOSS_HALF_WIDTH, room_right_limit - BOSS_HALF_WIDTH)
@@ -351,9 +373,18 @@ func _jump_state(delta):
 		if sprite.animation != "jump_ascent":
 			_play_animation("jump_ascent")
 		jump_peak_active = false
-	elif not jump_peak_active:
+
+	if not jump_peak_active and jump_velocity.y >= 0.0:
 		jump_peak_active = true
+		jump_peak_y = position.y
+		jump_descent_hold_active = false
 		_play_animation("jump_peak")
+
+	if jump_peak_active and jump_velocity.y > 0.0 and not jump_descent_hold_active:
+		jump_descent_hold_active = true
+		_play_animation("jump_descent")
+		sprite.frame = JUMP_DESCENT_HOLD_FRAME
+		sprite.pause()
 
 	# Detectar contacto con el suelo durante la caida
 	if jump_velocity.y > 0.0:
@@ -367,25 +398,36 @@ func _jump_state(delta):
 		if not hit.is_empty():
 			var hit_y: float = float(hit.position.y)
 			if hit_y >= room_bottom_limit - FLOOR_NEAR_BOTTOM_THRESHOLD:
-				position.y = hit_y
+				position.y = (room_suelo_y - descent_hit.position.y) if jump_descent_hold_active else hit_y
 				jump_velocity = Vector2.ZERO
-				_land_shockwave(position.y)
+				_land_shockwave(room_suelo_y if jump_descent_hold_active else hit_y)
 				attack_hitbox.monitoring = false
 				attack_hitbox.monitorable = false
-				post_jump_recover_timer = POST_JUMP_RECOVER
-				current_state = State.IDLE
+				if jump_descent_hold_active:
+					sprite.play()
+					post_land_timer = POST_LAND_HOLD_TIME
+				else:
+					post_jump_recover_timer = POST_JUMP_RECOVER
+					current_state = State.IDLE
 				return
 
 	# Fallback: si se agota el tiempo sin detectar suelo
 	if action_timer <= 0:
 		var landing_y := _resolve_landing_y()
-		position.y = landing_y
+		if jump_descent_hold_active:
+			position.y = room_suelo_y - descent_hit.position.y
+		else:
+			position.y = landing_y
 		jump_velocity = Vector2.ZERO
-		_land_shockwave(landing_y)
+		_land_shockwave(room_suelo_y if jump_descent_hold_active else landing_y)
 		attack_hitbox.monitoring = false
 		attack_hitbox.monitorable = false
-		post_jump_recover_timer = POST_JUMP_RECOVER
-		current_state = State.IDLE
+		if jump_descent_hold_active:
+			sprite.play()
+			post_land_timer = POST_LAND_HOLD_TIME
+		else:
+			post_jump_recover_timer = POST_JUMP_RECOVER
+			current_state = State.IDLE
 
 func _resolve_landing_y() -> float:
 	var space_state := get_world_2d().direct_space_state
@@ -446,7 +488,7 @@ func _configure_sprite_animations() -> void:
 		return
 	if sprite.sprite_frames.has_animation("idle"):
 		sprite.sprite_frames.set_animation_loop("idle", true)
-	for animation_name in ["change_phase", "charge", "jump_ascent", "jump_peak", "shoot"]:
+	for animation_name in ["change_phase", "charge", "jump_ascent", "jump_peak", "jump_descent", "shoot", "summon"]:
 		if sprite.sprite_frames.has_animation(animation_name):
 			sprite.sprite_frames.set_animation_loop(animation_name, false)
 
@@ -487,6 +529,9 @@ func _reset_for_encounter(make_active: bool) -> void:
 	charge_recover_timer = 0.0
 	projectile_fired = false
 	jump_peak_active = false
+	jump_peak_y = 0.0
+	jump_descent_hold_active = false
+	post_land_timer = 0.0
 	has_summoned_fury_walkers = false
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
