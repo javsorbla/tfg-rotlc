@@ -6,13 +6,13 @@ func _preselect_resolution(window : Window) -> void:
 func _update_resolution_options_enabled(window : Window) -> void:
 	if OS.has_feature("web"):
 		%ResolutionControl.editable = false
-		%ResolutionControl.tooltip_text = "Disabled for web"
+		%ResolutionControl.tooltip_text = "Desactivado en web"
 	elif AppSettings.is_fullscreen(window):
 		%ResolutionControl.editable = false
-		%ResolutionControl.tooltip_text = "Disabled for fullscreen"
+		%ResolutionControl.tooltip_text = "Desactivado en pantalla completa"
 	else:
 		%ResolutionControl.editable = true
-		%ResolutionControl.tooltip_text = "Select a screen size"
+		%ResolutionControl.tooltip_text = "Selecciona un tamaño de pantalla"
 
 func _update_ui(window : Window) -> void:
 	%FullscreenControl.value = AppSettings.is_fullscreen(window)

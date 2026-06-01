@@ -85,6 +85,6 @@ script = ExtResource("2_xihbi")
 [node name="CloseButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" unique_id=314526102]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Close"
+text = "Cerrar"
 
 [connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/CloseButton" to="." method="_on_close_button_pressed"]

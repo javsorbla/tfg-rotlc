@@ -20,13 +20,13 @@ alignment = 1
 
 [node name="MouseSensitivityControl" parent="VBoxContainer/MarginContainer/VBoxContainer" index="0" unique_id=1384087 instance=ExtResource("2_ax2ge")]
 layout_mode = 2
-option_name = "Mouse Sensitivity"
+option_name = "Sensibilidad del ratón"
 option_section = 1
 key = "MouseSensitivity"
 section = "InputSettings"
 
 [node name="OptionLabel" parent="VBoxContainer/MarginContainer/VBoxContainer/MouseSensitivityControl" index="0" unique_id=1854788461]
-text = "Mouse Sensitivity :"
+text = "Sensibilidad del ratón :"
 
 [node name="HSlider" parent="VBoxContainer/MarginContainer/VBoxContainer/MouseSensitivityControl" index="1" unique_id=424108384]
 min_value = 0.25

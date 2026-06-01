@@ -10,11 +10,11 @@ offset_right = 210.0
 offset_bottom = 100.0
 script = ExtResource("2_oif0q")
 input_confirmation = 0
-close_button_text = "Close"
-title = "Set Input"
+close_button_text = "Cerrar"
+title = "Asignar entrada"
 
 [node name="TitleLabel" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer" parent_id_path=PackedInt32Array(1788474031) index="0" unique_id=1049966061]
-text = "Set Input"
+text = "Asignar entrada"
 
 [node name="DescriptionLabel" parent="ContentContainer/BoxContainer/BodyMargin" parent_id_path=PackedInt32Array(590613964) index="0" unique_id=617407155]
 visible = false
@@ -26,7 +26,7 @@ size_flags_vertical = 3
 [node name="InputLabel" type="Label" parent="ContentContainer/BoxContainer/BodyMargin/VBoxContainer" index="0" unique_id=1464176867]
 unique_name_in_owner = true
 layout_mode = 2
-text = "None"
+text = "Ninguna"
 horizontal_alignment = 1
 
 [node name="InputTextEdit" type="TextEdit" parent="ContentContainer/BoxContainer/BodyMargin/VBoxContainer" index="1" unique_id=1475588538]
@@ -49,10 +49,11 @@ mouse_hidden_enabled = false
 
 [node name="CloseButton" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="0" unique_id=314526102]
 focus_neighbor_top = NodePath("../../../BodyMargin/VBoxContainer/InputTextEdit")
-text = "Close"
+text = "Cerrar"
 
 [node name="ConfirmButton" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="1" unique_id=1052970550]
 focus_neighbor_top = NodePath("../../../BodyMargin/VBoxContainer/InputTextEdit")
+text = "Confirmar"
 
 [node name="DelayTimer" type="Timer" parent="." index="1" unique_id=1825912432]
 unique_name_in_owner = true

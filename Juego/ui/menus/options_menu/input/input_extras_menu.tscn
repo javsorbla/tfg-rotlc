@@ -33,13 +33,13 @@ alignment = 1
 
 [node name="MouseSensitivityControl" parent="VBoxContainer/MarginContainer/VBoxContainer" unique_id=1921387610 instance=ExtResource("2_mphg3")]
 layout_mode = 2
-option_name = "Mouse Sensitivity"
+option_name = "Sensibilidad del ratón"
 option_section = 1
 key = "MouseSensitivity"
 section = "InputSettings"
 
 [node name="OptionLabel" parent="VBoxContainer/MarginContainer/VBoxContainer/MouseSensitivityControl" index="0" unique_id=1854788461]
-text = "Mouse Sensitivity :"
+text = "Sensibilidad del ratón :"
 
 [node name="HSlider" parent="VBoxContainer/MarginContainer/VBoxContainer/MouseSensitivityControl" index="1" unique_id=424108384]
 min_value = 0.25
@@ -48,13 +48,13 @@ tick_count = 8
 
 [node name="JoypadSensitivityControl" parent="VBoxContainer/MarginContainer/VBoxContainer" unique_id=256777414 instance=ExtResource("2_mphg3")]
 layout_mode = 2
-option_name = "Joypad Sensitivity"
+option_name = "Sensibilidad del mando"
 option_section = 1
 key = "JoypadSensitivity"
 section = "InputSettings"
 
 [node name="OptionLabel" parent="VBoxContainer/MarginContainer/VBoxContainer/JoypadSensitivityControl" index="0" unique_id=1854788461]
-text = "Joypad Sensitivity :"
+text = "Sensibilidad del mando :"
 
 [node name="HSlider" parent="VBoxContainer/MarginContainer/VBoxContainer/JoypadSensitivityControl" index="1" unique_id=424108384]
 min_value = 0.25

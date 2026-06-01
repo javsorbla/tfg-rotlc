@@ -6,7 +6,6 @@
 [ext_resource type="Theme" path="res://ui/menus/main_menu/main_menu_shell_theme.tres" id="4_shell"]
 
 [node name="PauseMenuOptionsOverlaidWindow" unique_id=701085877 instance=ExtResource("1_efreu")]
-process_mode = 3
 anchors_preset = 15
 anchor_left = 0.0
 anchor_top = 0.0
@@ -19,6 +18,7 @@ offset_bottom = 0.0
 packed_scene = ExtResource("2_odnp0")
 theme = ExtResource("4_shell")
 title_visible = false
+update_content = true
 
 [node name="BackgroundTextureRect" type="TextureRect" parent="."]
 z_index = -2
