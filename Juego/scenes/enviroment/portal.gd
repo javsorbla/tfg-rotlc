@@ -4,7 +4,9 @@ extends Area2D
 @export var auto_call_parent: bool = true
 @export var auto_change_scene: bool = false 
 signal activated(body)
+
 @onready var anim: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D")
+@onready var light2d: PointLight2D = get_node_or_null("PointLight2D")
 @onready var sfx: AudioStreamPlayer2D = get_node_or_null("AudioStreamPlayer2D")
 var is_transitioning: bool = false
 var _entered_body: Node = null
@@ -13,12 +15,64 @@ func _ready() -> void:
 	add_to_group("portal")
 	connect("body_entered", Callable(self, "_on_body_entered"))
 	if anim:
-		# Ensure idle animation plays continuously if available
-		if anim.sprite_frames and anim.sprite_frames.has_animation("idle"):
+		var portal_animation := _get_portal_animation_name()
+		if anim.sprite_frames and anim.sprite_frames.has_animation(portal_animation):
+			anim.sprite_frames.set_animation_loop(portal_animation, true)
+			anim.play(portal_animation)
+		elif anim.sprite_frames and anim.sprite_frames.has_animation("idle"):
 			anim.sprite_frames.set_animation_loop("idle", true)
 			anim.play("idle")
 		else:
 			anim.stop()
+
+	_apply_portal_light()
+
+
+func _get_portal_animation_name() -> String:
+	return _get_portal_level_name()
+
+
+func _get_portal_level_name() -> String:
+	var level := 0
+	if has_node("/root/GameState"):
+		var game_state := get_node("/root/GameState")
+		if game_state.has_method("get_current_level"):
+			level = int(game_state.get_current_level())
+		elif typeof(game_state.get("current_level")) == TYPE_INT:
+			level = int(game_state.get("current_level"))
+
+	match level:
+		0:
+			return "cyan"
+		1:
+			return "red"
+		2:
+			return "yellow"
+		3:
+			return "purple"
+		_:
+			return "cyan"
+
+
+func _get_portal_light_color() -> Color:
+	match _get_portal_level_name():
+		"cyan":
+			return Color.html("#49adff")
+		"red":
+			return Color.html("#ff4b4b")
+		"yellow":
+			return Color.html("#ffd94a")
+		"purple":
+			return Color.html("#b66bff")
+		_:
+			return Color.html("#49adff")
+
+
+func _apply_portal_light() -> void:
+	if light2d == null:
+		return
+	light2d.color = _get_portal_light_color()
+	light2d.energy = 1.0
 
 func _on_body_entered(body: Node) -> void:
 	if is_transitioning:
@@ -53,8 +107,8 @@ func _on_body_entered(body: Node) -> void:
 
 	# If configured to auto change scene and next_scene is set, request it (fallback)
 	if auto_change_scene and next_scene != "":
-		if Engine.has_singleton("GameState") and GameState.has_method("request_level_change"):
-			GameState.request_level_change(next_scene)
+		if has_node("/root/GameState") and get_node("/root/GameState").has_method("request_level_change"):
+			get_node("/root/GameState").request_level_change(next_scene)
 		else:
 			get_tree().call_deferred("change_scene_to_file", next_scene)
 
@@ -63,11 +117,11 @@ func _on_anim_finished() -> void:
 
 func _request_level_change() -> void:
 	var target := next_scene
-	if target == "" and Engine.has_singleton("GameState") and GameState.has_method("get_next_level_scene"):
-		target = GameState.get_next_level_scene()
+	if target == "" and has_node("/root/GameState") and get_node("/root/GameState").has_method("get_next_level_scene"):
+		target = get_node("/root/GameState").get_next_level_scene()
 
-	if Engine.has_singleton("GameState") and GameState.has_method("request_level_change"):
-		GameState.request_level_change(target)
+	if has_node("/root/GameState") and get_node("/root/GameState").has_method("request_level_change"):
+		get_node("/root/GameState").request_level_change(target)
 	else:
 		if target != "":
 			get_tree().change_scene(target)

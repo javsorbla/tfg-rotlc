@@ -3,10 +3,13 @@ extends Area2D
 const SPEED: float = 200.0
 const DAMAGE: int = 2
 
+@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+
 var direction: Vector2 = Vector2.ZERO
 var can_hit_source: bool = false
 
 func _ready() -> void:
+	sprite.play("default")
 	area_entered.connect(_on_area_entered)
 	$VisibleOnScreenNotifier2D.screen_exited.connect(_on_screen_exited)
 	get_tree().create_timer(5.0).timeout.connect(queue_free)

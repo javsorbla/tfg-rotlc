@@ -15,6 +15,16 @@ const RETURN_ARC_HEIGHT: float = 40.0
 const KNOCKBACK_FORCE: float = 10.0
 const DIVE_MAX_DISTANCE: float = 300.0  # distancia máxima antes de volver
 
+const MOVE_SHEET_2 := preload("res://assets/enemies/common/acechador_aereo/move_sheet_2.png")
+const STUN_SHEET_2 := preload("res://assets/enemies/common/acechador_aereo/stun_sheet_2.png")
+const DEAD_SHEET_2 := preload("res://assets/enemies/common/acechador_aereo/dead_sheet_2.png")
+const MOVE_SHEET_3 := preload("res://assets/enemies/common/acechador_aereo/move_sheet_3.png")
+const STUN_SHEET_3 := preload("res://assets/enemies/common/acechador_aereo/stun_sheet_3.png")
+const DEAD_SHEET_3 := preload("res://assets/enemies/common/acechador_aereo/dead_sheet_3.png")
+const MOVE_SHEET_4 := preload("res://assets/enemies/common/acechador_aereo/move_sheet_4.png")
+const STUN_SHEET_4 := preload("res://assets/enemies/common/acechador_aereo/stun_sheet_4.png")
+const DEAD_SHEET_4 := preload("res://assets/enemies/common/acechador_aereo/dead_sheet_4.png")
+
 enum State { IDLE, DIVING, RETURNING, STUNNED, DEAD }
 
 var current_state: State = State.IDLE
@@ -40,6 +50,13 @@ var death_grounded_timer: float = -1.0
 var has_landed: bool = false
 var _combat_reset_state: Dictionary = {}
 
+var _base_sprite_frames: SpriteFrames = null
+var _level2_sprite_frames: SpriteFrames = null
+var _level3_sprite_frames: SpriteFrames = null
+var _level4_sprite_frames: SpriteFrames = null
+
+@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+
 
 func _ready() -> void:
 	current_health = MAX_HEALTH
@@ -47,6 +64,8 @@ func _ready() -> void:
 	
 	spawn_position = global_position
 	GameState.level_reset.connect(_on_level_reset)
+	_base_sprite_frames = sprite.sprite_frames
+	call_deferred("_apply_level_visuals")
 	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
@@ -90,7 +109,85 @@ func _on_level_reset():
 	has_landed = false
 	death_grounded_timer = -1.0
 	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	call_deferred("_apply_level_visuals")
 	_enter_state(State.IDLE)
+
+
+func _apply_level_visuals() -> void:
+	if sprite == null or _base_sprite_frames == null:
+		return
+
+	var target_frames: SpriteFrames = _base_sprite_frames
+	if GameState.current_level == 2:
+		target_frames = _get_level2_sprite_frames()
+	elif GameState.current_level == 3:
+		target_frames = _get_level3_sprite_frames()
+	elif GameState.current_level == 4:
+		target_frames = _get_level4_sprite_frames()
+
+	if sprite.sprite_frames != target_frames:
+		sprite.sprite_frames = target_frames
+
+	var current_animation := sprite.animation
+	if current_animation != "" and sprite.sprite_frames.has_animation(current_animation):
+		sprite.play(current_animation)
+
+func _get_level2_sprite_frames() -> SpriteFrames:
+	if _level2_sprite_frames != null:
+		return _level2_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "move", MOVE_SHEET_2)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_2)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_2)
+
+	_level2_sprite_frames = frames
+	return _level2_sprite_frames
+
+func _get_level3_sprite_frames() -> SpriteFrames:
+	if _level3_sprite_frames != null:
+		return _level3_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "move", MOVE_SHEET_3)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_3)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_3)
+
+	_level3_sprite_frames = frames
+	return _level3_sprite_frames
+	
+func _get_level4_sprite_frames() -> SpriteFrames:
+	if _level4_sprite_frames != null:
+		return _level4_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "move", MOVE_SHEET_4)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_4)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_4)
+
+	_level4_sprite_frames = frames
+	return _level4_sprite_frames
+
+func _replace_animation_frames(frames: SpriteFrames, animation_name: StringName, source_texture: Texture2D) -> void:
+	if frames == null or source_texture == null or not frames.has_animation(animation_name):
+		return
+
+	var frame_count := frames.get_frame_count(animation_name)
+	for frame_index in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = source_texture
+		atlas.region = Rect2(frame_index * 64, 0, 64, 64)
+		var frame_duration := _base_sprite_frames.get_frame_duration(animation_name, frame_index)
+		frames.set_frame(animation_name, frame_index, atlas, frame_duration)
 
 
 func _despawn_dead_instance() -> void:

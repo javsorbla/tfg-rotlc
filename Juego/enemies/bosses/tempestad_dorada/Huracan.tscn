@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://bbstnd3yu4inu"]
+[gd_scene load_steps=51 format=3 uid="uid://bbstnd3yu4inu"]
 
 [ext_resource type="Script" path="res://enemies/bosses/tempestad_dorada/huracan.gd" id="1_v118m"]
 [ext_resource type="Texture2D" uid="uid://dil0elpfgdj86" path="res://assets/enemies/bosses/tempestad_dorada/huracan_sheet.png" id="2_lau1l"]
@@ -180,6 +180,180 @@ animations = [{
 radius = 53.0
 height = 236.0
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_cvmtr"]
+blend_mode = 1
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kqwkx"]
+atlas = ExtResource("2_lau1l")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cy8mu"]
+atlas = ExtResource("2_lau1l")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ldau8"]
+atlas = ExtResource("2_lau1l")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1cw6e"]
+atlas = ExtResource("2_lau1l")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3yu4f"]
+atlas = ExtResource("2_lau1l")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_24nyp"]
+atlas = ExtResource("2_lau1l")
+region = Rect2(640, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ufswu"]
+atlas = ExtResource("2_lau1l")
+region = Rect2(768, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n1bp8"]
+atlas = ExtResource("2_lau1l")
+region = Rect2(896, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3rxor"]
+atlas = ExtResource("3_he8xf")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lcfbs"]
+atlas = ExtResource("3_he8xf")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_05cqi"]
+atlas = ExtResource("3_he8xf")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_buf47"]
+atlas = ExtResource("3_he8xf")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_57ydk"]
+atlas = ExtResource("3_he8xf")
+region = Rect2(640, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_agp5w"]
+atlas = ExtResource("3_he8xf")
+region = Rect2(768, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_higek"]
+atlas = ExtResource("3_cnx7t")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k7dd1"]
+atlas = ExtResource("3_cnx7t")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_iyfwk"]
+atlas = ExtResource("3_cnx7t")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jlbvq"]
+atlas = ExtResource("3_cnx7t")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7cjai"]
+atlas = ExtResource("3_cnx7t")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mqr4e"]
+atlas = ExtResource("3_cnx7t")
+region = Rect2(640, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hlsse"]
+atlas = ExtResource("3_cnx7t")
+region = Rect2(768, 0, 128, 128)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_btyxj"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kqwkx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cy8mu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ldau8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1cw6e")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3yu4f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_24nyp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ufswu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n1bp8")
+}],
+"loop": false,
+"name": &"huracan",
+"speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3rxor")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lcfbs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_05cqi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_buf47")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_57ydk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_agp5w")
+}],
+"loop": true,
+"name": &"huracan_idle",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_higek")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k7dd1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_iyfwk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jlbvq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7cjai")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mqr4e")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hlsse")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mqr4e")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hlsse")
+}],
+"loop": false,
+"name": &"inicio",
+"speed": 8.0
+}]
+
 [node name="Huracan" type="Area2D"]
 collision_layer = 16
 collision_mask = 4
@@ -189,8 +363,16 @@ script = ExtResource("1_v118m")
 position = Vector2(4, -118)
 scale = Vector2(1.96875, 2.44531)
 sprite_frames = SubResource("SpriteFrames_isfr6")
-animation = &"huracan_idle"
+animation = &"inicio"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1, -94)
 shape = SubResource("CapsuleShape2D_k33w1")
+
+[node name="AnimatedSprite2DGlow" type="AnimatedSprite2D" parent="."]
+modulate = Color(0.298039, 0.6, 1, 0.4)
+material = SubResource("CanvasItemMaterial_cvmtr")
+position = Vector2(4, -118)
+scale = Vector2(2.445, 2.445)
+sprite_frames = SubResource("SpriteFrames_btyxj")
+animation = &"inicio"

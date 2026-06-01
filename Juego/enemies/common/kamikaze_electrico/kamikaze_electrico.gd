@@ -18,6 +18,8 @@ var spawn_position = Vector2.ZERO
 var previous_state: State = State.SLEEP
 var _combat_reset_state: Dictionary = {}
 
+@onready var luz = $PointLight2D
+
 func _ready() -> void:
 	current_health = MAX_HEALTH
 	player = get_tree().get_first_node_in_group("player")
@@ -31,7 +33,39 @@ func _ready() -> void:
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	_enter_state(State.SLEEP)
+	
+	var imagen = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx = (x - 32.0) / 32.0
+			var dy = (y - 32.0) / 32.0
+			var dist = sqrt(dx*dx + dy*dy)
+			var alpha = clamp(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.5)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+	
+	_actualizar_luz()
 
+func _actualizar_luz():
+	match current_state:
+		State.SLEEP:
+			luz.color = Color(0.0, 0.6, 1.0)
+			luz.texture_scale = 0.8
+			luz.energy = 1.0
+		State.ATTACK:
+			luz.color = Color(0.0, 0.6, 1.0, 0.5)
+			luz.texture_scale = 1.5
+			luz.energy = 3.0
+		State.EXPLODE:
+			luz.color = Color(1.0, 0.8, 0.2, 0.5)
+			luz.texture_scale = 2.0
+			luz.energy = 4.0
+		State.DEAD:
+			luz.color = Color(0.0, 0.6, 1.0, 0.2)
+			luz.texture_scale = 1.5
+			luz.energy = 3.0
 
 func _physics_process(delta: float) -> void:
 	match current_state:
@@ -115,7 +149,8 @@ func _enter_state(new_state: State) -> void:
 				$EnemyHurtbox.set_deferred("collision_layer", 0)
 				$EnemyHurtbox.set_deferred("collision_mask", 0)
 			velocity = Vector2(0, 0)
-
+	
+	_actualizar_luz()
 
 func _state_sleep() -> void:
 	velocity = Vector2.ZERO

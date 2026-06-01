@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://k13rjfq2n5wc"
-path="res://.godot/imported/snow-tileset.png-1097156f40b42acd7647522fca1e48ec.ctex"
+uid="uid://b84okgad0ai7x"
+path="res://.godot/imported/fantasy_4colors_tileset_frame_1.png-b4252399e775591919dc8e4d16646bcf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tilesets/snow-tileset.png"
-dest_files=["res://.godot/imported/snow-tileset.png-1097156f40b42acd7647522fca1e48ec.ctex"]
+source_file="res://assets/tilesets/tutorial/fantasy_4colors_tileset_frame_1.png"
+dest_files=["res://.godot/imported/fantasy_4colors_tileset_frame_1.png-b4252399e775591919dc8e4d16646bcf.ctex"]
 
 [params]
 
