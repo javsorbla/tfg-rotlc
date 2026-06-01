@@ -46,6 +46,11 @@ const STORM_COUNT: int = 5
 const STORM_INTERVAL: float = 0.5
 
 const HIT_COOLDOWN: float = 0.1
+const BASE_LIGHT_ENERGY: float = 3.0
+const HIGH_LIGHT_ENERGY: float = 6.0
+const WEAK_LIGHT_ENERGY: float = 1.0
+const LIGHT_FLICKER_AMPLITUDE: float = 0.25
+const LIGHT_FLICKER_SPEED: float = 0.02
 
 var current_health = MAX_HEALTH
 var current_phase = Phase.ONE
@@ -134,6 +139,8 @@ var hit_cooldown: float = 0.0
 @onready var hurricane_scene = preload("res://enemies/bosses/tempestad_dorada/Huracan.tscn")
 @onready var storm_scene = preload("res://enemies/bosses/tempestad_dorada/Tormenta.tscn")
 
+var luz: PointLight2D
+
 const CRYSTAL_SCENE: PackedScene = preload("res://objects/Cristal.tscn")
 
 func _spawn_final_boss_crystal(variant_idx: int = 2, offset := Vector2(0, -34)) -> void:
@@ -197,6 +204,57 @@ func _ready():
 	_set_dive_shapes(false)
 	sprite.animation_finished.connect(_on_sprite_animation_finished)
 
+	luz = PointLight2D.new()
+	add_child(luz)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+	luz.color = Color(0.0, 0.6, 1.0)
+	
+	var imagen = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx = (x - 32.0) / 32.0
+			var dy = (y - 32.0) / 32.0
+			var dist = sqrt(dx*dx + dy*dy)
+			var alpha = clamp(dist, 0.0, 1.0)
+			alpha = lerp(0.3, 0.7, alpha)
+			if dist > 0.9:
+				alpha *= clamp(1.0 - (dist - 0.9) / 0.1, 0.0, 1.0)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.energy = _get_light_energy()
+	_actualizar_luz()
+
+func _actualizar_luz():
+
+	match current_state:
+		State.PATROL, State.PAUSE:
+			if ray_winding_up or sprite.animation in ["charging", "charging_idle"]:
+				luz.texture_scale = 2.5 
+			else:
+				luz.texture_scale = 2.0 
+
+	if luz:
+		luz.energy = _get_light_energy()
+
+
+func _get_light_energy() -> float:
+	if is_dying or sprite.animation in ["dead", "dead_attack"]:
+		return 0.0
+	if current_state == State.WEAK or sprite.animation == "weak":
+		return WEAK_LIGHT_ENERGY
+	if current_state == State.DIVE or sprite.animation in ["charging", "charging_idle"]:
+		return HIGH_LIGHT_ENERGY
+	return BASE_LIGHT_ENERGY
+
+func _process(_delta):
+	if is_dying:
+		luz.energy = move_toward(luz.energy, 0.0, 0.05)
+		return
+		
+	_actualizar_luz()
+	if luz:
+		var flicker = sin(Time.get_ticks_msec() * LIGHT_FLICKER_SPEED) * LIGHT_FLICKER_AMPLITUDE
+		luz.energy = maxf(0.0, _get_light_energy() + flicker)
 
 func _on_sprite_animation_finished():
 	match sprite.animation:
@@ -801,6 +859,8 @@ func die():
 	var died_in_dive = (current_state == State.DIVE)
 	is_dying = true
 	is_active = false
+	if luz:
+		luz.energy = 0.0
 
 	if ray_instance:
 		ray_instance.queue_free()
