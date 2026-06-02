@@ -12,7 +12,7 @@ const STOP_DISTANCE = 340.0
 # Fase 1
 const FLOAT_SPEED = 60.0
 const CHARGE_SPEED = 200.0
-const CHARGE_COOLDOWN = 3.0
+const CHARGE_COOLDOWN = 3.5
 const PROJECTILE_COOLDOWN = 4.0
 const CHARGE_RECOVER_TIME = 1
 const CHARGE_HOLD_FRAME = 4
@@ -24,9 +24,9 @@ const PROJECTILE_SECONDARY_OFFSET = Vector2(32.0, -10.0)
 # Fase 2
 const FLOAT_SPEED_P2 = 110.0
 const CHARGE_SPEED_P2 = 250.0
-const CHARGE_COOLDOWN_P2 = 2.0
-const PROJECTILE_COOLDOWN_P2 = 2.5
-const JUMP_COOLDOWN = 5.0
+const CHARGE_COOLDOWN_P2 = 3
+const PROJECTILE_COOLDOWN_P2 = 3.5
+const JUMP_COOLDOWN = 5.5
 const JUMP_SPEED = 230.0
 const JUMP_HORIZONTAL_DEADZONE = 24.0
 const FLOOR_RAY_MARGIN = 64.0
@@ -68,6 +68,7 @@ var charge_direction = Vector2.ZERO
 var original_y = 0.0
 var core_hurtbox_base_x := 0.0
 var damage_flash_tween: Tween = null
+var fury_blink_tween: Tween = null
 var has_summoned_fury_walkers = false
 
 var room_left_limit = 0.0
@@ -176,6 +177,7 @@ func _enter_phase_two():
 		action_timer = FURY_CENTER_MOVE_TIME + FURY_SUMMON_PAUSE + (10.0 / 12.0) + FURY_SUMMON_STAGGER
 		_play_animation("change_phase")
 		_start_fury_transition_async()
+	_start_fury_blink()
 
 func _start_fury_transition_async():
 	var target_center_x: float = _get_bossroom_center_x()
@@ -244,10 +246,10 @@ func _idle_state(delta):
 
 	if current_phase == Phase.TWO and jump_timer <= 0:
 		_start_jump()
-	elif charge_timer <= 0:
-		_start_charge()
 	elif projectile_timer <= 0:
 		_start_projectile()
+	elif charge_timer <= 0:
+		_start_charge()
 
 func _start_charge():
 	current_state = State.CHARGE
@@ -566,6 +568,15 @@ func _play_core_damage_flash():
 	sprite.modulate = Color(4.0, 4.0, 4.0, 1.0)
 	damage_flash_tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), DAMAGE_FLASH_TIME)
 
+func _start_fury_blink():
+	if fury_blink_tween:
+		fury_blink_tween.kill()
+	fury_blink_tween = create_tween()
+	fury_blink_tween.set_loops()
+	var dark_blue := Color(0.4, 0.6, 1.0, 1.0)
+	fury_blink_tween.tween_property(sprite, "modulate", dark_blue, 0.5)
+	fury_blink_tween.tween_property(sprite, "modulate", Color.WHITE, 0.5)
+
 func _summon_fury_walkers_async():
 	if not caminante_helado_scene:
 		return
@@ -638,6 +649,10 @@ func die():
 	current_state = State.DEAD
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
+	if fury_blink_tween:
+		fury_blink_tween.kill()
+		fury_blink_tween = null
+	sprite.modulate = Color.WHITE
 	_play_animation("death")
 	await sprite.animation_finished
 	var boss_room = get_tree().get_first_node_in_group("boss_room")
