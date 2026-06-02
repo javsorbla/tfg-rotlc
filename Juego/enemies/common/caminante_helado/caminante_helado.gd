@@ -11,6 +11,18 @@ const STUN_DURATION: float = 0.5
 const HIT_PAUSE_DURATION: float = 0.7
 const DEAD_VISIBLE_TIME: float = 1.1
 
+const WALK_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/walk_sheet_3.png")
+const STUN_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/stun_sheet_3.png")
+const DEAD_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/dead_sheet_3.png")
+const IDLE_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/idle_sheet_3.png")
+const PUNCH_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/punch_sheet_3.png")
+const WALK_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/walk_sheet_4.png")
+const STUN_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/stun_sheet_4.png")
+const DEAD_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/dead_sheet_4.png")
+const IDLE_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/idle_sheet_4.png")
+const PUNCH_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/punch_sheet_4.png")
+
+
 # --- ESTADOS ---
 enum State { IDLE, PATROL, CHASE, STUNNED, DEAD, ATTACK_PAUSE }
 
@@ -28,6 +40,10 @@ var patrol_timer: float = 0.0
 var flip_cooldown: float = 0.0 
 var death_token: int = 0
 
+var _base_sprite_frames: SpriteFrames = null
+var _level3_sprite_frames: SpriteFrames = null
+var _level4_sprite_frames: SpriteFrames = null
+
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var vision: RayCast2D = $Vision
 
@@ -43,6 +59,9 @@ func _ready() -> void:
 		spawn_position = global_position
 	if not GameState.level_reset.is_connected(_on_level_reset):
 		GameState.level_reset.connect(_on_level_reset)
+	
+	_base_sprite_frames = sprite.sprite_frames
+	call_deferred("_apply_level_visuals")
 	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
@@ -96,10 +115,73 @@ func _on_level_reset():
 	$EnemyHurtbox.set_deferred("collision_layer", 16)
 	$EnemyHurtbox.set_deferred("collision_mask", 4)
 	sprite.modulate.a = 1.0
+	call_deferred("_apply_level_visuals")
 	sprite.play("idle")
 	vision.enabled = true
 
 # --- LÓGICA DE ANIMACIÓN ---
+func _apply_level_visuals() -> void:
+	if sprite == null or _base_sprite_frames == null:
+		return
+
+	var target_frames: SpriteFrames = _base_sprite_frames
+	if GameState.current_level == 3:
+		target_frames = _get_level3_sprite_frames()
+	elif GameState.current_level == 4:
+		target_frames = _get_level4_sprite_frames()
+
+	if sprite.sprite_frames != target_frames:
+		sprite.sprite_frames = target_frames
+
+	var current_animation := sprite.animation
+	if current_animation != "" and sprite.sprite_frames.has_animation(current_animation):
+		sprite.play(current_animation)
+
+func _get_level3_sprite_frames() -> SpriteFrames:
+	if _level3_sprite_frames != null:
+		return _level3_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "walk", WALK_SHEET_3)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_3)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_3)
+	_replace_animation_frames(frames, "idle", IDLE_SHEET_3)
+	_replace_animation_frames(frames, "punch", PUNCH_SHEET_3)
+
+	_level3_sprite_frames = frames
+	return _level3_sprite_frames
+	
+func _get_level4_sprite_frames() -> SpriteFrames:
+	if _level4_sprite_frames != null:
+		return _level4_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "walk", WALK_SHEET_4)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_4)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_4)
+	_replace_animation_frames(frames, "idle", IDLE_SHEET_4)
+	_replace_animation_frames(frames, "punch", PUNCH_SHEET_4)
+
+	_level4_sprite_frames = frames
+	return _level4_sprite_frames
+
+func _replace_animation_frames(frames: SpriteFrames, animation_name: StringName, source_texture: Texture2D) -> void:
+	if frames == null or source_texture == null or not frames.has_animation(animation_name):
+		return
+
+	var frame_count := frames.get_frame_count(animation_name)
+	for frame_index in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = source_texture
+		atlas.region = Rect2(frame_index * 64, 0, 64, 64)
+		var frame_duration := _base_sprite_frames.get_frame_duration(animation_name, frame_index)
+		frames.set_frame(animation_name, frame_index, atlas, frame_duration)
 
 func _update_animations() -> void:
 	if current_state in [State.STUNNED, State.DEAD, State.ATTACK_PAUSE]:
