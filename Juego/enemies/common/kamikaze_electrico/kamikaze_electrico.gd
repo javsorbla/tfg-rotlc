@@ -57,11 +57,11 @@ func _actualizar_luz():
 		State.ATTACK:
 			luz.color = Color(0.0, 0.6, 1.0, 0.5)
 			luz.texture_scale = 1.5
-			luz.energy = 3.0
+			luz.energy = 5.0
 		State.EXPLODE:
-			luz.color = Color(1.0, 0.8, 0.2, 0.5)
+			luz.color = Color(0.0, 0.6, 1.0, 0.5)
 			luz.texture_scale = 2.0
-			luz.energy = 4.0
+			luz.energy = 6.0
 		State.DEAD:
 			luz.color = Color(0.0, 0.6, 1.0, 0.2)
 			luz.texture_scale = 1.5
