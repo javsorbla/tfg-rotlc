@@ -2,10 +2,10 @@
 extends ConfirmationOverlaidWindow
 ## Scene to confirm a new input for an action name.
 
-const LISTENING_TEXT : String = "Listening for input..."
-const FOCUS_HERE_TEXT : String = "Focus here to assign inputs."
-const CONFIRM_INPUT_TEXT : String = "Press again to confirm..."
-const NO_INPUT_TEXT : String = "None"
+const LISTENING_TEXT : String = "Escuchando entrada..."
+const FOCUS_HERE_TEXT : String = "Enfócate aquí para asignar entradas."
+const CONFIRM_INPUT_TEXT : String = "Pulsa otra vez para confirmar..."
+const NO_INPUT_TEXT : String = "Ninguna"
 
 enum InputConfirmation {
 	SINGLE,

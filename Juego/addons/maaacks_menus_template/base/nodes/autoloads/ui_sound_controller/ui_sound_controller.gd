@@ -10,7 +10,7 @@ const MAX_DEPTH = 16
 
 @export var root_path : NodePath = ^".."
 ## Audio bus for any audio streams created.
-@export var audio_bus : StringName = &"SFX"
+@export var audio_bus : StringName = &"EFX"
 ## Continually check any new nodes added to the scene tree.
 @export var persistent : bool = true :
 	set(value):

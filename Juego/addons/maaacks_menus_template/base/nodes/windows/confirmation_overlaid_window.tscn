@@ -5,19 +5,19 @@
 
 [node name="ConfirmationOverlaidWindow" unique_id=1482267070 instance=ExtResource("1_vfkm2")]
 script = ExtResource("2_sw7p1")
-confirm_button_text = "Confirm"
+confirm_button_text = "Confirmar"
 update_content = true
-close_button_text = "Cancel"
+close_button_text = "Cancelar"
 
 [node name="MenuButtons" parent="ContentContainer/BoxContainer/MenuButtonsMargin" parent_id_path=PackedInt32Array(1413292752) index="0" unique_id=1371114575]
 vertical = false
 
 [node name="CloseButton" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="0" unique_id=314526102]
-text = "Cancel"
+text = "Cancelar"
 
 [node name="ConfirmButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="1" unique_id=1052970550]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Confirm"
+text = "Confirmar"
 
 [connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/ConfirmButton" to="." method="_on_confirm_button_pressed"]

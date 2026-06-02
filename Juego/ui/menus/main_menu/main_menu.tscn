@@ -1,7 +1,7 @@
 [gd_scene load_steps=13 format=3 uid="uid://byvydukidk6i2"]
 
 [ext_resource type="Script" path="res://ui/menus/main_menu/main_menu.gd" id="2_lk0wa"]
-[ext_resource type="PackedScene" uid="uid://dum2pujhh1w4g" path="res://ui/menus/windows/main_menu_options_window.tscn" id="3_qhsni"]
+[ext_resource type="PackedScene" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="3_qhsni"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/autoloads/ui_sound_controller/ui_sound_controller.gd" id="4_egdge"]
 [ext_resource type="PackedScene" uid="uid://c5pfkjxskjc60" path="res://ui/menus/windows/main_menu_credits_window.tscn" id="4_qhsni"]
 [ext_resource type="PackedScene" uid="uid://bkcsjsk2ciff" path="res://addons/maaacks_menus_template/base/nodes/music_players/background_music_player.tscn" id="5_1s4l0"]

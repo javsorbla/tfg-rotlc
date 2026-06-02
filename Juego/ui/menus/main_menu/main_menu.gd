@@ -231,6 +231,13 @@ func _get_game_state() -> Node:
 	return null
 
 
+func _open_sub_menu(menu: PackedScene) -> Node:
+	var result := super._open_sub_menu(menu)
+	await get_tree().process_frame
+	MenuProgressionHelper.apply_progress_to_node(result)
+	return result
+
+
 func try_exit_game() -> void:
 	if confirm_exit and (not exit_confirmation.visible):
 		MenuProgressionHelper.apply_progress_to_node(exit_confirmation)
