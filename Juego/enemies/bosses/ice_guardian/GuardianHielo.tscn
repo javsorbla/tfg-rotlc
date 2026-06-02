@@ -1,4 +1,4 @@
-[gd_scene load_steps=79 format=3 uid="uid://cebumpot7e5vm"]
+[gd_scene load_steps=90 format=3 uid="uid://cebumpot7e5vm"]
 
 [ext_resource type="Script" path="res://enemies/bosses/ice_guardian/guardian_hielo.gd" id="1_7r6jr"]
 [ext_resource type="Texture2D" uid="uid://dqavu5nxcfme7" path="res://assets/enemies/bosses/ice_guardian/guardian_rage_sheet.png" id="2_5dqd4"]
@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://b6qd5f48v1uoc" path="res://assets/enemies/bosses/ice_guardian/guardian_shoot_sheet.png" id="3_ab3fx"]
 [ext_resource type="Texture2D" uid="uid://b0het5mo6xxkg" path="res://assets/enemies/bosses/ice_guardian/guardian_ascent_sheet.png" id="3_gbaxk"]
 [ext_resource type="Texture2D" uid="uid://cdh06hfqov5es" path="res://assets/enemies/bosses/ice_guardian/guardian_charge_idle_sheet.png" id="4_110s2"]
+[ext_resource type="Texture2D" uid="uid://c03bee2a8x07w" path="res://assets/enemies/bosses/ice_guardian/guardian_death_sheet.png" id="5_neb6r"]
 [ext_resource type="Texture2D" uid="uid://c6ar7k5nwoiwg" path="res://assets/enemies/bosses/ice_guardian/guardian_jump_peak_sheet.png" id="6_kyg3y"]
 [ext_resource type="Texture2D" uid="uid://cccrnv5r84brd" path="res://assets/enemies/bosses/ice_guardian/guardian_jump_descent.png" id="7_mkhjj"]
 [ext_resource type="Texture2D" uid="uid://cemdnpcgttho7" path="res://assets/enemies/bosses/ice_guardian/guardian_summon_minions.png" id="10_g58xv"]
@@ -86,6 +87,46 @@ region = Rect2(896, 0, 128, 128)
 [sub_resource type="AtlasTexture" id="AtlasTexture_h8tpq"]
 atlas = ExtResource("4_110s2")
 region = Rect2(1024, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bhk87"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2781f"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bofdl"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nkki8"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7rq5r"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(640, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xsrkc"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(768, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3tiy7"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(896, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_losg4"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(1024, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gdiu8"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(1152, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ipq8t"]
+atlas = ExtResource("5_neb6r")
+region = Rect2(1280, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_n6fjr"]
 atlas = ExtResource("2_m1t16")
@@ -338,6 +379,41 @@ animations = [{
 "speed": 10.0
 }, {
 "frames": [{
+"duration": 0.75,
+"texture": SubResource("AtlasTexture_bhk87")
+}, {
+"duration": 0.75,
+"texture": SubResource("AtlasTexture_2781f")
+}, {
+"duration": 0.75,
+"texture": SubResource("AtlasTexture_bofdl")
+}, {
+"duration": 0.75,
+"texture": SubResource("AtlasTexture_nkki8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7rq5r")
+}, {
+"duration": 1.25,
+"texture": SubResource("AtlasTexture_xsrkc")
+}, {
+"duration": 1.25,
+"texture": SubResource("AtlasTexture_3tiy7")
+}, {
+"duration": 1.25,
+"texture": SubResource("AtlasTexture_losg4")
+}, {
+"duration": 1.25,
+"texture": SubResource("AtlasTexture_gdiu8")
+}, {
+"duration": 1.25,
+"texture": SubResource("AtlasTexture_ipq8t")
+}],
+"loop": true,
+"name": &"death",
+"speed": 12.0
+}, {
+"frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_n6fjr")
 }, {
@@ -522,7 +598,7 @@ script = ExtResource("1_7r6jr")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_7kxj6")
-animation = &"jump_descent"
+animation = &"death"
 
 [node name="NormalHurtbox" type="Area2D" parent="."]
 collision_layer = 16

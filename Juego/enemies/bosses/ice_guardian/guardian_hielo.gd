@@ -488,7 +488,7 @@ func _configure_sprite_animations() -> void:
 		return
 	if sprite.sprite_frames.has_animation("idle"):
 		sprite.sprite_frames.set_animation_loop("idle", true)
-	for animation_name in ["change_phase", "charge", "jump_ascent", "jump_peak", "jump_descent", "shoot", "summon"]:
+	for animation_name in ["change_phase", "charge", "jump_ascent", "jump_peak", "jump_descent", "shoot", "summon", "death"]:
 		if sprite.sprite_frames.has_animation(animation_name):
 			sprite.sprite_frames.set_animation_loop(animation_name, false)
 
@@ -618,10 +618,15 @@ func _on_enemy_hurtbox_area_entered(area: Area2D):
 		take_damage(int(1 * multiplier))
 
 func die():
+	if current_state == State.DEAD:
+		return
 	current_state = State.DEAD
+	attack_hitbox.set_deferred("monitoring", false)
+	attack_hitbox.set_deferred("monitorable", false)
+	_play_animation("death")
+	await sprite.animation_finished
 	var boss_room = get_tree().get_first_node_in_group("boss_room")
 	if boss_room:
 		boss_room.on_boss_defeated()
-	# Spawn boss crystal before despawn
 	_spawn_final_boss_crystal(0)
 	queue_free()
