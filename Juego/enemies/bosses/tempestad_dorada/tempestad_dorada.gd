@@ -208,6 +208,7 @@ func _ready():
 	add_child(luz)
 	luz.blend_mode = Light2D.BLEND_MODE_ADD
 	luz.color = Color(0.0, 0.6, 1.0)
+	luz.z_index = 100
 	
 	var imagen = Image.create(64, 64, false, Image.FORMAT_RGBA8)
 	for x in range(64):
