@@ -131,6 +131,8 @@ func _ready():
 		attack_hitbox.add_to_group("enemy_hitbox")
 	if not $NormalHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
 		$NormalHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
+	if not core_hurtbox.area_entered.is_connected(_on_core_hurtbox_area_entered):
+		core_hurtbox.area_entered.connect(_on_core_hurtbox_area_entered)
 	if not is_in_group("boss"):
 		add_to_group("boss")
 
@@ -555,6 +557,15 @@ func _play_damage_flash():
 	sprite.modulate = Color(2.2, 2.2, 2.2, 1.0)
 	damage_flash_tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), DAMAGE_FLASH_TIME)
 
+func _play_core_damage_flash():
+	if not sprite:
+		return
+	if damage_flash_tween:
+		damage_flash_tween.kill()
+	damage_flash_tween = create_tween()
+	sprite.modulate = Color(4.0, 4.0, 4.0, 1.0)
+	damage_flash_tween.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), DAMAGE_FLASH_TIME)
+
 func _summon_fury_walkers_async():
 	if not caminante_helado_scene:
 		return
@@ -616,6 +627,10 @@ func _on_enemy_hurtbox_area_entered(area: Area2D):
 		var player_node = get_tree().get_first_node_in_group("player")
 		var multiplier = player_node.damage_multiplier if player_node else 1.0
 		take_damage(int(1 * multiplier))
+
+func _on_core_hurtbox_area_entered(area: Area2D):
+	if area.is_in_group("player_hitbox"):
+		_play_core_damage_flash()
 
 func die():
 	if current_state == State.DEAD:
