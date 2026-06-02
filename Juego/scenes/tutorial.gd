@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 
 const CAMPOS_SCENE := "res://scenes/CamposDeZafiro.tscn"
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
@@ -12,6 +12,9 @@ func _ready() -> void:
 
 	if GameState.has_method("auto_unlock_power_for_level"):
 		GameState.auto_unlock_power_for_level()
+	
+	NakamaManager.start_run(GameState.current_level)
+	
 	_ensure_pause_menu_layer()
 	_ensure_death_screen()
 	call_deferred("_wire_player_death")

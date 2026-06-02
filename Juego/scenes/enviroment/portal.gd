@@ -104,8 +104,9 @@ func _on_body_entered(body: Node) -> void:
 			connect("activated", handler)
 		if auto_call_parent and not is_connected("body_entered", handler):
 			p.call_deferred("_on_final_body_entered", _entered_body)
-
-	# If configured to auto change scene and next_scene is set, request it (fallback)
+	
+	NakamaManager.complete_run(true)
+	
 	if auto_change_scene and next_scene != "":
 		if has_node("/root/GameState") and get_node("/root/GameState").has_method("request_level_change"):
 			get_node("/root/GameState").request_level_change(next_scene)

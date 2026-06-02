@@ -24,6 +24,7 @@ const SAVE_DATA_VERSION := 1
 const SAVE_PATH := "user://savegame.json"
 const SAVE_TMP_PATH := "user://savegame.json.tmp"
 const SAVE_BAK_PATH := "user://savegame.json.bak"
+const RUN_LOG_PATH := "user://runs.jsonl"
 
 const DEFAULT_UMBRA_PLAYER_METRICS := {
 	"avg_distance": 200.0,
@@ -50,9 +51,11 @@ const LEVEL_ORDER := [
 	"res://scenes/CostaAmbar.tscn",
 ]
 
-# Mapping of levels to their default boss power (extend as needed)
+# Mapping of levels to their default boss power
 const LEVEL_DEFAULT_POWER := {
-	2: "cyan" # MontañasDeCeniza -> cyan (Ice Guardian)
+	2: "cyan",
+	3: "red",
+	4: "yellow"
 }
 
 var _finetuning_process_id: int = -1
@@ -64,7 +67,6 @@ var _onnx_model_file_mtimes: Dictionary = {}
 
 var umbra_progress := _make_default_umbra_progress()
 var player_progress := _make_default_player_progress()
-
 
 func _make_default_player_progress() -> Dictionary:
 	return {
@@ -92,7 +94,6 @@ func _make_default_umbra_progress() -> Dictionary:
 		"player_metrics": DEFAULT_UMBRA_PLAYER_METRICS.duplicate(true),
 		"latest_model_path": ""
 	}
-
 
 func _ready() -> void:
 	_load_player_progress()
@@ -937,3 +938,15 @@ func register_umbra_encounter(encounter_data: Dictionary) -> void:
 	umbra_progress["difficulty_scale"] = clamp(0.8 + win_rate * 0.6, 0.8, 1.4)
 
 	_save_umbra_progress()
+
+# Leaderboards
+func _append_run_log(payload: Dictionary) -> void:
+	var file := FileAccess.open(RUN_LOG_PATH, FileAccess.WRITE_READ)
+	if file == null:
+		file = FileAccess.open(RUN_LOG_PATH, FileAccess.WRITE)
+		if file == null:
+			return
+
+	file.seek_end()
+	file.store_line(JSON.stringify(payload))
+	file.close()

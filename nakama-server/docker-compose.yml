@@ -1,0 +1,30 @@
+version: '3'
+services:
+  nakama:
+    image: heroiclabs/nakama:latest
+    entrypoint:
+      - "/bin/sh"
+      - "-ecx"
+      - >
+        /nakama/nakama migrate up --database.address postgres:password@postgres:5432/nakama &&
+        exec /nakama/nakama --config /nakama/data/local.yml --database.address postgres:password@postgres:5432/nakama
+    restart: always
+    ports:
+      - "7350:7350"
+      - "7351:7351"
+    depends_on:
+      - postgres
+    volumes:
+      - ./data:/nakama/data
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: nakama
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
