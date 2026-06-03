@@ -137,6 +137,8 @@ func complete_run(success: bool) -> void:
 	var global_score = compute_global_score(duration)
 
 	var metadata = {
+		"level_id": _current_run["level_id"],
+		"duration": duration,
 		"deaths": _current_run["deaths"],
 		"enemies_killed": _current_run["enemies_killed"],
 		"damage_dealt": _current_run["damage_dealt"],
@@ -152,6 +154,7 @@ func complete_run(success: bool) -> void:
 	}
 
 	await submit_leaderboard("global_score", record)
+	await submit_secondary_leaderboards(duration, metadata)
 
 	print("Run completed. Score:", global_score)
 	_reset_current_run()
@@ -202,20 +205,43 @@ func set_nickname(p_nickname: String) -> void:
 # LEADERBOARD
 # =========================
 
-func fetch_leaderboard_top(limit := 50):
+func submit_secondary_leaderboards(duration: int, metadata: Dictionary) -> void:
+	if not has_authenticated:
+		return
+
+	var secondary := [
+		{"id": "global_time", "score": max(1, int(10000.0 / max(duration, 1)))},
+		{"id": "global_kills", "score": _current_run["enemies_killed"]},
+		{"id": "global_deaths", "score": max(0, 1000 - _current_run["deaths"])},
+		{"id": "global_damage_dealt", "score": _current_run["damage_dealt"]},
+		{"id": "global_damage_taken", "score": max(0, 100000 - _current_run["damage_taken"])},
+		{"id": "global_prism_cores", "score": _current_run["prism_cores"]},
+	]
+
+	for entry in secondary:
+		var result = await client.write_leaderboard_record_async(
+			session, entry["id"], entry["score"], 0, JSON.stringify(metadata)
+		)
+		if result.is_exception():
+			push_error("Failed to submit " + entry["id"] + ": " + str(result))
+		else:
+			print("Secondary leaderboard submitted:", entry["id"], " score:", entry["score"])
+
+
+func fetch_leaderboard_top(leaderboard_id: String, limit := 50):
 	if not has_authenticated:
 		return []
-	var result = await client.list_leaderboard_records_async(session, "global_score", null, null, limit)
+	var result = await client.list_leaderboard_records_async(session, leaderboard_id, null, null, limit)
 	if result.is_exception():
 		push_error("Failed to fetch leaderboard: " + str(result))
 		return []
 	return result.records
 
 
-func fetch_leaderboard_around_me(limit := 10):
+func fetch_leaderboard_around_me(leaderboard_id: String, limit := 10):
 	if not has_authenticated:
 		return []
-	var result = await client.list_leaderboard_records_around_owner_async(session, "global_score", session.user_id, null, limit)
+	var result = await client.list_leaderboard_records_around_owner_async(session, leaderboard_id, session.user_id, null, limit)
 	if result.is_exception():
 		push_error("Failed to fetch leaderboard around me: " + str(result))
 		return []
