@@ -564,6 +564,7 @@ func take_damage(amount: int):
 	health.take_damage(amount)
 
 func die():
+	NakamaManager.add_enemy_kill()
 	# Guardar métricas para el siguiente encuentro
 	_report_encounter(false)
 	if use_runtime_finetuned_model:

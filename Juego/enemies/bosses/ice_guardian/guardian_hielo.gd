@@ -646,6 +646,7 @@ func _on_core_hurtbox_area_entered(area: Area2D):
 func die():
 	if current_state == State.DEAD:
 		return
+	NakamaManager.add_enemy_kill()
 	current_state = State.DEAD
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)

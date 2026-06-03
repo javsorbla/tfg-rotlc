@@ -857,6 +857,7 @@ func is_hurting() -> bool:
 	return false
 
 func die():
+	NakamaManager.add_enemy_kill()
 	var died_in_dive = (current_state == State.DIVE)
 	is_dying = true
 	is_active = false

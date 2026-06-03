@@ -9,6 +9,7 @@ func _ready() -> void:
 	# Auto-unlock level's default power if configured
 	if GameState.has_method("auto_unlock_power_for_level"):
 		GameState.auto_unlock_power_for_level()
+	NakamaManager.start_run(GameState.current_level)
 	_ensure_pause_menu_layer()
 	_ensure_death_screen()
 	# Defer HUD show + player ColorManager sync to avoid init race

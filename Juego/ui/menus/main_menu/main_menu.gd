@@ -17,6 +17,8 @@ const BUTTON_LEVEL_NORMAL_COLORS := {
 	5: Color(0.95, 0.96, 0.99, 1.0),
 }
 
+const NICKNAME_DIALOG_SCENE := preload("res://ui/menus/windows/nickname_dialog.tscn")
+
 @onready var background_texture_rect: TextureRect = $BackgroundTextureRect
 @onready var progression_overlay: ColorRect = $ProgressionOverlay
 @onready var entry_fade_rect: ColorRect = $EntryFadeCanvasLayer/EntryFadeRect
@@ -24,6 +26,7 @@ const BUTTON_LEVEL_NORMAL_COLORS := {
 @onready var menu_buttons_box_container_fx: BoxContainer = %MenuButtonsBoxContainer
 @onready var gem_particles: GPUParticles2D = $GemCanvasLayer/GemParticles
 @onready var continue_button: Button = %ContinueButton
+@onready var leaderboard_button: Button = %LeaderboardButton
 
 var _progress := 0.0
 var _base_menu_y := 0.0
@@ -33,6 +36,10 @@ var _breathing_time := 0.0
 func _ready() -> void:
 	super._ready()
 	Hud.hide_hud()
+
+	if GameState.player_progress.get("nickname", "").is_empty():
+		_show_nickname_dialog()
+
 	_base_menu_y = menu_container_fx.position.y
 	_progress = _resolve_progress()
 	_configure_gem_sparkle_particles()
@@ -58,6 +65,17 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	# Debug input is disabled - levels are set directly by scene load
 	pass
+
+
+func _show_nickname_dialog() -> void:
+	menu_container_fx.hide()
+	var dialog := NICKNAME_DIALOG_SCENE.instantiate()
+	dialog.done.connect(_on_nickname_dialog_done)
+	add_child(dialog)
+
+
+func _on_nickname_dialog_done() -> void:
+	menu_container_fx.show()
 
 
 func _on_level_changed() -> void:
@@ -258,6 +276,10 @@ func _on_new_game_confirmation_confirmed() -> void:
 	var game_state := _get_game_state()
 	if game_state != null and game_state.has_method("reset_for_new_game"):
 		game_state.reset_for_new_game()
-	# Cargar la escena inicial (Campos de Zafiro)
-	# Cargar la escena inicial (Tutorial)
 	SceneLoader.load_scene("res://scenes/Tutorial.tscn")
+
+
+func _on_leaderboard_button_pressed() -> void:
+	var panel := preload("res://ui/menus/windows/leaderboard_panel.tscn").instantiate()
+	add_child(panel)
+	panel.show()

@@ -43,6 +43,7 @@ func take_damage(amount: int, bypass_shield: bool = false):
 	if (player.is_shielding and not bypass_shield) or is_invincible:
 		return
 	current_health -= amount
+	NakamaManager.add_damage_taken(amount)
 	Hud.update_hearts(current_health, MAX_HEALTH)
 	is_invincible = true
 	invincibility_timer = INVINCIBILITY_DURATION
@@ -59,6 +60,8 @@ func set_death_callback(callback: Callable) -> void:
 
 func die():
 	emit_signal("died", get_parent())
+	NakamaManager._current_run["deaths"] += 1
+	NakamaManager.complete_run(false)
 	_invoke_death_callback()
 	if auto_reset:
 		_reset_player()

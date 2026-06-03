@@ -1,3 +1,5 @@
 venv/
 logs/
 backup/
+.cookie
+nakama-server/db_data/

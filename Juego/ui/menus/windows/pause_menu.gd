@@ -51,6 +51,9 @@ func _show_window(window : Control) -> void:
 	open_window = null
 	_enable_focus.call_deferred()
 
+func is_popup_open() -> bool:
+	return open_window != null
+
 func close() -> void:
 	if open_window != null:
 		close_window()

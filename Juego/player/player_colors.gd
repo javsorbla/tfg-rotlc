@@ -126,14 +126,17 @@ func change_state(new_state):
 		active_power = "cyan"
 		power_timer = POWER_DURATIONS["cyan"]
 		power_active = true
+		NakamaManager.add_skill_used("cyan")
 	elif new_state == red_state:
 		active_power = "red"
 		power_timer = POWER_DURATIONS["red"]
 		power_active = true
+		NakamaManager.add_skill_used("red")
 	elif new_state == yellow_state:
 		active_power = "yellow"
 		power_timer = POWER_DURATIONS["yellow"]
 		power_active = true
+		NakamaManager.add_skill_used("yellow")
 	else:
 		active_power = ""
 		power_active = false

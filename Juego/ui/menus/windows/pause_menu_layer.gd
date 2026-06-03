@@ -8,6 +8,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("pause"):
 		return
 	if visible:
+		if pause_menu.has_method("is_popup_open") and pause_menu.is_popup_open():
+			return
 		pause_menu.close()
 		hide()
 	else:

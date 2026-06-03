@@ -137,6 +137,7 @@ unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(420, 200)
 layout_mode = 2
+update_content = true
 title = "Controles"
 
 [node name="AlreadyAssignedMessage" parent="." instance=ExtResource("7_caxpa")]
@@ -144,6 +145,7 @@ unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(420, 200)
 layout_mode = 2
+update_content = true
 title = "Entrada ya asignada"
 
 [connection signal="tab_changed" from="VBoxContainer/DeviceTabs" to="." method="_on_device_tabs_tab_changed"]
