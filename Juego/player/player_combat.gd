@@ -78,6 +78,8 @@ func _on_attack_hitbox_area_entered(area: Area2D) -> void:
 			var umbra_damage := maxi(1, int(round(float(player.damage_multiplier))))
 			target.take_damage(umbra_damage)
 			NakamaManager.add_damage_dealt(umbra_damage)
+		else:
+			NakamaManager.add_damage_dealt(maxi(1, int(round(float(player.damage_multiplier)))))
 		var delay = 0.05
 		await get_tree().create_timer(delay).timeout
 		spawn_hit_particles(hit_position)

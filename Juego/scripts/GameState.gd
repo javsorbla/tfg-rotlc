@@ -74,7 +74,8 @@ func _make_default_player_progress() -> Dictionary:
 		"prism_core_collected": false,
 		"prism_core_collected_levels": {},
 		"unlocked_powers": _make_default_unlocked_powers(),
-		"nickname": ""
+		"nickname": "",
+		"campaign_stats": {}
 	}
 
 
@@ -349,7 +350,8 @@ func _build_save_payload() -> Dictionary:
 		},
 		"checkpoint_activated": checkpoint_activated,
 		"player_progress": player_progress.duplicate(true),
-		"run_start_time": NakamaManager._current_run["start_time"]
+		"run_start_time": NakamaManager._current_run["start_time"],
+		"campaign_stats": NakamaManager._campaign_stats.duplicate(true)
 	}
 
 

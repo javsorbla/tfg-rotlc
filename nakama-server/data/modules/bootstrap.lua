@@ -2,23 +2,41 @@ local nk = require("nakama")
 
 local M = {}
 
-local LEADERBOARDS = {
-  {"global_score", "Puntuación compuesta"},
-  {"global_time", "Tiempo"},
-  {"global_kills", "Enemigos eliminados"},
-  {"global_deaths", "Muertes"},
-  {"global_damage_dealt", "Daño infligido"},
-  {"global_damage_taken", "Daño recibido"},
-  {"global_prism_cores", "Núcleos de prisma"},
-}
+local LEVEL_IDS = {"level_0", "level_1", "level_2", "level_3", "level_4"}
+local METRICS = {"time", "kills", "deaths", "damage_dealt", "damage_received", "prism_cores"}
+local CAMPAIGN_METRICS = {"time", "kills", "deaths", "damage_dealt", "damage_received", "prism_cores"}
 
 function M.init()
-  for _, lb in ipairs(LEADERBOARDS) do
-    local ok, err = pcall(nk.leaderboard_create, lb[1], false, "desc", "best", nil, {})
+  for _, level in ipairs(LEVEL_IDS) do
+    -- Composite score per level
+    local score_id = level .. "_score"
+    local ok, err = pcall(nk.leaderboard_create, score_id, false, "desc", "best", nil, {})
     if not ok then
-      nk.logger_warn("Leaderboard " .. lb[1] .. " ya existía o error: " .. tostring(err))
+      nk.logger_warn("Leaderboard " .. score_id .. " ya existía o error: " .. tostring(err))
     else
-      nk.logger_info("Leaderboard " .. lb[1] .. " creado")
+      nk.logger_info("Leaderboard " .. score_id .. " creado")
+    end
+
+    -- Metrics per level
+    for _, metric in ipairs(METRICS) do
+      local id = level .. "_" .. metric
+      local ok2, err2 = pcall(nk.leaderboard_create, id, false, "desc", "best", nil, {})
+      if not ok2 then
+        nk.logger_warn("Leaderboard " .. id .. " ya existía o error: " .. tostring(err2))
+      else
+        nk.logger_info("Leaderboard " .. id .. " creado")
+      end
+    end
+  end
+
+  -- Campaign (accumulated) leaderboards
+  for _, metric in ipairs(CAMPAIGN_METRICS) do
+    local id = "campaign_" .. metric
+    local ok, err = pcall(nk.leaderboard_create, id, false, "desc", "best", nil, {})
+    if not ok then
+      nk.logger_warn("Leaderboard " .. id .. " ya existía o error: " .. tostring(err))
+    else
+      nk.logger_info("Leaderboard " .. id .. " creado")
     end
   end
 end

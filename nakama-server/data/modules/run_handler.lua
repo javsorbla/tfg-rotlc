@@ -20,12 +20,13 @@ function M.submit_run(context, payload)
     }
   })
 
-  -- LEADERBOARD
+  -- LEADERBOARD (dynamic ID, defaults to level_0_score)
   local score = run_table.score or 0
   local metadata = run_table.metadata or {}
+  local leaderboard_id = run_table.leaderboard_id or "level_0_score"
 
   local ok, err = pcall(nk.leaderboard_record_write,
-    "global_score",
+    leaderboard_id,
     context.user_id,
     context.username,
     score,
@@ -33,9 +34,9 @@ function M.submit_run(context, payload)
   )
 
   if not ok then
-    nk.logger_warn("Leaderboard no encontrado, creando...")
-    nk.leaderboard_create("global_score", true, "desc", "best", nil, {})
-    nk.leaderboard_record_write("global_score", context.user_id, context.username, score, metadata)
+    nk.logger_warn("Leaderboard " .. leaderboard_id .. " no encontrado, creando...")
+    nk.leaderboard_create(leaderboard_id, true, "desc", "best", nil, {})
+    nk.leaderboard_record_write(leaderboard_id, context.user_id, context.username, score, metadata)
   end
 
   return nk.json_encode({

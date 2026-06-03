@@ -4,16 +4,16 @@
 
 [node name="LeaderboardPanel" type="PanelContainer"]
 process_mode = 3
-custom_minimum_size = Vector2(640, 500)
+custom_minimum_size = Vector2(700, 520)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -320.0
-offset_top = -250.0
-offset_right = 320.0
-offset_bottom = 250.0
+offset_left = -350.0
+offset_top = -260.0
+offset_right = 350.0
+offset_bottom = 260.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_3675s")
@@ -23,29 +23,47 @@ close_button_text = "Cerrar"
 [node name="ContentContainer" type="MarginContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
 
-[node name="BoxContainer" type="BoxContainer" parent="ContentContainer"]
+[node name="MainHBox" type="HBoxContainer" parent="ContentContainer"]
 layout_mode = 2
-vertical = true
 
-[node name="TitleMargin" type="MarginContainer" parent="ContentContainer/BoxContainer"]
+[node name="SidebarVBox" type="VBoxContainer" parent="ContentContainer/MainHBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 0)
+size_flags_horizontal = 0
+theme_override_constants/separation = 2
+
+[node name="SidebarButtons" type="VBoxContainer" parent="ContentContainer/MainHBox/SidebarVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_horizontal = 4
+
+[node name="VSeparator" type="VSeparator" parent="ContentContainer/MainHBox"]
+layout_mode = 2
+
+[node name="ContentVBox" type="VBoxContainer" parent="ContentContainer/MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleMargin" type="MarginContainer" parent="ContentContainer/MainHBox/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/margin_left = 0
 theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_bottom = 4
 
-[node name="BoxContainer" type="BoxContainer" parent="ContentContainer/BoxContainer/TitleMargin"]
+[node name="BoxContainer" type="BoxContainer" parent="ContentContainer/MainHBox/ContentVBox/TitleMargin"]
 layout_mode = 2
 theme_override_constants/separation = 0
 vertical = true
 
-[node name="TitleLabel" type="Label" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer"]
+[node name="TitleLabel" type="Label" parent="ContentContainer/MainHBox/ContentVBox/TitleMargin/BoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
@@ -53,33 +71,31 @@ theme_override_colors/font_color = Color(0.95, 0.96, 0.99, 1)
 text = "Clasificación"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="ContentContainer/MainHBox/ContentVBox/TitleMargin/BoxContainer"]
 layout_mode = 2
 
-[node name="TabBar" type="TabBar" parent="ContentContainer/BoxContainer"]
+[node name="MetricRow" type="HBoxContainer" parent="ContentContainer/MainHBox/ContentVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="BodyMargin" type="MarginContainer" parent="ContentContainer/MainHBox/ContentVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 4
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ContentContainer/MainHBox/ContentVBox/BodyMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RecordsList" type="VBoxContainer" parent="ContentContainer/MainHBox/ContentVBox/BodyMargin/ScrollContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="BodyMargin" type="MarginContainer" parent="ContentContainer/BoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="DescriptionLabel" type="RichTextLabel" parent="ContentContainer/BoxContainer/BodyMargin"]
-unique_name_in_owner = true
-visible = false
-
-[node name="ScrollContainer" type="ScrollContainer" parent="ContentContainer/BoxContainer/BodyMargin"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="RecordsList" type="VBoxContainer" parent="ContentContainer/BoxContainer/BodyMargin/ScrollContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="LoadingLabel" type="Label" parent="ContentContainer/BoxContainer/BodyMargin/ScrollContainer"]
+[node name="LoadingLabel" type="Label" parent="ContentContainer/MainHBox/ContentVBox/BodyMargin/ScrollContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
@@ -87,7 +103,7 @@ horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
 text = "Cargando clasificación..."
 
-[node name="ErrorLabel" type="Label" parent="ContentContainer/BoxContainer/BodyMargin"]
+[node name="ErrorLabel" type="Label" parent="ContentContainer/MainHBox/ContentVBox/BodyMargin"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -97,7 +113,7 @@ vertical_alignment = 1
 theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
 text = ""
 
-[node name="PlayerPositionLabel" type="Label" parent="ContentContainer/BoxContainer"]
+[node name="PlayerPositionLabel" type="Label" parent="ContentContainer/MainHBox/ContentVBox"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -107,20 +123,19 @@ theme_override_colors/font_color = Color(0.95, 0.96, 0.3, 1)
 text = ""
 horizontal_alignment = 1
 
-[node name="MenuButtonsMargin" type="MarginContainer" parent="ContentContainer/BoxContainer"]
+[node name="MenuButtonsMargin" type="MarginContainer" parent="ContentContainer/MainHBox/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/margin_top = 8
 
-[node name="MenuButtons" type="BoxContainer" parent="ContentContainer/BoxContainer/MenuButtonsMargin"]
+[node name="MenuButtons" type="BoxContainer" parent="ContentContainer/MainHBox/ContentVBox/MenuButtonsMargin"]
 unique_name_in_owner = true
 layout_mode = 2
 alignment = 1
 
-[node name="CloseButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
+[node name="CloseButton" type="Button" parent="ContentContainer/MainHBox/ContentVBox/MenuButtonsMargin/MenuButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Cerrar"
 
-[connection signal="tab_changed" from="ContentContainer/BoxContainer/TabBar" to="." method="_on_tab_changed"]
-[connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="ContentContainer/MainHBox/ContentVBox/MenuButtonsMargin/MenuButtons/CloseButton" to="." method="_on_close_button_pressed"]

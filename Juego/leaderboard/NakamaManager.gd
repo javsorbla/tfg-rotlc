@@ -26,7 +26,7 @@ var has_authenticated := false
 # CURRENT RUN STATS
 # =========================
 var _current_run := {
-	"level_id": "",
+	"level_id": -1,
 	"start_time": 0,
 	"deaths": 0,
 	"enemies_killed": 0,
@@ -37,6 +37,23 @@ var _current_run := {
 }
 
 # =========================
+# CAMPAIGN STATS (accumulated across all levels, persisted)
+# =========================
+var _campaign_stats := _make_default_campaign_stats()
+
+static func _make_default_campaign_stats() -> Dictionary:
+	return {
+		"total_time": 0,
+		"total_kills": 0,
+		"total_deaths": 0,
+		"total_damage_dealt": 0,
+		"total_damage_taken": 0,
+		"total_prism_cores": 0,
+		"campaign_completed": false,
+		"levels_completed": {}
+	}
+
+# =========================
 # LIFECYCLE
 # =========================
 func _ready():
@@ -44,6 +61,9 @@ func _ready():
 	if has_node("/root/GameState"):
 		var gs = get_node("/root/GameState")
 		nickname = gs.player_progress.get("nickname", "")
+		if gs.player_progress.has("campaign_stats"):
+			load_campaign_stats(gs.player_progress["campaign_stats"])
+		gs.player_progress_reset.connect(_on_player_progress_reset)
 	await authenticate()
 
 # =========================
@@ -104,40 +124,19 @@ func start_run(level_id: int):
 func resume_run_timer(start_time: float) -> void:
 	_current_run["start_time"] = start_time
 
-func submit_run(payload: Dictionary) -> void:
-	if not has_authenticated:
-		return
-
-	var object = NakamaWriteStorageObject.new(
-		"runs",                         # collection 
-		str(Time.get_unix_time_from_system()),  # key
-		0,                              # permission_read 
-		0,                              # permission_write 
-		JSON.stringify(payload),        # value 
-		""                              # version 
-	)
-
-	var result = await client.write_storage_objects_async(session, [object])
-
-	if result.is_exception():
-		print("Nakama error:", result)
-	else:
-		print("Run stored OK")
 
 func complete_run(success: bool) -> void:
 	if not has_authenticated:
 		return
-
-	if _current_run.is_empty():
+	if _current_run.is_empty() or _current_run["level_id"] == -1:
 		return
 
 	var end_time = Time.get_unix_time_from_system()
-	var duration = end_time - _current_run["start_time"]
-
-	var global_score = compute_global_score(duration)
+	var duration = int(end_time - _current_run["start_time"])
+	var level_id = _current_run["level_id"]
 
 	var metadata = {
-		"level_id": _current_run["level_id"],
+		"level_id": level_id,
 		"duration": duration,
 		"deaths": _current_run["deaths"],
 		"enemies_killed": _current_run["enemies_killed"],
@@ -147,24 +146,123 @@ func complete_run(success: bool) -> void:
 		"prism_cores": _current_run["prism_cores"]
 	}
 
-	var record = {
-		"score": global_score,
-		"success": success,
-		"metadata": metadata
-	}
+	# Per-level leaderboards only on completed runs
+	if success:
+		await _submit_level_leaderboards(level_id, duration, metadata)
 
-	await submit_leaderboard("global_score", record)
-	await submit_secondary_leaderboards(duration, metadata)
+	# Always accumulate to campaign stats
+	_accumulate_to_campaign(metadata)
 
-	print("Run completed. Score:", global_score)
+	# Final level → submit campaign leaderboards
+	if success and level_id == 4:
+		await submit_campaign_leaderboards()
+
+	# Persist campaign stats
+	_persist_campaign_stats()
+
+	print("Run completed. Level:", level_id, " Success:", success)
 	_reset_current_run()
+
+
+func _submit_level_leaderboards(level_id: int, duration: int, metadata: Dictionary) -> void:
+	var score = compute_global_score(duration)
+	var level_prefix = "level_%d" % level_id
+	var meta_json = JSON.stringify(metadata)
+
+	# Composite score
+	await submit_leaderboard(level_prefix + "_score", {
+		"score": score,
+		"success": true,
+		"metadata": metadata
+	})
+
+	# Metric entries
+	var entries = [
+		{"id": level_prefix + "_time", "score": max(1, int(1000000.0 / max(duration, 1)))},
+		{"id": level_prefix + "_kills", "score": metadata["enemies_killed"]},
+		{"id": level_prefix + "_deaths", "score": max(0, 1000 - metadata["deaths"])},
+		{"id": level_prefix + "_damage_dealt", "score": metadata["damage_dealt"]},
+		{"id": level_prefix + "_damage_received", "score": max(0, 100000 - metadata["damage_taken"])},
+		{"id": level_prefix + "_prism_cores", "score": metadata["prism_cores"]},
+	]
+
+	for entry in entries:
+		var result = await client.write_leaderboard_record_async(
+			session, entry["id"], entry["score"], 0, meta_json
+		)
+		if result.is_exception():
+			push_error("Failed to submit " + entry["id"] + ": " + str(result))
+
+
+func submit_campaign_leaderboards() -> void:
+	if not has_authenticated:
+		return
+	if _campaign_stats["total_time"] <= 0:
+		return
+
+	_campaign_stats["campaign_completed"] = true
+	var meta_json = JSON.stringify(_campaign_stats)
+
+	var entries = [
+		{"id": "campaign_time", "score": max(1, int(1000000.0 / max(_campaign_stats["total_time"], 1)))},
+		{"id": "campaign_kills", "score": _campaign_stats["total_kills"]},
+		{"id": "campaign_deaths", "score": max(0, 10000 - _campaign_stats["total_deaths"])},
+		{"id": "campaign_damage_dealt", "score": _campaign_stats["total_damage_dealt"]},
+		{"id": "campaign_damage_received", "score": max(0, 1000000 - _campaign_stats["total_damage_taken"])},
+		{"id": "campaign_prism_cores", "score": _campaign_stats["total_prism_cores"]},
+	]
+
+	for entry in entries:
+		var result = await client.write_leaderboard_record_async(
+			session, entry["id"], entry["score"], 0, meta_json
+		)
+		if result.is_exception():
+			push_error("Failed to submit campaign " + entry["id"] + ": " + str(result))
+		else:
+			print("Campaign leaderboard submitted:", entry["id"], " score:", entry["score"])
+
+	_persist_campaign_stats()
+
+
+func _accumulate_to_campaign(metadata: Dictionary) -> void:
+	_campaign_stats["total_time"] += max(0, int(metadata.get("duration", 0)))
+	_campaign_stats["total_kills"] += max(0, int(metadata.get("enemies_killed", 0)))
+	_campaign_stats["total_deaths"] += max(0, int(metadata.get("deaths", 0)))
+	_campaign_stats["total_damage_dealt"] += max(0, int(metadata.get("damage_dealt", 0)))
+	_campaign_stats["total_damage_taken"] += max(0, int(metadata.get("damage_taken", 0)))
+	_campaign_stats["total_prism_cores"] += max(0, int(metadata.get("prism_cores", 0)))
+	_campaign_stats["levels_completed"][str(metadata.get("level_id", -1))] = true
+
+
+func _persist_campaign_stats() -> void:
+	if not has_node("/root/GameState"):
+		return
+	var gs = get_node("/root/GameState")
+	gs.player_progress["campaign_stats"] = _campaign_stats.duplicate(true)
+	gs._save_player_progress()
+
+
+func load_campaign_stats(stats: Dictionary) -> void:
+	if typeof(stats) == TYPE_DICTIONARY and not stats.is_empty():
+		for key in _campaign_stats.keys():
+			if stats.has(key):
+				_campaign_stats[key] = stats[key]
+
+
+func reset_campaign_stats() -> void:
+	_campaign_stats = _make_default_campaign_stats()
+	_reset_current_run()
+
+
+func _on_player_progress_reset() -> void:
+	reset_campaign_stats()
 
 # =========================
 # SCORE FORMULA
 # =========================
 func _reset_current_run() -> void:
 	_current_run = {
-		"level_id": "",
+		"level_id": -1,
 		"start_time": 0,
 		"deaths": 0,
 		"enemies_killed": 0,
@@ -205,29 +303,6 @@ func set_nickname(p_nickname: String) -> void:
 # LEADERBOARD
 # =========================
 
-func submit_secondary_leaderboards(duration: int, metadata: Dictionary) -> void:
-	if not has_authenticated:
-		return
-
-	var secondary := [
-		{"id": "global_time", "score": max(1, int(10000.0 / max(duration, 1)))},
-		{"id": "global_kills", "score": _current_run["enemies_killed"]},
-		{"id": "global_deaths", "score": max(0, 1000 - _current_run["deaths"])},
-		{"id": "global_damage_dealt", "score": _current_run["damage_dealt"]},
-		{"id": "global_damage_taken", "score": max(0, 100000 - _current_run["damage_taken"])},
-		{"id": "global_prism_cores", "score": _current_run["prism_cores"]},
-	]
-
-	for entry in secondary:
-		var result = await client.write_leaderboard_record_async(
-			session, entry["id"], entry["score"], 0, JSON.stringify(metadata)
-		)
-		if result.is_exception():
-			push_error("Failed to submit " + entry["id"] + ": " + str(result))
-		else:
-			print("Secondary leaderboard submitted:", entry["id"], " score:", entry["score"])
-
-
 func fetch_leaderboard_top(leaderboard_id: String, limit := 50):
 	if not has_authenticated:
 		return []
@@ -257,7 +332,7 @@ func submit_leaderboard(leaderboard_id: String, record: Dictionary):
 		session,
 		leaderboard_id,
 		record["score"],
-		0, # subscore obligatorio
+		0,
 		metadata_json
 	)
 
