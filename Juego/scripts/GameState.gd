@@ -73,7 +73,8 @@ func _make_default_player_progress() -> Dictionary:
 		"max_health_bonus": 0,
 		"prism_core_collected": false,
 		"prism_core_collected_levels": {},
-		"unlocked_powers": _make_default_unlocked_powers()
+		"unlocked_powers": _make_default_unlocked_powers(),
+		"nickname": ""
 	}
 
 
@@ -177,7 +178,8 @@ func save_game(reason := "") -> bool:
 
 
 func reset_for_new_game() -> void:
-	# Remove existing save files and reset in-memory progress to defaults.
+	var stored_nickname: String = player_progress.get("nickname", "")
+
 	if FileAccess.file_exists(SAVE_PATH):
 		var abs := ProjectSettings.globalize_path(SAVE_PATH)
 		DirAccess.remove_absolute(abs)
@@ -192,16 +194,16 @@ func reset_for_new_game() -> void:
 		DirAccess.remove_absolute(abs_umbra)
 
 	player_progress = _make_default_player_progress()
+	if not stored_nickname.is_empty():
+		player_progress["nickname"] = stored_nickname
 	umbra_progress = _make_default_umbra_progress()
 	current_level = 0
 	current_level_path = ""
 	spawn_position = Vector2.ZERO
 	checkpoint_activated = false
 
-	# Persist cleared player progress (so has_save() returns false)
 	_save_player_progress()
 
-	# Notify listeners (HUD, player) that progress was reset
 	emit_signal("player_progress_reset")
 
 

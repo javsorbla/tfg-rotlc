@@ -1,0 +1,120 @@
+[gd_scene load_steps=0 format=3]
+
+[ext_resource type="Script" path="res://ui/menus/windows/leaderboard_panel.gd" id="1_3675s"]
+
+[node name="LeaderboardPanel" type="PanelContainer"]
+process_mode = 3
+custom_minimum_size = Vector2(480, 400)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -200.0
+offset_right = 240.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_3675s")
+exclusive_background_color = Color(0, 0, 0, 0.6)
+close_button_text = "Cerrar"
+
+[node name="ContentContainer" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="BoxContainer" type="BoxContainer" parent="ContentContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="TitleMargin" type="MarginContainer" parent="ContentContainer/BoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 8
+
+[node name="BoxContainer" type="BoxContainer" parent="ContentContainer/BoxContainer/TitleMargin"]
+layout_mode = 2
+theme_override_constants/separation = 0
+vertical = true
+
+[node name="TitleLabel" type="Label" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.95, 0.96, 0.99, 1)
+text = "Clasificación"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="ContentContainer/BoxContainer/TitleMargin/BoxContainer"]
+layout_mode = 2
+
+[node name="BodyMargin" type="MarginContainer" parent="ContentContainer/BoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="ContentContainer/BoxContainer/BodyMargin"]
+unique_name_in_owner = true
+visible = false
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ContentContainer/BoxContainer/BodyMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RecordsList" type="VBoxContainer" parent="ContentContainer/BoxContainer/BodyMargin/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LoadingLabel" type="Label" parent="ContentContainer/BoxContainer/BodyMargin/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
+text = "Cargando clasificación..."
+
+[node name="ErrorLabel" type="Label" parent="ContentContainer/BoxContainer/BodyMargin"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+text = ""
+
+[node name="PlayerPositionLabel" type="Label" parent="ContentContainer/BoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 0
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.95, 0.96, 0.3, 1)
+text = ""
+horizontal_alignment = 1
+
+[node name="MenuButtonsMargin" type="MarginContainer" parent="ContentContainer/BoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_top = 8
+
+[node name="MenuButtons" type="BoxContainer" parent="ContentContainer/BoxContainer/MenuButtonsMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="CloseButton" type="Button" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cerrar"
+
+[connection signal="pressed" from="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/CloseButton" to="." method="_on_close_button_pressed"]

@@ -1,0 +1,100 @@
+[gd_scene load_steps=3 format=3 uid="uid://c656ietmocj7g"]
+
+[ext_resource type="Script" path="res://ui/menus/windows/nickname_dialog.gd" id="1_72r6f"]
+[ext_resource type="Theme" uid="uid://dtpn5omjjunlh" path="res://ui/menus/main_menu/main_menu_shell_theme.tres" id="2_theme"]
+
+[node name="NicknameDialog" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_72r6f")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+color = Color(0, 0, 0, 0.85)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.08
+anchor_top = 0.18
+anchor_right = 0.92
+anchor_bottom = 0.82
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+theme = ExtResource("2_theme")
+
+[node name="InnerMargin" type="MarginContainer" parent="MarginContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer/Panel/InnerMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 24
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/Panel/InnerMargin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.94, 0.94, 0.95, 1)
+theme_override_font_sizes/font_size = 28
+text = "Elige tu nombre de jugador"
+horizontal_alignment = 1
+
+[node name="DescriptionLabel" type="Label" parent="MarginContainer/Panel/InnerMargin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
+theme_override_font_sizes/font_size = 17
+text = "Este nombre se mostrará en la clasificación y no se puede cambiar después."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/Panel/InnerMargin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+placeholder_text = "Tu nombre..."
+max_length = 20
+
+[node name="ErrorLabel" type="Label" parent="MarginContainer/Panel/InnerMargin/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+
+[node name="ConfirmButton" type="Button" parent="MarginContainer/Panel/InnerMargin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Confirmar"
+
+[connection signal="text_changed" from="MarginContainer/Panel/InnerMargin/VBox/LineEdit" to="." method="_on_line_edit_text_changed"]
+[connection signal="text_submitted" from="MarginContainer/Panel/InnerMargin/VBox/LineEdit" to="." method="_on_line_edit_text_submitted"]
+[connection signal="pressed" from="MarginContainer/Panel/InnerMargin/VBox/ConfirmButton" to="." method="_on_confirm_button_pressed"]

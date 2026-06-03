@@ -5,7 +5,7 @@ local M = {}
 function M.init()
   local ok, err = pcall(nk.leaderboard_create,
     "global_score",
-    true,
+    false,
     "desc",
     "best",
     nil,

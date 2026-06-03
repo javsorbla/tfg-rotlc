@@ -7,6 +7,7 @@ const SCHEME := "http"
 const HOST := "127.0.0.1"
 const PORT := 7350
 const SERVER_KEY := "defaultkey"
+const AUTH_TIMEOUT_SECONDS := 10
 
 # =========================
 # NAKAMA CORE
@@ -39,14 +40,22 @@ var _current_run := {
 # LIFECYCLE
 # =========================
 func _ready():
-	device_id = OS.get_unique_id()
+	device_id = OS.get_unique_id().trim_prefix("{").trim_suffix("}")
+	if has_node("/root/GameState"):
+		var gs = get_node("/root/GameState")
+		nickname = gs.player_progress.get("nickname", "")
 	await authenticate()
 
 # =========================
 # AUTH
 # =========================
 func authenticate():
-	client = Nakama.create_client(SERVER_KEY, HOST, PORT, SCHEME)
+	client = Nakama.create_client(SERVER_KEY, HOST, PORT, SCHEME, AUTH_TIMEOUT_SECONDS)
+
+	var nakama_node := get_node("/root/Nakama")
+	var adapter: NakamaHTTPAdapter = nakama_node.get_client_adapter()
+	adapter.use_threads = false
+	adapter.timeout = AUTH_TIMEOUT_SECONDS
 
 	var result = await client.authenticate_device_async(device_id)
 
@@ -58,6 +67,18 @@ func authenticate():
 	has_authenticated = true
 
 	print("Nakama logged in:", session.user_id)
+
+	if not nickname.is_empty():
+		print("Syncing pending nickname to server:", nickname)
+		var update_result = await client.update_account_async(session, nickname)
+		if update_result.is_exception():
+			push_error("Failed to update username: " + str(update_result))
+
+	var account = await client.get_account_async(session)
+	if account.is_exception():
+		push_error("Failed to get account: " + str(account))
+	else:
+		print("Account username on server:", account.user.username)
 
 # =========================
 # RUN SYSTEM
@@ -164,8 +185,42 @@ func compute_global_score(time_seconds: int) -> int:
 	return max(1, score)
 
 # =========================
+# NICKNAME
+# =========================
+
+func set_nickname(p_nickname: String) -> void:
+	nickname = p_nickname
+	if not has_authenticated:
+		return
+	var result = await client.update_account_async(session, nickname)
+	if result.is_exception():
+		push_error("Failed to set nickname on server: " + str(result))
+	else:
+		print("Nickname synced to server:", nickname)
+
+# =========================
 # LEADERBOARD
 # =========================
+
+func fetch_leaderboard_top(limit := 50):
+	if not has_authenticated:
+		return []
+	var result = await client.list_leaderboard_records_async(session, "global_score", null, null, limit)
+	if result.is_exception():
+		push_error("Failed to fetch leaderboard: " + str(result))
+		return []
+	return result.records
+
+
+func fetch_leaderboard_around_me(limit := 10):
+	if not has_authenticated:
+		return []
+	var result = await client.list_leaderboard_records_around_owner_async(session, "global_score", session.user_id, null, limit)
+	if result.is_exception():
+		push_error("Failed to fetch leaderboard around me: " + str(result))
+		return []
+	return result.records
+
 
 func submit_leaderboard(leaderboard_id: String, record: Dictionary):
 	if not has_authenticated:
