@@ -5,6 +5,12 @@ const DAMAGE: int = 10
 const ATTACK_SPEED: float = 320.0
 const SLEEP_DISTANCE: float = 250.0
 
+const CHARGED_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/charged_sheet_4.png")
+const DEAD_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/dead_sheet_4.png")
+const DEAD_EXPLODE_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/dead_explode_sheet_4.png")
+const EXPLODE_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/explode_sheet_4.png")
+const SLEEP_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/sleep_sheet_4.png")
+
 enum State { SLEEP, ATTACK, EXPLODE, DEAD }
 
 var current_state: State = State.SLEEP
@@ -18,6 +24,10 @@ var spawn_position = Vector2.ZERO
 var previous_state: State = State.SLEEP
 var _combat_reset_state: Dictionary = {}
 
+var _base_sprite_frames: SpriteFrames = null
+var _level4_sprite_frames: SpriteFrames = null
+
+@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var luz = $PointLight2D
 
 func _ready() -> void:
@@ -25,6 +35,9 @@ func _ready() -> void:
 	player = get_tree().get_first_node_in_group("player")
 	spawn_position = global_position
 	GameState.level_reset.connect(_on_level_reset)
+	
+	_base_sprite_frames = sprite.sprite_frames
+	call_deferred("_apply_level_visuals")
 	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
@@ -49,21 +62,22 @@ func _ready() -> void:
 	_actualizar_luz()
 
 func _actualizar_luz():
+	var base_color := Color(0.0, 0.6, 1.0) if GameState.current_level != 4 else Color(0.4, 0.0, 0.8)
 	match current_state:
 		State.SLEEP:
-			luz.color = Color(0.0, 0.6, 1.0)
+			luz.color = base_color
 			luz.texture_scale = 0.8
 			luz.energy = 1.0
 		State.ATTACK:
-			luz.color = Color(0.0, 0.6, 1.0, 0.5)
+			luz.color = Color(base_color.r, base_color.g, base_color.b, 0.5)
 			luz.texture_scale = 1.5
 			luz.energy = 5.0
 		State.EXPLODE:
-			luz.color = Color(0.0, 0.6, 1.0, 0.5)
+			luz.color = Color(base_color.r, base_color.g, base_color.b, 0.5)
 			luz.texture_scale = 2.0
 			luz.energy = 6.0
 		State.DEAD:
-			luz.color = Color(0.0, 0.6, 1.0, 0.2)
+			luz.color = Color(base_color.r, base_color.g, base_color.b, 0.2)
 			luz.texture_scale = 1.5
 			luz.energy = 3.0
 
@@ -91,7 +105,52 @@ func _on_level_reset():
 	explode_from_death = false
 	dead_timer = 0.0
 	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	call_deferred("_apply_level_visuals")
 	_enter_state(State.SLEEP)
+
+func _apply_level_visuals() -> void:
+	if sprite == null or _base_sprite_frames == null:
+		return
+
+	var target_frames: SpriteFrames = _base_sprite_frames
+	if GameState.current_level == 4:
+		target_frames = _get_level4_sprite_frames()
+
+	if sprite.sprite_frames != target_frames:
+		sprite.sprite_frames = target_frames
+
+	var current_animation := sprite.animation
+	if current_animation != "" and sprite.sprite_frames.has_animation(current_animation):
+		sprite.play(current_animation)
+	
+func _get_level4_sprite_frames() -> SpriteFrames:
+	if _level4_sprite_frames != null:
+		return _level4_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "charged", CHARGED_SHEET_4)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_4)
+	_replace_animation_frames(frames, "dead_explode", DEAD_EXPLODE_SHEET_4)
+	_replace_animation_frames(frames, "explode", EXPLODE_SHEET_4)
+	_replace_animation_frames(frames, "sleep", SLEEP_SHEET_4)
+
+	_level4_sprite_frames = frames
+	return _level4_sprite_frames
+
+func _replace_animation_frames(frames: SpriteFrames, animation_name: StringName, source_texture: Texture2D) -> void:
+	if frames == null or source_texture == null or not frames.has_animation(animation_name):
+		return
+
+	var frame_count := frames.get_frame_count(animation_name)
+	for frame_index in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = source_texture
+		atlas.region = Rect2(frame_index * 64, 0, 64, 64)
+		var frame_duration := _base_sprite_frames.get_frame_duration(animation_name, frame_index)
+		frames.set_frame(animation_name, frame_index, atlas, frame_duration)
 
 
 func _despawn_dead_instance() -> void:
