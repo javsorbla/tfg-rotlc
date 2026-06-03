@@ -3,21 +3,19 @@ local nk = require("nakama")
 local M = {}
 
 function M.init()
-  nk.run_once(function()
-    nk.logger_info("Inicializando leaderboards...")
-
-    nk.leaderboard_create(
-      "global_score",
-      true,
-      "desc",
-      "best score",
-      "{}",
-      nil,
-      false
-    )
-
-    nk.logger_info("Leaderboards listos")
-  end)
+  local ok, err = pcall(nk.leaderboard_create,
+    "global_score",
+    true,
+    "desc",
+    "best",
+    nil,
+    {}
+  )
+  if not ok then
+    nk.logger_warn("Leaderboard global_score ya existía o error: " .. tostring(err))
+  else
+    nk.logger_info("Leaderboard global_score creado")
+  end
 end
 
 return M

@@ -346,7 +346,8 @@ func _build_save_payload() -> Dictionary:
 			"y": spawn_position.y
 		},
 		"checkpoint_activated": checkpoint_activated,
-		"player_progress": player_progress.duplicate(true)
+		"player_progress": player_progress.duplicate(true),
+		"run_start_time": NakamaManager._current_run["start_time"]
 	}
 
 
@@ -474,6 +475,10 @@ func _apply_loaded_state(payload: Dictionary) -> void:
 			if progress.has(key):
 				player_progress[key] = progress[key]
 		_recompute_player_bonus_from_levels()
+
+	var run_start = float(payload.get("run_start_time", 0))
+	if run_start > 0:
+		NakamaManager.resume_run_timer(run_start)
 
 
 func _load_umbra_progress() -> void:

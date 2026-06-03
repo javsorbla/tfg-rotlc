@@ -24,13 +24,19 @@ function M.submit_run(context, payload)
   local score = run_table.score or 0
   local metadata = run_table.metadata or {}
 
-  nk.leaderboard_record_write(
+  local ok, err = pcall(nk.leaderboard_record_write,
     "global_score",
     context.user_id,
     context.username,
     score,
     metadata
   )
+
+  if not ok then
+    nk.logger_warn("Leaderboard no encontrado, creando...")
+    nk.leaderboard_create("global_score", true, "desc", "best", nil, {})
+    nk.leaderboard_record_write("global_score", context.user_id, context.username, score, metadata)
+  end
 
   return nk.json_encode({
     ok = true,

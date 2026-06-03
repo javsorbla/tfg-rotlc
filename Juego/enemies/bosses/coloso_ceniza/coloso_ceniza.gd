@@ -678,6 +678,7 @@ func _on_attack_hitbox_area_entered(area: Area2D):
 
 
 func die():
+	NakamaManager.add_enemy_kill()
 	current_state = State.DEAD
 	is_active = false
 	_spawn_final_boss_crystal(1)

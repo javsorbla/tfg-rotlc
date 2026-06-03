@@ -63,6 +63,7 @@ func authenticate():
 # RUN SYSTEM
 # =========================
 func start_run(level_id: int):
+	var preserved_start = _current_run["start_time"]
 	_current_run = {
 		"level_id": level_id,
 		"start_time": Time.get_unix_time_from_system(),
@@ -73,8 +74,14 @@ func start_run(level_id: int):
 		"skills_used": {},
 		"prism_cores": 0
 	}
+	if preserved_start > 0:
+		_current_run["start_time"] = preserved_start
 
 	print("▶ Run started:", level_id)
+
+
+func resume_run_timer(start_time: float) -> void:
+	_current_run["start_time"] = start_time
 
 func submit_run(payload: Dictionary) -> void:
 	if not has_authenticated:
@@ -126,10 +133,24 @@ func complete_run(success: bool) -> void:
 	await submit_leaderboard("global_score", record)
 
 	print("Run completed. Score:", global_score)
+	_reset_current_run()
 
 # =========================
 # SCORE FORMULA
 # =========================
+func _reset_current_run() -> void:
+	_current_run = {
+		"level_id": "",
+		"start_time": 0,
+		"deaths": 0,
+		"enemies_killed": 0,
+		"damage_dealt": 0,
+		"damage_taken": 0,
+		"skills_used": {},
+		"prism_cores": 0
+	}
+
+
 func compute_global_score(time_seconds: int) -> int:
 	var score = 0
 
@@ -174,7 +195,6 @@ func add_damage_dealt(amount: int):
 
 func add_damage_taken(amount: int):
 	_current_run["damage_taken"] += amount
-	_current_run["deaths"] += 1
 
 
 func add_enemy_kill():
