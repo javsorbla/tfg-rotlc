@@ -409,6 +409,7 @@ func take_damage(amount: int) -> void:
 	_enter_state(State.STUNNED)
 
 func die() -> void:
+	NakamaManager.add_enemy_kill()
 	_enter_state(State.DEAD)
 	set_physics_process(false)
 	set_process(false)

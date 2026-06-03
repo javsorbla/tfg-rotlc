@@ -1,19 +1,19 @@
-[gd_scene load_steps=0 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://br1oddh1tkhw3"]
 
 [ext_resource type="Script" path="res://ui/menus/windows/leaderboard_panel.gd" id="1_3675s"]
 
 [node name="LeaderboardPanel" type="PanelContainer"]
 process_mode = 3
-custom_minimum_size = Vector2(700, 520)
+custom_minimum_size = Vector2(780, 540)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -350.0
-offset_top = -260.0
-offset_right = 350.0
-offset_bottom = 260.0
+offset_left = -390.0
+offset_top = -270.0
+offset_right = 390.0
+offset_bottom = 270.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_3675s")
@@ -32,16 +32,16 @@ theme_override_constants/margin_bottom = 12
 layout_mode = 2
 
 [node name="SidebarVBox" type="VBoxContainer" parent="ContentContainer/MainHBox"]
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-custom_minimum_size = Vector2(150, 0)
 size_flags_horizontal = 0
 theme_override_constants/separation = 2
 
 [node name="SidebarButtons" type="VBoxContainer" parent="ContentContainer/MainHBox/SidebarVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
 size_flags_horizontal = 4
+size_flags_vertical = 3
 
 [node name="VSeparator" type="VSeparator" parent="ContentContainer/MainHBox"]
 layout_mode = 2
@@ -66,13 +66,22 @@ vertical = true
 [node name="TitleLabel" type="Label" parent="ContentContainer/MainHBox/ContentVBox/TitleMargin/BoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.95, 0.96, 0.99, 1)
+theme_override_font_sizes/font_size = 22
 text = "Clasificación"
 horizontal_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="ContentContainer/MainHBox/ContentVBox/TitleMargin/BoxContainer"]
 layout_mode = 2
+
+[node name="OfflineBanner" type="Label" parent="ContentContainer/MainHBox/ContentVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "Sin conexión. Mostrando datos locales"
+horizontal_alignment = 1
 
 [node name="MetricRow" type="HBoxContainer" parent="ContentContainer/MainHBox/ContentVBox"]
 unique_name_in_owner = true
@@ -99,28 +108,25 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
-horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
 text = "Cargando clasificación..."
+horizontal_alignment = 1
 
 [node name="ErrorLabel" type="Label" parent="ContentContainer/MainHBox/ContentVBox/BodyMargin"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
 horizontal_alignment = 1
 vertical_alignment = 1
-theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
-text = ""
 
 [node name="PlayerPositionLabel" type="Label" parent="ContentContainer/MainHBox/ContentVBox"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 0
-theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.95, 0.96, 0.3, 1)
-text = ""
+theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1
 
 [node name="MenuButtonsMargin" type="MarginContainer" parent="ContentContainer/MainHBox/ContentVBox"]

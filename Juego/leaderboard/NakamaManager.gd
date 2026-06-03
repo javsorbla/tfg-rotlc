@@ -54,6 +54,13 @@ static func _make_default_campaign_stats() -> Dictionary:
 	}
 
 # =========================
+# OFFLINE QUEUE & LOCAL CACHE
+# =========================
+var _pending_queue := []
+var _retry_timer: Timer
+var _local_best_runs := {}
+
+# =========================
 # LIFECYCLE
 # =========================
 func _ready():
@@ -63,8 +70,15 @@ func _ready():
 		nickname = gs.player_progress.get("nickname", "")
 		if gs.player_progress.has("campaign_stats"):
 			load_campaign_stats(gs.player_progress["campaign_stats"])
+		if gs.player_progress.has("pending_queue"):
+			_pending_queue = gs.player_progress["pending_queue"].duplicate(true)
+		if gs.player_progress.has("local_best_runs"):
+			_local_best_runs = gs.player_progress["local_best_runs"].duplicate(true)
 		gs.player_progress_reset.connect(_on_player_progress_reset)
+	if not _pending_queue.is_empty():
+		_start_retry_timer()
 	await authenticate()
+	_flush_pending_queue()
 
 # =========================
 # AUTH
@@ -85,6 +99,7 @@ func authenticate():
 
 	session = result
 	has_authenticated = true
+	_flush_pending_queue()
 
 	print("Nakama logged in:", session.user_id)
 
@@ -126,8 +141,6 @@ func resume_run_timer(start_time: float) -> void:
 
 
 func complete_run(success: bool) -> void:
-	if not has_authenticated:
-		return
 	if _current_run.is_empty() or _current_run["level_id"] == -1:
 		return
 
@@ -164,17 +177,28 @@ func complete_run(success: bool) -> void:
 	_reset_current_run()
 
 
+func _write_record(leaderboard_id: String, score: int, metadata: Dictionary) -> void:
+	var meta_json := JSON.stringify(metadata)
+	if not has_authenticated:
+		_enqueue_submission({"id": leaderboard_id, "score": score, "metadata_json": meta_json})
+		return
+	var result = await client.write_leaderboard_record_async(
+		session, leaderboard_id, score, 0, meta_json
+	)
+	if result.is_exception():
+		push_error("Failed to submit " + leaderboard_id + ": " + str(result))
+		_enqueue_submission({"id": leaderboard_id, "score": score, "metadata_json": meta_json})
+	else:
+		_update_local_best(leaderboard_id, score, metadata)
+		print("Leaderboard submitted:", leaderboard_id)
+
+
 func _submit_level_leaderboards(level_id: int, duration: int, metadata: Dictionary) -> void:
 	var score = compute_global_score(duration)
 	var level_prefix = "level_%d" % level_id
-	var meta_json = JSON.stringify(metadata)
 
 	# Composite score
-	await submit_leaderboard(level_prefix + "_score", {
-		"score": score,
-		"success": true,
-		"metadata": metadata
-	})
+	await _write_record(level_prefix + "_score", score, metadata)
 
 	# Metric entries
 	var entries = [
@@ -187,23 +211,19 @@ func _submit_level_leaderboards(level_id: int, duration: int, metadata: Dictiona
 	]
 
 	for entry in entries:
-		var result = await client.write_leaderboard_record_async(
-			session, entry["id"], entry["score"], 0, meta_json
-		)
-		if result.is_exception():
-			push_error("Failed to submit " + entry["id"] + ": " + str(result))
+		await _write_record(entry["id"], entry["score"], metadata)
 
 
 func submit_campaign_leaderboards() -> void:
-	if not has_authenticated:
-		return
 	if _campaign_stats["total_time"] <= 0:
 		return
 
 	_campaign_stats["campaign_completed"] = true
-	var meta_json = JSON.stringify(_campaign_stats)
+
+	var campaign_score_val: int = max(1, _campaign_stats["total_kills"] * 50 - _campaign_stats["total_deaths"] * 100 + _campaign_stats["total_prism_cores"] * 500)
 
 	var entries = [
+		{"id": "campaign_score", "score": campaign_score_val},
 		{"id": "campaign_time", "score": max(1, int(1000000.0 / max(_campaign_stats["total_time"], 1)))},
 		{"id": "campaign_kills", "score": _campaign_stats["total_kills"]},
 		{"id": "campaign_deaths", "score": max(0, 10000 - _campaign_stats["total_deaths"])},
@@ -213,13 +233,7 @@ func submit_campaign_leaderboards() -> void:
 	]
 
 	for entry in entries:
-		var result = await client.write_leaderboard_record_async(
-			session, entry["id"], entry["score"], 0, meta_json
-		)
-		if result.is_exception():
-			push_error("Failed to submit campaign " + entry["id"] + ": " + str(result))
-		else:
-			print("Campaign leaderboard submitted:", entry["id"], " score:", entry["score"])
+		await _write_record(entry["id"], entry["score"], _campaign_stats)
 
 	_persist_campaign_stats()
 
@@ -252,6 +266,87 @@ func load_campaign_stats(stats: Dictionary) -> void:
 func reset_campaign_stats() -> void:
 	_campaign_stats = _make_default_campaign_stats()
 	_reset_current_run()
+
+
+func _start_retry_timer() -> void:
+	if _retry_timer == null or not is_instance_valid(_retry_timer):
+		_retry_timer = Timer.new()
+		_retry_timer.wait_time = 30.0
+		_retry_timer.one_shot = true
+		_retry_timer.timeout.connect(_flush_pending_queue)
+		add_child(_retry_timer)
+	_retry_timer.start()
+
+
+func _stop_retry_timer() -> void:
+	if _retry_timer != null and is_instance_valid(_retry_timer):
+		_retry_timer.stop()
+
+
+func _flush_pending_queue() -> void:
+	if _pending_queue.is_empty():
+		_stop_retry_timer()
+		return
+
+	if not has_authenticated:
+		await authenticate()
+		if not has_authenticated:
+			_start_retry_timer()
+			return
+
+	var failed: Array = []
+	for entry in _pending_queue:
+		var result = await client.write_leaderboard_record_async(
+			session, entry["id"], entry["score"], 0, entry["metadata_json"]
+		)
+		if result.is_exception():
+			failed.append(entry)
+		else:
+			print("Deferred leaderboard submitted:", entry["id"])
+	_pending_queue = failed
+	_persist_pending_queue()
+
+	if _pending_queue.is_empty():
+		_stop_retry_timer()
+	else:
+		_start_retry_timer()
+
+
+func _enqueue_submission(entry: Dictionary) -> void:
+	_pending_queue.append(entry)
+	_persist_pending_queue()
+	_start_retry_timer()
+
+
+func _persist_pending_queue() -> void:
+	if not has_node("/root/GameState"):
+		return
+	var gs = get_node("/root/GameState")
+	gs.player_progress["pending_queue"] = _pending_queue.duplicate(true)
+	gs._save_player_progress()
+
+
+func _update_local_best(leaderboard_id: String, score: int, metadata: Dictionary) -> void:
+	var existing: Dictionary = _local_best_runs.get(leaderboard_id, {})
+	if existing.is_empty() or score > existing.get("score", 0):
+		_local_best_runs[leaderboard_id] = {
+			"score": score,
+			"metadata": metadata,
+			"timestamp": Time.get_unix_time_from_system()
+		}
+		_persist_local_best_runs()
+
+
+func _persist_local_best_runs() -> void:
+	if not has_node("/root/GameState"):
+		return
+	var gs = get_node("/root/GameState")
+	gs.player_progress["local_best_runs"] = _local_best_runs.duplicate(true)
+	gs._save_player_progress()
+
+
+func get_local_best_for(leaderboard_id: String) -> Dictionary:
+	return _local_best_runs.get(leaderboard_id, {})
 
 
 func _on_player_progress_reset() -> void:
@@ -324,23 +419,7 @@ func fetch_leaderboard_around_me(leaderboard_id: String, limit := 10):
 
 
 func submit_leaderboard(leaderboard_id: String, record: Dictionary):
-	if not has_authenticated:
-		return
-	var metadata_json := JSON.stringify(record["metadata"])
-
-	var result = await client.write_leaderboard_record_async(
-		session,
-		leaderboard_id,
-		record["score"],
-		0,
-		metadata_json
-	)
-
-	if result.is_exception():
-		push_error("Failed leaderboard submit: " + str(result))
-		return
-
-	print("Leaderboard submitted:", leaderboard_id)
+	await _write_record(leaderboard_id, record["score"], record["metadata"])
 
 # =========================
 # RUN UPDATES
