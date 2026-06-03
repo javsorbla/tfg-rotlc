@@ -16,6 +16,16 @@ const TURN_DELAY: float = 1.0
 const KNOCKBACK_PLAYER: float = 250.0
 const REVIVE_DURATION: float = 6.0
 
+const BREAK_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/break_sheet_4.png")
+const DAMAGED_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/damaged_sheet_4.png")
+const DAMAGED_IDLE_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/damaged_idle_sheet_4.png")
+const DAMAGED_STUN_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/damaged_stun_sheet_4.png")
+const FAINTED_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/fainted_sheet_4.png")
+const REVIVE_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/revive_sheet_4.png")
+const SHIELD_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/shield_sheet_4.png")
+const SHIELD_IDLE_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/shield_idle_sheet_4.png")
+const SHIELD_STUN_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/shield_stun_sheet_4.png")
+
 enum State { PATROL, ATTACK, STUNNED, FAINTED }
 
 var current_state: State = State.PATROL
@@ -35,10 +45,18 @@ var hit_wall: bool = false
 var breaking_shield: bool = false
 var spawn_position = Vector2.ZERO
 
+var _base_sprite_frames: SpriteFrames = null
+var _level4_sprite_frames: SpriteFrames = null
+
+@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+
 func _ready() -> void:
 	player = get_tree().get_first_node_in_group("player")
 	spawn_position = global_position
 	GameState.level_reset.connect(_on_level_reset)
+
+	_base_sprite_frames = sprite.sprite_frames
+	call_deferred("_apply_level_visuals")
 
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
@@ -74,6 +92,55 @@ func _on_level_reset():
 	velocity = Vector2.ZERO
 	visible = true
 	$EnemyHurtbox.monitorable = true
+	call_deferred("_apply_level_visuals")
+
+func _apply_level_visuals() -> void:
+	if sprite == null or _base_sprite_frames == null:
+		return
+
+	var target_frames: SpriteFrames = _base_sprite_frames
+	if GameState.current_level == 4:
+		target_frames = _get_level4_sprite_frames()
+
+	if sprite.sprite_frames != target_frames:
+		sprite.sprite_frames = target_frames
+
+	var current_animation := sprite.animation
+	if current_animation != "" and sprite.sprite_frames.has_animation(current_animation):
+		sprite.play(current_animation)
+	
+func _get_level4_sprite_frames() -> SpriteFrames:
+	if _level4_sprite_frames != null:
+		return _level4_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "break_shield", BREAK_SHEET_4)
+	_replace_animation_frames(frames, "damaged", DAMAGED_SHEET_4)
+	_replace_animation_frames(frames, "damaged_idle", DAMAGED_IDLE_SHEET_4)
+	_replace_animation_frames(frames, "damaged_stun", DAMAGED_STUN_SHEET_4)
+	_replace_animation_frames(frames, "fainted", FAINTED_SHEET_4)
+	_replace_animation_frames(frames, "revive", REVIVE_SHEET_4)
+	_replace_animation_frames(frames, "shield", SHIELD_SHEET_4)
+	_replace_animation_frames(frames, "shield_idle", SHIELD_IDLE_SHEET_4)
+	_replace_animation_frames(frames, "shield_stun", SHIELD_STUN_SHEET_4)
+
+	_level4_sprite_frames = frames
+	return _level4_sprite_frames
+
+func _replace_animation_frames(frames: SpriteFrames, animation_name: StringName, source_texture: Texture2D) -> void:
+	if frames == null or source_texture == null or not frames.has_animation(animation_name):
+		return
+
+	var frame_count := frames.get_frame_count(animation_name)
+	for frame_index in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = source_texture
+		atlas.region = Rect2(frame_index * 64, 0, 64, 64)
+		var frame_duration := _base_sprite_frames.get_frame_duration(animation_name, frame_index)
+		frames.set_frame(animation_name, frame_index, atlas, frame_duration)
 
 func _enter_state(new_state: State) -> void:
 	current_state = new_state
