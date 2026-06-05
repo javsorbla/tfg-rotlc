@@ -501,13 +501,13 @@ shape = SubResource("RectangleShape2D_w1h6r")
 position = Vector2(2325, -1516)
 
 [node name="OrbeDeLuz2" parent="Entorno" instance=ExtResource("12_e47pw")]
-position = Vector2(4129, -2996)
+position = Vector2(4126, -2544)
 
 [node name="OrbeDeLuz3" parent="Entorno" instance=ExtResource("12_e47pw")]
 position = Vector2(4439, -3939)
 
 [node name="GeneradorPinchos" parent="." instance=ExtResource("6_kmi3x")]
-position = Vector2(2739, -2372)
+position = Vector2(2739, -2362)
 escena_pincho = ExtResource("7_k3ue5")
 ancho_generacion = 373.0
 separacion_pinchos = 12.0
