@@ -17,7 +17,6 @@ func _physics_process(delta):
 	if global_position.y - posicion_inicial_y >= distancia_maxima:
 		queue_free()
 
-# NUEVA FUNCIÓN: Ahora detectamos otras ÁREAS (como tu Hurtbox)
 func _on_area_entered(area):
 	# Comprobamos si el área que el pincho ha tocado tiene el grupo "player_hurtbox"
 	if area.is_in_group("player_hurtbox"):
@@ -33,6 +32,5 @@ func _on_area_entered(area):
 		# El pincho se destruye tras pinchar al jugador
 		queue_free()
 
-# Para que se borre si cae al vacío
 func _on_visible_on_screen_notifier_2d_screen_exited():
 	queue_free()

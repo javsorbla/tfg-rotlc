@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://byxavl4uwhmx2"
-path="res://.godot/imported/vacio_idle_sheet.png-ff853d90c829cba4b3722b676badc244.ctex"
+uid="uid://fjl0j3lfp36g"
+path="res://.godot/imported/antorcha_suelo_sheet.png-a3b8dd49531efc6ad58e73d8f7c859b4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/vacio/vacio_idle_sheet.png"
-dest_files=["res://.godot/imported/vacio_idle_sheet.png-ff853d90c829cba4b3722b676badc244.ctex"]
+source_file="res://assets/environment/antorcha_suelo_sheet.png"
+dest_files=["res://.godot/imported/antorcha_suelo_sheet.png-a3b8dd49531efc6ad58e73d8f7c859b4.ctex"]
 
 [params]
 

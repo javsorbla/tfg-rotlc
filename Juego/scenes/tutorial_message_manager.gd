@@ -19,6 +19,7 @@ signal advance_requested
 @export var intro_fade_out_duration: float = 0.5
 @export var zone_fade_in_duration: float = 0.3
 @export var zone_fade_out_duration: float = 0.3
+@export var pulse_enabled: bool = true
 
 var _default_offset: Vector2 = Vector2.ZERO
 
@@ -259,6 +260,9 @@ func _set_backdrop(visible: bool) -> void:
 
 func _trigger_pulse() -> void:
 	if pulse_node == null:
+		return
+	if not pulse_enabled:
+		pulse_node.visible = false
 		return
 	var mat: ShaderMaterial = pulse_node.material as ShaderMaterial
 	if mat == null:
