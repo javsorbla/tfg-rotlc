@@ -19,7 +19,7 @@
 [ext_resource type="PackedScene" uid="uid://r7eyivevh6jj" path="res://scenes/enviroment/PlataformaRompiblePorNivel.tscn" id="13_m1a85"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="15_4xeyx"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="16_grtny"]
-[ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="18_vsa3d"]
+[ext_resource type="PackedScene" path="res://scenes/enviroment/ZonaJefe.tscn" id="18_vsa3d"]
 [ext_resource type="PackedScene" uid="uid://c0ogqogypgm2j" path="res://enemies/bosses/vacio/Vacio.tscn" id="19_hak7k"]
 [ext_resource type="Texture2D" uid="uid://isqq2irmto4w" path="res://assets/backgrounds/night/1.png" id="20_384sy"]
 
