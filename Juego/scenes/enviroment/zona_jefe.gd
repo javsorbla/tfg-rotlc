@@ -122,10 +122,14 @@ func on_boss_defeated():
 
 	GameState.mark_boss_room_cleared(_room_key)
 
-	if _music_was_changed and level_music != null:
-		ProjectMusicController.fade_out_duration = 1.5
-		ProjectMusicController.play_stream(level_music)
-		ProjectMusicController.fade_out_duration = 0.0
+	if _music_was_changed:
+		if level_music != null:
+			ProjectMusicController.fade_out_duration = 1.5
+			ProjectMusicController.play_stream(level_music)
+			ProjectMusicController.fade_out_duration = 0.0
+		elif is_instance_valid(ProjectMusicController.music_stream_player):
+			var tween := create_tween()
+			tween.tween_property(ProjectMusicController.music_stream_player, "volume_db", -80.0, 1.5)
 		_music_was_changed = false
 
 func _on_boss_defeated_signal(umbra_won: bool) -> void:

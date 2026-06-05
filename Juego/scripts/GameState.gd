@@ -878,6 +878,7 @@ func request_level_change(next_scene: String) -> void:
 	# persist current state before changing (small save)
 	save_game("level_change")
 	# change scene
+	ProjectMusicController.stop()
 	get_tree().change_scene(next_scene)
 
 
