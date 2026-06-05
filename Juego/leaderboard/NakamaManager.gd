@@ -140,6 +140,16 @@ func resume_run_timer(start_time: float) -> void:
 	_current_run["start_time"] = start_time
 
 
+func notify_death() -> void:
+	if _current_run["start_time"] > 0:
+		var segment := int(Time.get_unix_time_from_system() - _current_run["start_time"])
+		_campaign_stats["total_time"] += max(0, segment)
+	_campaign_stats["total_deaths"] += 1
+	_persist_campaign_stats()
+	_current_run["start_time"] = Time.get_unix_time_from_system()
+	_current_run["deaths"] += 1
+
+
 func complete_run(success: bool) -> void:
 	if _current_run.is_empty() or _current_run["level_id"] == -1:
 		return
@@ -180,6 +190,7 @@ func complete_run(success: bool) -> void:
 func _write_record(leaderboard_id: String, score: int, metadata: Dictionary) -> void:
 	var meta_json := JSON.stringify(metadata)
 	if not has_authenticated:
+		_update_local_best(leaderboard_id, score, metadata)
 		_enqueue_submission({"id": leaderboard_id, "score": score, "metadata_json": meta_json})
 		return
 	var result = await client.write_leaderboard_record_async(

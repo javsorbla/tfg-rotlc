@@ -36,19 +36,20 @@ var _current_metric: int = 0
 var _records_cache: Array = []
 var _metrics_by_tab: Dictionary = {}
 
+
 @onready var records_list: VBoxContainer = %RecordsList
 @onready var player_position_label: Label = %PlayerPositionLabel
 @onready var loading_label: Label = %LoadingLabel
 @onready var error_label: Label = %ErrorLabel
 @onready var offline_banner: Label = %OfflineBanner
-@onready var sidebar_buttons: VBoxContainer = %SidebarButtons
-@onready var metric_row: HBoxContainer = %MetricRow
+@onready var tab_buttons: HBoxContainer = %TabButtons      
+@onready var metric_sidebar: VBoxContainer = %MetricSidebar
 
 
 func _ready() -> void:
 	_build_metrics_dict()
-	_build_sidebar()
-	_build_metric_row(SIDEBAR_TABS[0].id)
+	_build_tab_row()
+	_build_metric_sidebar(SIDEBAR_TABS[0].id)
 	offline_banner.hide()
 	MenuProgressionHelper.apply_progress_to_node(self)
 	_refresh()
@@ -60,26 +61,27 @@ func _build_metrics_dict() -> void:
 		_metrics_by_tab["level_%d" % i] = _make_level_metrics(i)
 
 
-func _build_sidebar() -> void:
+# Construye la fila horizontal de tabs (niveles)
+func _build_tab_row() -> void:
 	var group: ButtonGroup = ButtonGroup.new()
 	for i in range(SIDEBAR_TABS.size()):
 		var tab: Dictionary = SIDEBAR_TABS[i]
 		var btn: Button = Button.new()
 		btn.text = tab.label
-		btn.size_flags_horizontal = SIZE_EXPAND_FILL
 		btn.toggle_mode = true
 		btn.button_group = group
-		btn.clip_text = false  # evita que corte el texto
-		btn.custom_minimum_size = Vector2(0, 32) 
-		btn.pressed.connect(_on_sidebar_tab_pressed.bind(i))
-		sidebar_buttons.add_child(btn)
+		btn.clip_text = false
+		btn.custom_minimum_size = Vector2(80, 32)
+		btn.pressed.connect(_on_tab_pressed.bind(i))
+		tab_buttons.add_child(btn)
 
-	if sidebar_buttons.get_child_count() > 0:
-		sidebar_buttons.get_child(0).button_pressed = true
+	if tab_buttons.get_child_count() > 0:
+		tab_buttons.get_child(0).button_pressed = true
 
 
-func _build_metric_row(tab_id: String) -> void:
-	for child in metric_row.get_children():
+# Construye la columna vertical de métricas (sidebar izquierda)
+func _build_metric_sidebar(tab_id: String) -> void:
+	for child in metric_sidebar.get_children():
 		child.queue_free()
 
 	var metrics: Array = _metrics_by_tab.get(tab_id, [])
@@ -90,12 +92,14 @@ func _build_metric_row(tab_id: String) -> void:
 		btn.text = m.label
 		btn.toggle_mode = true
 		btn.button_group = group
-		btn.custom_minimum_size = Vector2(60, 0)
+		btn.size_flags_horizontal = SIZE_EXPAND_FILL
+		btn.clip_text = false
+		btn.custom_minimum_size = Vector2(0, 32)
 		btn.pressed.connect(_on_metric_pressed.bind(i))
-		metric_row.add_child(btn)
+		metric_sidebar.add_child(btn)
 
-	if metric_row.get_child_count() > 0:
-		metric_row.get_child(0).button_pressed = true
+	if metric_sidebar.get_child_count() > 0:
+		metric_sidebar.get_child(0).button_pressed = true
 		_current_metric = 0
 	MenuProgressionHelper.apply_progress_to_node(self)
 
@@ -194,7 +198,7 @@ func _populate_records(records: Array) -> void:
 
 		var rank: Label = Label.new()
 		rank.text = str(i + 1) + "."
-		rank.custom_minimum_size = Vector2(40, 0)
+		rank.custom_minimum_size = Vector2(36, 0)
 		rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 		var name_label: Label = Label.new()
@@ -205,11 +209,13 @@ func _populate_records(records: Array) -> void:
 			display_name = NakamaManager.nickname if is_me and not NakamaManager.nickname.is_empty() else "Jugador#" + owner_id.left(6)
 		name_label.text = display_name
 		name_label.size_flags_horizontal = SIZE_EXPAND_FILL
+		name_label.clip_text = true
 
 		var value_label: Label = Label.new()
 		value_label.text = _format_value(metric_data, record)
 		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		value_label.custom_minimum_size = Vector2(100, 0)
+		value_label.size_flags_horizontal = SIZE_SHRINK_END
+		value_label.custom_minimum_size = Vector2(80, 0)
 
 		row.add_child(rank)
 		row.add_child(name_label)
@@ -241,7 +247,7 @@ func _check_player_position() -> void:
 		if record.owner_id == my_id:
 			var pos: int = int(record.rank) + 1
 			var value_str := _format_value(metric_data, record)
-			player_position_label.text = "Tu puesto: #" + str(pos) + " - " + value_str
+			player_position_label.text = "Tu puesto: #" + str(pos) + " — " + value_str
 			player_position_label.show()
 			found = true
 			break
@@ -251,10 +257,10 @@ func _check_player_position() -> void:
 		player_position_label.show()
 
 
-func _on_sidebar_tab_pressed(index: int) -> void:
+func _on_tab_pressed(index: int) -> void:
 	_current_sidebar_tab = index
 	var tab_id: String = SIDEBAR_TABS[index].id
-	_build_metric_row(tab_id)
+	_build_metric_sidebar(tab_id)
 	_refresh()
 
 
@@ -283,7 +289,7 @@ func _show_offline_records(metric_data: Dictionary) -> void:
 
 	var rank: Label = Label.new()
 	rank.text = "1."
-	rank.custom_minimum_size = Vector2(40, 0)
+	rank.custom_minimum_size = Vector2(36, 0)
 	rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	var name_label: Label = Label.new()
@@ -293,7 +299,8 @@ func _show_offline_records(metric_data: Dictionary) -> void:
 	var value_label: Label = Label.new()
 	value_label.text = _format_value(metric_data, local)
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	value_label.custom_minimum_size = Vector2(100, 0)
+	value_label.size_flags_horizontal = SIZE_SHRINK_END
+	value_label.custom_minimum_size = Vector2(80, 0)
 
 	row.add_child(rank)
 	row.add_child(name_label)

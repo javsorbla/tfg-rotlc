@@ -60,8 +60,7 @@ func set_death_callback(callback: Callable) -> void:
 
 func die():
 	emit_signal("died", get_parent())
-	NakamaManager._current_run["deaths"] += 1
-	NakamaManager.complete_run(false)
+	NakamaManager.notify_death()
 	_invoke_death_callback()
 	if auto_reset:
 		_reset_player()
