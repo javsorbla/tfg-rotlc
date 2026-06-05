@@ -6,6 +6,8 @@ func _ready() -> void:
 	MenuProgressionHelper.apply_progress_to_node(self)
 
 func show() -> void:
+	if ProjectMusicController.has_method("stop"):
+		ProjectMusicController.stop()
 	# Asegurar que el juego esté pausado antes de mostrar
 	print("[DeathScreen] show() called, current paused state: ", get_tree().paused)
 	if not get_tree().paused:
