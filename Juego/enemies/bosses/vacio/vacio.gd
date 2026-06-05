@@ -1,12 +1,15 @@
 extends Node2D
 
 # --- CONSTANTES ---
-const MAX_HEALTH: int = 3
+const MAX_HEALTH: int = 30
 const DAMAGE: int = 1
 const CHASE_SPEED_P1: float = 65.0 
 const CHASE_SPEED_P2: float = 95.0 
 const DAMAGE_FLASH_TIME: float = 0.08
-const HEIGHT_OFFSET: float = -30.0 
+const HEIGHT_OFFSET: float = -30.0
+const HITS_UNTIL_ORB: int = 7
+const MAX_ACTIVE_ORBS: int = 3
+const ORBE_LUZ_SCENE = preload("res://objects/OrbeDeLuz.tscn") 
 
 # --- ESTADOS ---
 enum State { IDLE, CHASE, EXPAND, VANISH, APPEAR, AOE, SPIKE_RAIN, SHOOT, PHASE_TRANSITION, DYING, DEAD }
@@ -45,6 +48,8 @@ var aoe_frame_9_shown: bool = false
 
 var damage_flash_tween: Tween = null
 var action_tween: Tween = null
+
+var hits_received: int = 0
 
 var dying_center: Vector2 = Vector2.ZERO
 var dying_phrases: Array = [
@@ -191,6 +196,7 @@ func _on_level_reset() -> void:
 	dying_phrase_index = 0
 	dying_phrase_timer = 0.0
 	dying_reached_center = false
+	hits_received = 0
 	_enter_state(State.IDLE)
 
 
@@ -516,6 +522,10 @@ func take_damage(amount: int) -> void:
 	if current_state in [State.VANISH, State.APPEAR, State.AOE] and not normal_hurtbox.monitoring:
 		return
 	current_health -= amount
+	hits_received += 1
+	if hits_received >= HITS_UNTIL_ORB:
+		_spawn_healing_orb()
+		hits_received = 0
 	if current_health <= 10 and not in_phase_2:
 		_enter_state(State.PHASE_TRANSITION)
 		return
@@ -568,6 +578,24 @@ func _spawn_bola() -> void:
 
 	var target_pos = player.global_position + Vector2(0, HEIGHT_OFFSET)
 	bola.direction = (target_pos - global_position).normalized()
+
+
+func _spawn_healing_orb() -> void:
+	if ORBE_LUZ_SCENE == null:
+		return
+
+	var active_orbs := get_tree().get_nodes_in_group("light_orb")
+	if active_orbs.size() >= MAX_ACTIVE_ORBS:
+		return
+
+	var scene_root = get_tree().root.get_child(0)
+	if scene_root == null:
+		return
+
+	var orbe = ORBE_LUZ_SCENE.instantiate()
+	orbe.is_spawned = true
+	orbe.global_position = global_position + Vector2(randf_range(-30, 30), -50)
+	scene_root.call_deferred("add_child", orbe)
 
 
 func _state_shoot(delta: float) -> void:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=4 uid="uid://bx25imn2lrp2c"]
+[gd_scene load_steps=42 format=4 uid="uid://bx25imn2lrp2c"]
 
 [ext_resource type="Script" path="res://scenes/torre_del_vacio.gd" id="1_0v4l0"]
 [ext_resource type="Texture2D" uid="uid://breoi48iiv0rb" path="res://assets/tilesets/torre_vacio/torre-vacio-tileset.png" id="2_006yg"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://ednw5et05gxf" path="res://enemies/common/centinela_marfil/CentinelaMarfil.tscn" id="7_q6dpq"]
 [ext_resource type="PackedScene" uid="uid://b7kj5rrupn1ou" path="res://enemies/common/caminante_helado/CaminanteHelado.tscn" id="9_a1l6b"]
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="11_740x8"]
+[ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="12_e47pw"]
 [ext_resource type="PackedScene" uid="uid://r7eyivevh6jj" path="res://scenes/enviroment/PlataformaRompiblePorNivel.tscn" id="13_m1a85"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="15_4xeyx"]
 [ext_resource type="PackedScene" uid="uid://dnmgjarcbr16k" path="res://scenes/enviroment/FuegoMorado.tscn" id="15_5ajew"]
@@ -510,6 +511,15 @@ color_zona = Color(0.562116, 0.787787, 0.960816, 1)
 position = Vector2(863, -203)
 shape = SubResource("RectangleShape2D_w1h6r")
 
+[node name="OrbeDeLuz" parent="Entorno" instance=ExtResource("12_e47pw")]
+position = Vector2(2325, -1516)
+
+[node name="OrbeDeLuz2" parent="Entorno" instance=ExtResource("12_e47pw")]
+position = Vector2(4129, -2996)
+
+[node name="OrbeDeLuz3" parent="Entorno" instance=ExtResource("12_e47pw")]
+position = Vector2(4439, -3939)
+
 [node name="GeneradorPinchos" parent="." instance=ExtResource("6_kmi3x")]
 position = Vector2(2739, -2372)
 escena_pincho = ExtResource("7_k3ue5")
@@ -522,7 +532,7 @@ separacion_pinchos = 12.0
 zoom = Vector2(1, 1)
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("15_4xeyx")]
-position = Vector2(5041, -3912)
+position = Vector2(22, -32)
 collision_mask = 5
 
 [node name="Sync" type="Node" parent="."]
