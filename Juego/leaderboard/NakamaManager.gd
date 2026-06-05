@@ -3,11 +3,15 @@ extends Node
 # =========================
 # CONFIG SERVER
 # =========================
-const SCHEME := "http"
-const HOST := "127.0.0.1"
-const PORT := 7350
 const SERVER_KEY := "defaultkey"
 const AUTH_TIMEOUT_SECONDS := 10
+const NETWORK_CONFIG_PATH := "user://network_config.json"
+
+var _network_config := {
+	"scheme": "http",
+	"host": "64.226.80.31",
+	"port": 7350,
+}
 
 # =========================
 # NAKAMA CORE
@@ -64,6 +68,7 @@ var _local_best_runs := {}
 # LIFECYCLE
 # =========================
 func _ready():
+	_load_network_config()
 	device_id = OS.get_unique_id().trim_prefix("{").trim_suffix("}")
 	if has_node("/root/GameState"):
 		var gs = get_node("/root/GameState")
@@ -80,11 +85,33 @@ func _ready():
 	await authenticate()
 	_flush_pending_queue()
 
+func _load_network_config() -> void:
+	if FileAccess.file_exists(NETWORK_CONFIG_PATH):
+		var file := FileAccess.open(NETWORK_CONFIG_PATH, FileAccess.READ)
+		if file:
+			var parsed = JSON.parse_string(file.get_as_text())
+			file.close()
+			if typeof(parsed) == TYPE_DICTIONARY:
+				for key in _network_config.keys():
+					if parsed.has(key):
+						_network_config[key] = parsed[key]
+				print("Network config loaded:", _network_config["host"])
+				return
+	_save_network_config()
+
+
+func _save_network_config() -> void:
+	var file := FileAccess.open(NETWORK_CONFIG_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(_network_config, "\t"))
+		file.close()
+
+
 # =========================
 # AUTH
 # =========================
 func authenticate():
-	client = Nakama.create_client(SERVER_KEY, HOST, PORT, SCHEME, AUTH_TIMEOUT_SECONDS)
+	client = Nakama.create_client(SERVER_KEY, _network_config["host"], _network_config["port"], _network_config["scheme"], AUTH_TIMEOUT_SECONDS)
 
 	var nakama_node := get_node("/root/Nakama")
 	var adapter: NakamaHTTPAdapter = nakama_node.get_client_adapter()

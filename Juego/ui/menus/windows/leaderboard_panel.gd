@@ -12,7 +12,7 @@ const SIDEBAR_TABS := [
 const CAMPAIGN_METRICS := [
 	{"id": "campaign_score", "label": "Puntuación", "meta_key": "", "format": "score"},
 	{"id": "campaign_time", "label": "Tiempo", "meta_key": "total_time", "format": "time"},
-	{"id": "campaign_kills", "label": "Enemigos", "meta_key": "total_kills", "format": "int"},
+	{"id": "campaign_kills", "label": "Eliminaciones", "meta_key": "total_kills", "format": "int"},
 	{"id": "campaign_deaths", "label": "Muertes", "meta_key": "total_deaths", "format": "int"},
 	{"id": "campaign_damage_dealt", "label": "Daño infligido", "meta_key": "total_damage_dealt", "format": "int"},
 	{"id": "campaign_damage_received", "label": "Daño recibido", "meta_key": "total_damage_taken", "format": "int"},
@@ -24,7 +24,7 @@ static func _make_level_metrics(level_id: int) -> Array:
 	return [
 		{"id": p + "_score", "label": "Puntuación", "meta_key": "", "format": "score"},
 		{"id": p + "_time", "label": "Tiempo", "meta_key": "duration", "format": "time"},
-		{"id": p + "_kills", "label": "Enemigos", "meta_key": "enemies_killed", "format": "int"},
+		{"id": p + "_kills", "label": "Eliminaciones", "meta_key": "enemies_killed", "format": "int"},
 		{"id": p + "_deaths", "label": "Muertes", "meta_key": "deaths", "format": "int"},
 		{"id": p + "_damage_dealt", "label": "Daño infligido", "meta_key": "damage_dealt", "format": "int"},
 		{"id": p + "_damage_received", "label": "Daño recibido", "meta_key": "damage_taken", "format": "int"},
@@ -205,8 +205,10 @@ func _populate_records(records: Array) -> void:
 		var owner_id: String = record.owner_id if record.owner_id else ""
 		var display_name := str(record.username)
 		var is_me := owner_id == my_id
-		if display_name.is_empty() or display_name == owner_id:
-			display_name = NakamaManager.nickname if is_me and not NakamaManager.nickname.is_empty() else "Jugador#" + owner_id.left(6)
+		if is_me and not NakamaManager.nickname.is_empty():
+			display_name = NakamaManager.nickname
+		elif display_name.is_empty() or display_name == owner_id or _is_uuid_like(display_name):
+			display_name = "Jugador#" + owner_id.left(6)
 		name_label.text = display_name
 		name_label.size_flags_horizontal = SIZE_EXPAND_FILL
 		name_label.clip_text = true
@@ -272,6 +274,17 @@ func _on_metric_pressed(index: int) -> void:
 func _clear_records_list() -> void:
 	for child in records_list.get_children():
 		child.queue_free()
+
+
+static func _is_uuid_like(s: String) -> bool:
+	if s.length() == 36 and s[8] == '-' and s[13] == '-' and s[18] == '-' and s[23] == '-':
+		return true
+	if s.length() >= 32:
+		for c in s:
+			if "0123456789abcdefABCDEF".find(c) == -1:
+				return false
+		return true
+	return false
 
 
 func _show_offline_records(metric_data: Dictionary) -> void:
