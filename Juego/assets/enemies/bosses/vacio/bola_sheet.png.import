@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://byxavl4uwhmx2"
-path="res://.godot/imported/vacio_idle_sheet.png-ff853d90c829cba4b3722b676badc244.ctex"
+uid="uid://c88ty50mqpxlb"
+path="res://.godot/imported/bola_sheet.png-a2a80bad61c483ef11e53f39b72ff819.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/vacio/vacio_idle_sheet.png"
-dest_files=["res://.godot/imported/vacio_idle_sheet.png-ff853d90c829cba4b3722b676badc244.ctex"]
+source_file="res://assets/enemies/bosses/vacio/bola_sheet.png"
+dest_files=["res://.godot/imported/bola_sheet.png-a2a80bad61c483ef11e53f39b72ff819.ctex"]
 
 [params]
 

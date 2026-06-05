@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://carbscgs8x4q7"
-path="res://.godot/imported/vacio2-limpio-reducido.png-a4c3ddf39c5c9095f8b5d29afa82b692.ctex"
+uid="uid://bqqfqwbpop4p0"
+path="res://.godot/imported/dead_sheet_1.png-628bafcf2968f66967b0a1ff110d3e3c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/bosses/vacio/vacio2-limpio-reducido.png"
-dest_files=["res://.godot/imported/vacio2-limpio-reducido.png-a4c3ddf39c5c9095f8b5d29afa82b692.ctex"]
+source_file="res://assets/enemies/bosses/vacio/dead_sheet_1.png"
+dest_files=["res://.godot/imported/dead_sheet_1.png-628bafcf2968f66967b0a1ff110d3e3c.ctex"]
 
 [params]
 
