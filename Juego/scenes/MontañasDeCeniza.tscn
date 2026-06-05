@@ -591,6 +591,72 @@ position = Vector2(151, 167)
 [node name="Antorcha" parent="Entorno" instance=ExtResource("12_8y1mn")]
 position = Vector2(401, -23)
 
+[node name="Antorcha2" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(914, -30)
+
+[node name="Antorcha3" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(1179, -33)
+
+[node name="Antorcha4" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(1439, -32)
+
+[node name="Antorcha5" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(1663, 748)
+
+[node name="Antorcha6" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(2020, 743)
+
+[node name="Antorcha7" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(2418, 746)
+
+[node name="Antorcha8" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(2724, 748)
+
+[node name="Antorcha9" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(2856, 665)
+
+[node name="Antorcha10" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(3235, 665)
+
+[node name="Antorcha11" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(3477, 440)
+
+[node name="Antorcha12" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(3683, 380)
+
+[node name="Antorcha13" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(3858, 380)
+
+[node name="Antorcha14" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(4095, 443)
+
+[node name="Antorcha15" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(4215, 583)
+
+[node name="Antorcha16" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(4470, 584)
+
+[node name="Antorcha17" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(4705, 584)
+
+[node name="Antorcha18" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(5001, 582)
+
+[node name="Antorcha19" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(5357, 575)
+
+[node name="Antorcha20" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(5466, 459)
+
+[node name="Antorcha21" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(5756, 392)
+
+[node name="Antorcha22" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(6085, 394)
+
+[node name="Antorcha23" parent="Entorno" instance=ExtResource("12_8y1mn")]
+position = Vector2(6277, 391)
+
 [node name="ColosoCeniza" parent="." instance=ExtResource("14_38xxh")]
 position = Vector2(12692, 2202)
 
@@ -706,6 +772,28 @@ shadow_enabled = true
 [editable path="Entorno/ZonaJefe"]
 [editable path="Entorno/ZonaJefe2"]
 [editable path="Entorno/Antorcha"]
+[editable path="Entorno/Antorcha2"]
+[editable path="Entorno/Antorcha3"]
+[editable path="Entorno/Antorcha4"]
+[editable path="Entorno/Antorcha5"]
+[editable path="Entorno/Antorcha6"]
+[editable path="Entorno/Antorcha7"]
+[editable path="Entorno/Antorcha8"]
+[editable path="Entorno/Antorcha9"]
+[editable path="Entorno/Antorcha10"]
+[editable path="Entorno/Antorcha11"]
+[editable path="Entorno/Antorcha12"]
+[editable path="Entorno/Antorcha13"]
+[editable path="Entorno/Antorcha14"]
+[editable path="Entorno/Antorcha15"]
+[editable path="Entorno/Antorcha16"]
+[editable path="Entorno/Antorcha17"]
+[editable path="Entorno/Antorcha18"]
+[editable path="Entorno/Antorcha19"]
+[editable path="Entorno/Antorcha20"]
+[editable path="Entorno/Antorcha21"]
+[editable path="Entorno/Antorcha22"]
+[editable path="Entorno/Antorcha23"]
 [editable path="Killzones/ZonaMuerte"]
 [editable path="Killzones/ZonaMuerte2"]
 [editable path="Killzones/ZonaMuerte3"]
