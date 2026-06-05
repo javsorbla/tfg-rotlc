@@ -1,4 +1,4 @@
-[gd_scene load_steps=100 format=4 uid="uid://dc8npb5o6dmm3"]
+[gd_scene load_steps=102 format=4 uid="uid://dc8npb5o6dmm3"]
 
 [ext_resource type="Script" path="res://scenes/campos_de_zafiro.gd" id="1_1fbct"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="1_5ebei"]
@@ -24,6 +24,8 @@
 [ext_resource type="Texture2D" uid="uid://qisdegip77v1" path="res://assets/backgrounds/campos_zafiro/Plan 3.png" id="21_plan3"]
 [ext_resource type="Texture2D" uid="uid://o46j7ocrndew" path="res://assets/backgrounds/campos_zafiro/Plan 2.png" id="22_plan2"]
 [ext_resource type="Texture2D" uid="uid://devc7nllhf3xj" path="res://assets/backgrounds/campos_zafiro/Plan 1.png" id="23_plan1"]
+[ext_resource type="AudioStream" uid="uid://busx5svs6hfwg" path="res://music/campos_zafiro.ogg" id="24_music_campos"]
+[ext_resource type="AudioStream" uid="uid://8e53o74wn4m6" path="res://music/umbra.ogg" id="25_music_umbra"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k56g7"]
 texture = ExtResource("1_kj2pu")
@@ -702,6 +704,7 @@ position = Vector2(284, -123)
 
 [node name="ZonaJefe" parent="Entorno" groups=["boss_room"] instance=ExtResource("8_mqecc")]
 position = Vector2(12909, -1796)
+level_music = ExtResource("24_music_campos")
 
 [node name="CollisionShape2D" parent="Entorno/ZonaJefe/Trigger" index="0"]
 position = Vector2(62.5, -142.5)
@@ -735,6 +738,8 @@ position = Vector2(315, 13)
 
 [node name="ZonaJefe2" parent="Entorno" instance=ExtResource("8_mqecc")]
 position = Vector2(6929, -740)
+boss_music = ExtResource("25_music_umbra")
+level_music = ExtResource("24_music_campos")
 
 [node name="Trigger" parent="Entorno/ZonaJefe2" index="0"]
 position = Vector2(-19, 5)
