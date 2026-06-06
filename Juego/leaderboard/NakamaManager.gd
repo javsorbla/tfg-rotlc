@@ -32,6 +32,7 @@ var has_authenticated := false
 var _current_run := {
 	"level_id": -1,
 	"start_time": 0,
+	"total_level_time": 0,
 	"deaths": 0,
 	"enemies_killed": 0,
 	"damage_dealt": 0,
@@ -150,6 +151,7 @@ func start_run(level_id: int):
 	_current_run = {
 		"level_id": level_id,
 		"start_time": Time.get_unix_time_from_system(),
+		"total_level_time": 0,
 		"deaths": 0,
 		"enemies_killed": 0,
 		"damage_dealt": 0,
@@ -159,6 +161,7 @@ func start_run(level_id: int):
 	}
 	if old_run["level_id"] == level_id and old_run["start_time"] > 0:
 		_current_run["start_time"] = old_run["start_time"]
+		_current_run["total_level_time"] = old_run["total_level_time"]
 		_current_run["deaths"] = old_run["deaths"]
 		_current_run["enemies_killed"] = old_run["enemies_killed"]
 		_current_run["damage_dealt"] = old_run["damage_dealt"]
@@ -177,6 +180,7 @@ func notify_death() -> void:
 	if _current_run["start_time"] > 0:
 		var segment := int(Time.get_unix_time_from_system() - _current_run["start_time"])
 		_campaign_stats["total_time"] += max(0, segment)
+		_current_run["total_level_time"] += max(0, segment)
 	_campaign_stats["total_deaths"] += 1
 	_persist_campaign_stats()
 	_current_run["start_time"] = Time.get_unix_time_from_system()
@@ -188,12 +192,13 @@ func complete_run(success: bool) -> void:
 		return
 
 	var end_time = Time.get_unix_time_from_system()
-	var duration = int(end_time - _current_run["start_time"])
+	var last_segment = int(end_time - _current_run["start_time"])
+	var total_duration = _current_run["total_level_time"] + max(0, last_segment)
 	var level_id = _current_run["level_id"]
 
 	var metadata = {
 		"level_id": level_id,
-		"duration": duration,
+		"duration": total_duration,
 		"deaths": _current_run["deaths"],
 		"enemies_killed": _current_run["enemies_killed"],
 		"damage_dealt": _current_run["damage_dealt"],
@@ -205,10 +210,12 @@ func complete_run(success: bool) -> void:
 
 	# Per-level leaderboards only on completed runs
 	if success:
-		await _submit_level_leaderboards(level_id, duration, metadata)
+		await _submit_level_leaderboards(level_id, total_duration, metadata)
 
-	# Always accumulate to campaign stats
-	_accumulate_to_campaign(metadata)
+	# Always accumulate to campaign stats (use last_segment for time to avoid double-count)
+	var campaign_meta = metadata.duplicate()
+	campaign_meta["duration"] = max(0, last_segment)
+	_accumulate_to_campaign(campaign_meta)
 
 	# Final level → submit campaign leaderboards
 	if success and level_id == 4:
@@ -238,16 +245,21 @@ func _write_record(leaderboard_id: String, score: int, metadata: Dictionary) -> 
 		print("Leaderboard submitted:", leaderboard_id)
 
 
-func _submit_level_leaderboards(level_id: int, duration: int, metadata: Dictionary) -> void:
-	var score = compute_global_score(duration)
+func _submit_level_leaderboards(level_id: int, total_duration: int, metadata: Dictionary) -> void:
+	var score = compute_global_score(total_duration)
 	var level_prefix = "level_%d" % level_id
+	var score_lb_id = level_prefix + "_score"
 
-	# Composite score
-	await _write_record(level_prefix + "_score", score, metadata)
+	# Only submit if composite score improved
+	var existing = get_local_best_for(score_lb_id)
+	if not existing.is_empty() and score <= existing.get("score", 0):
+		print("Score not improved for ", score_lb_id, " — skipping level leaderboards")
+		return
 
-	# Metric entries
+	await _write_record(score_lb_id, score, metadata)
+
 	var entries = [
-		{"id": level_prefix + "_time", "score": max(1, int(1000000.0 / max(duration, 1)))},
+		{"id": level_prefix + "_time", "score": max(1, int(1000000.0 / max(total_duration, 1)))},
 		{"id": level_prefix + "_kills", "score": metadata["enemies_killed"]},
 		{"id": level_prefix + "_deaths", "score": max(0, 1000 - metadata["deaths"])},
 		{"id": level_prefix + "_damage_dealt", "score": metadata["damage_dealt"]},
@@ -266,6 +278,12 @@ func submit_campaign_leaderboards() -> void:
 	_campaign_stats["campaign_completed"] = true
 
 	var campaign_score_val: int = max(1, _campaign_stats["total_kills"] * 50 - _campaign_stats["total_deaths"] * 100 + _campaign_stats["total_prism_cores"] * 500)
+
+	# Only submit if campaign score improved
+	var existing = get_local_best_for("campaign_score")
+	if not existing.is_empty() and campaign_score_val <= existing.get("score", 0):
+		print("Campaign score not improved — skipping campaign leaderboards")
+		return
 
 	var entries = [
 		{"id": "campaign_score", "score": campaign_score_val},
@@ -406,6 +424,7 @@ func _reset_current_run() -> void:
 	_current_run = {
 		"level_id": -1,
 		"start_time": 0,
+		"total_level_time": 0,
 		"deaths": 0,
 		"enemies_killed": 0,
 		"damage_dealt": 0,
