@@ -13,6 +13,7 @@ const PULL_RISE_SPEED: float = 30.0
 const LAUNCH_SPEED: float = 400.0
 const LAUNCH_DURATION: float = 0.5
 const MAX_PULL_TIME: float = 2.0
+const HURACAN_SOUND := preload("res://music/enemies/bosses/tempestad_dorada/huracan.ogg")
 
 @onready var sprite = $AnimatedSprite2D
 @onready var collision = $CollisionPolygon2D
@@ -37,6 +38,7 @@ var room_left_limit: float = -10000.0
 var room_right_limit: float = 10000.0
 
 var luz: PointLight2D
+var sfx_player: AudioStreamPlayer
 
 func _ready():
 	add_to_group("hurricane")
@@ -49,6 +51,14 @@ func _ready():
 	active = false
 	player = get_tree().get_first_node_in_group("player")
 	sprite.animation_finished.connect(_on_sprite_animation_finished)
+	
+	sfx_player = AudioStreamPlayer.new()
+	sfx_player.name = "HuracanSfx"
+	sfx_player.stream = HURACAN_SOUND
+	sfx_player.bus = &"EFX"
+	sfx_player.volume_db = 0.0
+	add_child(sfx_player)
+	
 	_start_attack_sequence()
 	
 	luz = PointLight2D.new()
@@ -78,6 +88,7 @@ func _start_attack_sequence():
 	await get_tree().create_timer(WARNING_TIME).timeout
 	active = true
 	sprite.play("huracan")
+	sfx_player.play()
 	
 	var tween = create_tween()
 	tween.tween_property(luz, "energy", 1.5, 0.3).set_trans(Tween.TRANS_SINE)

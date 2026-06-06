@@ -2090,7 +2090,7 @@ position = Vector2(-65, -14)
 
 [node name="Umbra" parent="." groups=["boss"] instance=ExtResource("14_7tadn")]
 position = Vector2(5993, 1004)
-max_health = 1
+max_health = 20
 debug_model_indicator = false
 
 [node name="Sync" type="Node" parent="."]
