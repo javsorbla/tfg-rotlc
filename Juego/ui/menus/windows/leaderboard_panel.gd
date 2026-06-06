@@ -203,13 +203,25 @@ func _populate_records(records: Array) -> void:
 
 		var name_label: Label = Label.new()
 		var owner_id: String = record.owner_id if record.owner_id else ""
-		var display_name := str(record.username)
 		var is_me := owner_id == my_id
+
+		var nick_from_meta := ""
+		var meta_str := str(record.metadata) if record.metadata != null else ""
+		if not meta_str.is_empty():
+			var parsed = JSON.parse_string(meta_str)
+			if typeof(parsed) == TYPE_DICTIONARY and parsed.has("nickname"):
+				var nv = parsed["nickname"]
+				if typeof(nv) == TYPE_STRING and not (nv as String).is_empty():
+					nick_from_meta = nv
+
+		var raw_name := str(record.username)
 		if is_me and not NakamaManager.nickname.is_empty():
-			display_name = NakamaManager.nickname
-		elif display_name.is_empty() or display_name == owner_id or _is_uuid_like(display_name):
-			display_name = "Jugador#" + owner_id.left(6)
-		name_label.text = display_name
+			raw_name = NakamaManager.nickname
+		elif not nick_from_meta.is_empty():
+			raw_name = nick_from_meta
+		elif raw_name.is_empty() or raw_name == owner_id or _is_uuid_like(raw_name):
+			raw_name = "Jugador#" + owner_id.left(6)
+		name_label.text = raw_name
 		name_label.size_flags_horizontal = SIZE_EXPAND_FILL
 		name_label.clip_text = true
 
@@ -230,33 +242,42 @@ func _populate_records(records: Array) -> void:
 
 
 func _check_player_position() -> void:
-	if not NakamaManager.session:
+	if not NakamaManager.session or _records_cache.is_empty():
 		return
 
+	var my_id: String = NakamaManager.session.user_id
 	var tab_id: String = SIDEBAR_TABS[_current_sidebar_tab].id
 	var metrics: Array = _metrics_by_tab.get(tab_id, [])
 	var metric_data: Dictionary = metrics[_current_metric] if _current_metric < metrics.size() else {}
 	if metric_data.is_empty():
 		return
 
+	# Try to find player in cached top 50
+	for i in range(_records_cache.size()):
+		if _records_cache[i].owner_id == my_id:
+			var pos: int = i + 1
+			var value_str := _format_value(metric_data, _records_cache[i])
+			player_position_label.text = "Tu puesto: #" + str(pos) + " — " + value_str
+			player_position_label.show()
+			return
+
+	# Not in top 50 — get absolute rank via around_owner API
 	var around: Array = await NakamaManager.fetch_leaderboard_around_me(metric_data.id, 5)
 	if around.is_empty():
+		player_position_label.text = "Tu puesto: #—"
+		player_position_label.show()
 		return
 
-	var my_id: String = NakamaManager.session.user_id
-	var found: bool = false
 	for record in around:
 		if record.owner_id == my_id:
 			var pos: int = int(record.rank) + 1
 			var value_str := _format_value(metric_data, record)
 			player_position_label.text = "Tu puesto: #" + str(pos) + " — " + value_str
 			player_position_label.show()
-			found = true
-			break
+			return
 
-	if not found:
-		player_position_label.text = "Tu puesto: #—"
-		player_position_label.show()
+	player_position_label.text = "Tu puesto: #—"
+	player_position_label.show()
 
 
 func _on_tab_pressed(index: int) -> void:

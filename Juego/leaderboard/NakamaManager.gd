@@ -132,7 +132,7 @@ func authenticate():
 
 	if not nickname.is_empty():
 		print("Syncing pending nickname to server:", nickname)
-		var update_result = await client.update_account_async(session, nickname)
+		var update_result = await client.update_account_async(session, nickname, nickname)
 		if update_result.is_exception():
 			push_error("Failed to update username: " + str(update_result))
 
@@ -146,7 +146,7 @@ func authenticate():
 # RUN SYSTEM
 # =========================
 func start_run(level_id: int):
-	var preserved_start = _current_run["start_time"]
+	var old_run = _current_run.duplicate(true)
 	_current_run = {
 		"level_id": level_id,
 		"start_time": Time.get_unix_time_from_system(),
@@ -157,10 +157,16 @@ func start_run(level_id: int):
 		"skills_used": {},
 		"prism_cores": 0
 	}
-	if preserved_start > 0:
-		_current_run["start_time"] = preserved_start
+	if old_run["level_id"] == level_id and old_run["start_time"] > 0:
+		_current_run["start_time"] = old_run["start_time"]
+		_current_run["deaths"] = old_run["deaths"]
+		_current_run["enemies_killed"] = old_run["enemies_killed"]
+		_current_run["damage_dealt"] = old_run["damage_dealt"]
+		_current_run["damage_taken"] = old_run["damage_taken"]
+		_current_run["skills_used"] = old_run["skills_used"].duplicate(true)
+		_current_run["prism_cores"] = old_run["prism_cores"]
 
-	print("▶ Run started:", level_id)
+	print("▶ Run started:", level_id, " (preserved: ", old_run["level_id"] == level_id and old_run["start_time"] > 0, ")")
 
 
 func resume_run_timer(start_time: float) -> void:
@@ -193,7 +199,8 @@ func complete_run(success: bool) -> void:
 		"damage_dealt": _current_run["damage_dealt"],
 		"damage_taken": _current_run["damage_taken"],
 		"skills_used": _current_run["skills_used"],
-		"prism_cores": _current_run["prism_cores"]
+		"prism_cores": _current_run["prism_cores"],
+		"nickname": nickname
 	}
 
 	# Per-level leaderboards only on completed runs
@@ -270,8 +277,10 @@ func submit_campaign_leaderboards() -> void:
 		{"id": "campaign_prism_cores", "score": _campaign_stats["total_prism_cores"]},
 	]
 
+	var campaign_meta = _campaign_stats.duplicate()
+	campaign_meta["nickname"] = nickname
 	for entry in entries:
-		await _write_record(entry["id"], entry["score"], _campaign_stats)
+		await _write_record(entry["id"], entry["score"], campaign_meta)
 
 	_persist_campaign_stats()
 
@@ -426,7 +435,7 @@ func set_nickname(p_nickname: String) -> void:
 	nickname = p_nickname
 	if not has_authenticated:
 		return
-	var result = await client.update_account_async(session, nickname)
+	var result = await client.update_account_async(session, nickname, nickname)
 	if result.is_exception():
 		push_error("Failed to set nickname on server: " + str(result))
 	else:
