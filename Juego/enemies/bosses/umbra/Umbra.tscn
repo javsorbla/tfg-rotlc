@@ -45,7 +45,7 @@ shape = SubResource("CapsuleShape2D_ifwve")
 position = Vector2(-1, -18)
 scale = Vector2(0.684615, 0.746154)
 sprite_frames = ExtResource("3_8gdcn")
-animation = &"attack"
+animation = &"use_shield"
 
 [node name="AttackHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16
