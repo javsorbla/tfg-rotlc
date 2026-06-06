@@ -22,6 +22,14 @@ func _on_pause_menu_hidden():
 func _on_visibility_changed():
 	if visible:
 		pause_menu.show()
+		_set_music_mute(true)
+	else:
+		_set_music_mute(false)
+
+func _set_music_mute(muted: bool) -> void:
+	var idx := AudioServer.get_bus_index("Música")
+	if idx >= 0:
+		AudioServer.set_bus_mute(idx, muted)
 
 func _ready():
 	visibility_changed.connect(_on_visibility_changed)

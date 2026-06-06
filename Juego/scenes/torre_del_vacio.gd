@@ -2,6 +2,7 @@ extends Node2D
 
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
+const TORRE_VACIO_MUSIC := preload("res://music/scenes/torre_vacio/torre_vacio.ogg")
 
 func _enter_tree() -> void:
 	GameState.current_level = 4
@@ -15,6 +16,7 @@ func _ready() -> void:
 	_ensure_death_screen()
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
+	call_deferred("_start_level_music")
 
 func _ensure_pause_menu_layer() -> void:
 	if get_node_or_null("PauseMenuLayer") != null:
@@ -64,3 +66,6 @@ func _on_player_died(_owner: Node) -> void:
 	var death_screen = get_node_or_null("DeathScreenLayer/DeathScreen")
 	if death_screen != null and death_screen.has_method("show"):
 		death_screen.call_deferred("show")
+
+func _start_level_music() -> void:
+	ProjectMusicController.play_stream(TORRE_VACIO_MUSIC)

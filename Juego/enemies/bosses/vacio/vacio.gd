@@ -1,15 +1,16 @@
 extends Node2D
 
 # --- CONSTANTES ---
-const MAX_HEALTH: int = 30
+const MAX_HEALTH: int = 60
 const DAMAGE: int = 1
 const CHASE_SPEED_P1: float = 65.0 
 const CHASE_SPEED_P2: float = 95.0 
 const DAMAGE_FLASH_TIME: float = 0.08
 const HEIGHT_OFFSET: float = -30.0
-const HITS_UNTIL_ORB: int = 7
+const HITS_UNTIL_ORB: int = 10
 const MAX_ACTIVE_ORBS: int = 3
-const ORBE_LUZ_SCENE = preload("res://objects/OrbeDeLuz.tscn") 
+const ORBE_LUZ_SCENE = preload("res://objects/OrbeDeLuz.tscn")
+var MUSICA_BATALLA = preload("res://music/enemies/bosses/vacio/batalla_vacio.ogg") 
 
 # --- ESTADOS ---
 enum State { IDLE, CHASE, EXPAND, VANISH, APPEAR, AOE, SPIKE_RAIN, SHOOT, PHASE_TRANSITION, DYING, DEAD }
@@ -471,6 +472,8 @@ func _mostrar_texto_final() -> void:
 
 func activate() -> void:
 	is_active = true
+	if MUSICA_BATALLA and ProjectMusicController.has_method("play_stream"):
+		ProjectMusicController.play_stream(MUSICA_BATALLA)
 	_enter_state(State.CHASE)
 
 func _update_facing() -> void:
@@ -526,7 +529,7 @@ func take_damage(amount: int) -> void:
 	if hits_received >= HITS_UNTIL_ORB:
 		_spawn_healing_orb()
 		hits_received = 0
-	if current_health <= 10 and not in_phase_2:
+	if current_health <= 20 and not in_phase_2:
 		_enter_state(State.PHASE_TRANSITION)
 		return
 	if current_health <= 0:
@@ -585,7 +588,11 @@ func _spawn_healing_orb() -> void:
 		return
 
 	var active_orbs := get_tree().get_nodes_in_group("light_orb")
-	if active_orbs.size() >= MAX_ACTIVE_ORBS:
+	var boss_orbs := 0
+	for orb in active_orbs:
+		if orb.is_spawned:
+			boss_orbs += 1
+	if boss_orbs >= MAX_ACTIVE_ORBS:
 		return
 
 	var scene_root = get_tree().root.get_child(0)

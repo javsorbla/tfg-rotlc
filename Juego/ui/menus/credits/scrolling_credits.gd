@@ -104,6 +104,8 @@ func _get_main_menu_scene_path() -> String:
 
 
 func _trigger_close_request() -> void:
+	if ProjectMusicController.has_method("stop"):
+		ProjectMusicController.stop()
 	if get_signal_connection_list("request_close").is_empty():
 		var menu_path := _get_main_menu_scene_path()
 		if not menu_path.is_empty():
@@ -142,6 +144,8 @@ func _ready() -> void:
 
 
 func _on_end_reached() -> void:
+	if ProjectMusicController.has_method("fade_out"):
+		ProjectMusicController.fade_out(3.0)
 	await get_tree().create_timer(auto_return_delay).timeout
 	_trigger_close_request()
 

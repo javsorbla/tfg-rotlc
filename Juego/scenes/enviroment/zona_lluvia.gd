@@ -11,8 +11,11 @@ const ZONAS_EXCLUIDAS = [
 	{"min": Vector2(2050, -830), "max": Vector2(3014, 199)},
 	{"min": Vector2(5009, 209), "max": Vector2(6699, 1181)}
 ]
+const TRUENO_SOUND := preload("res://music/scenes/costa_ambar/trueno.ogg")
+const TRUENO_CAVE_DB: float = -8.0
 
 var color_base: Color
+var thunder_player: AudioStreamPlayer
 static var destello_activo: bool = false
 static var destello_iniciado: bool = false
 
@@ -66,6 +69,7 @@ func _ready():
 		destello_iniciado = true
 		var cm = get_tree().current_scene.get_node("CanvasModulate")
 		if cm:
+			_setup_thunder_player()
 			_programar_destello(cm)
 
 func _programar_destello(cm):
@@ -84,14 +88,30 @@ func _jugador_en_zona_excluida() -> bool:
 			return true
 	return false
 
+func _setup_thunder_player() -> void:
+	thunder_player = AudioStreamPlayer.new()
+	thunder_player.name = "ThunderPlayer"
+	thunder_player.stream = TRUENO_SOUND
+	thunder_player.bus = &"EFX"
+	add_child(thunder_player)
+
+func _play_thunder(en_zona_excluida: bool) -> void:
+	if not is_instance_valid(thunder_player):
+		return
+	thunder_player.volume_db = TRUENO_CAVE_DB if en_zona_excluida else 4.0
+	thunder_player.play()
+
 func _hacer_destello(cm):
 	if destello_activo:
 		_programar_destello(cm)
 		return
 	destello_activo = true
 	
+	var en_zona_excluida = _jugador_en_zona_excluida()
+	_play_thunder(en_zona_excluida)
+	
 	var color_base = cm.color
-	if not _jugador_en_zona_excluida():
+	if not en_zona_excluida:
 		var flashes = [0.25, 0.15, 0.3]
 		for duracion in flashes:
 			var tween = create_tween()

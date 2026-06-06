@@ -88,6 +88,7 @@ func _process(delta: float) -> void:
 func _on_final_body_entered(body) -> void:
 	if body is CharacterBody2D:
 		GameState.coming_from_transition = true
+		ProjectMusicController.stop()
 		get_tree().call_deferred("change_scene_to_file", CAMPOS_SCENE)
 
 func _on_player_died(_owner: Node) -> void:

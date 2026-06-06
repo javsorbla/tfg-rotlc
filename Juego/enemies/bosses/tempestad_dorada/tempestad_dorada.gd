@@ -3,8 +3,8 @@ extends Node2D
 enum State { PATROL, PAUSE, DIVE, STUNNED, WEAK }
 enum Phase { ONE, TWO }
 
-const MAX_HEALTH = 50
-const PHASE_TWO_THRESHOLD = 20
+const MAX_HEALTH = 60
+const PHASE_TWO_THRESHOLD = 30
 
 const BOSS_HALF_WIDTH = 40.0
 const FLOAT_AMPLITUDE = 100.0

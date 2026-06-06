@@ -111,6 +111,7 @@ func _on_body_entered(body: Node) -> void:
 		if has_node("/root/GameState") and get_node("/root/GameState").has_method("request_level_change"):
 			get_node("/root/GameState").request_level_change(next_scene)
 		else:
+			ProjectMusicController.stop()
 			get_tree().call_deferred("change_scene_to_file", next_scene)
 
 func _on_anim_finished() -> void:
@@ -125,4 +126,5 @@ func _request_level_change() -> void:
 		get_node("/root/GameState").request_level_change(target)
 	else:
 		if target != "":
+			ProjectMusicController.stop()
 			get_tree().change_scene(target)
