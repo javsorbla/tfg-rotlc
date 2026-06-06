@@ -10,6 +10,7 @@ signal request_close
 @export var scroll_paused : bool = false
 @export_file("*.tscn") var main_menu_scene_path: String = ""
 @export var allow_any_button_exit : bool = true
+@export var auto_return_delay: float = 1.5
 @export var exit_hint_blink_speed : float = 2.2
 @export var exit_actions : Array[StringName] = [
 	&"ui_cancel",
@@ -132,11 +133,17 @@ func _ready() -> void:
 	resized.connect(_on_resized)
 	visibility_changed.connect(_on_visibility_changed)
 	timer.timeout.connect(_on_scroll_restart_timer_timeout)
+	end_reached.connect(_on_end_reached)
 	set_header_and_footer()
 	add_child(timer)
 	scroll_paused = false
 	_update_exit_hint_text()
 	_hide_scrollbar()
+
+
+func _on_end_reached() -> void:
+	await get_tree().create_timer(auto_return_delay).timeout
+	_trigger_close_request()
 
 
 func _process(delta : float) -> void:

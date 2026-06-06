@@ -1,0 +1,71 @@
+[gd_scene load_steps=11 format=3 uid="uid://dnmgjarcbr16k"]
+
+[ext_resource type="Script" path="res://scenes/enviroment/fuego.gd" id="1_4vfht"]
+[ext_resource type="Texture2D" uid="uid://7jwliynjcote" path="res://assets/traps/fuego_morado_sheet.png" id="2_biids"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7txhk"]
+size = Vector2(16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mpa4r"]
+atlas = ExtResource("2_biids")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r18ey"]
+atlas = ExtResource("2_biids")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ik13w"]
+atlas = ExtResource("2_biids")
+region = Rect2(0, 16, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wwaae"]
+atlas = ExtResource("2_biids")
+region = Rect2(16, 16, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_aitgx"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mpa4r")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r18ey")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ik13w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wwaae")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="Gradient" id="Gradient_e25hl"]
+offsets = PackedFloat32Array(0, 0.396104)
+colors = PackedColorArray(0.719434, 0.49495, 0.259124, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_xr1qa"]
+gradient = SubResource("Gradient_e25hl")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.495413, 0.477064)
+
+[node name="FuegoMorado" type="Area2D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_4vfht")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_7txhk")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_aitgx")
+animation = &"idle"
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.569893, 0.30971, 0.863254, 1)
+energy = 0.7
+texture = SubResource("GradientTexture2D_xr1qa")

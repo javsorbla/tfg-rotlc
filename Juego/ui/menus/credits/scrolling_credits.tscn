@@ -12,14 +12,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("4")
-scroll_paused = true
+auto_return_delay = 3.0
 
 [node name="ScrollContainer" type="ScrollContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-scroll_vertical = 1828
+scroll_vertical = 350
 horizontal_scroll_mode = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer"]
@@ -54,7 +54,7 @@ mouse_filter = 2
 
 [node name="ExitHintLabel" type="Label" parent="ExitHintMargin"]
 unique_name_in_owner = true
-modulate = Color(1, 1, 1, 0.999783)
+modulate = Color(1, 1, 1, 0.813499)
 layout_mode = 2
-text = "ESC para salir"
+text = "A, B o START para salir"
 horizontal_alignment = 1
