@@ -12,6 +12,7 @@ var is_invincible = false
 var invincibility_timer = 0.0
 var flash_timer = 0.0
 var death_callback: Callable
+var _is_dead := false
 @export var auto_reset: bool = true
 
 @onready var player = get_parent()
@@ -30,6 +31,7 @@ func _ready():
 
 func _init_hud():
 	_sync_max_health_from_progress()
+	_is_dead = false
 	current_health = MAX_HEALTH
 	Hud.update_hearts(current_health, MAX_HEALTH)
 
@@ -40,7 +42,7 @@ func process(delta):
 
 
 func take_damage(amount: int, bypass_shield: bool = false):
-	if (player.is_shielding and not bypass_shield) or is_invincible:
+	if _is_dead or (player.is_shielding and not bypass_shield) or is_invincible:
 		return
 	current_health -= amount
 	NakamaManager.add_damage_taken(amount)
@@ -59,6 +61,10 @@ func set_death_callback(callback: Callable) -> void:
 	death_callback = callback
 
 func die():
+	if _is_dead:
+		return
+	_is_dead = true
+	hurtbox.set_deferred("monitorable", false)
 	emit_signal("died", get_parent())
 	NakamaManager.notify_death()
 	_invoke_death_callback()
@@ -71,6 +77,7 @@ func respawn() -> void:
 func _reset_player():
 	_sync_max_health_from_progress()
 	current_health = MAX_HEALTH
+	_is_dead = false
 	is_invincible = true
 	invincibility_timer = 0.6
 	flash_timer = 0.0
