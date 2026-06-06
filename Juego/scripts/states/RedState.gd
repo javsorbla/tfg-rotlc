@@ -2,6 +2,7 @@ class_name RedState
 extends ColorState
 
 const BREAK_PARTICLES = preload("res://scenes/enviroment/ParticulasBloques.tscn")
+const BLOQUE_ROMPIBLE_SOUND := preload("res://music/scenes/costa_ambar/bloque_rompible.ogg")
 
 func enter():
 	player.speed_multiplier = 1.0
@@ -40,12 +41,25 @@ func _try_break_wall():
 	var top_left = breakable_map.local_to_map(breakable_map.to_local(global_rect.position))
 	var bottom_right = breakable_map.local_to_map(breakable_map.to_local(global_rect.end))
 
+	var broke_any := false
 	for x in range(top_left.x, bottom_right.x + 1):
 		for y in range(top_left.y, bottom_right.y + 1):
 			var map_pos = Vector2i(x, y)
 			if breakable_map.get_cell_source_id(map_pos) != -1:
 				breakable_map.erase_cell(map_pos)
 				_spawn_particles(breakable_map, map_pos)
+				broke_any = true
+	if broke_any:
+		_play_break_sound()
+
+func _play_break_sound() -> void:
+	var sfx = AudioStreamPlayer.new()
+	sfx.stream = BLOQUE_ROMPIBLE_SOUND
+	sfx.bus = &"EFX"
+	sfx.volume_db = -6.0
+	sfx.finished.connect(sfx.queue_free)
+	player.add_child(sfx)
+	sfx.play()
 
 func _spawn_particles(breakable_map, map_pos: Vector2i):
 	var particles = BREAK_PARTICLES.instantiate()

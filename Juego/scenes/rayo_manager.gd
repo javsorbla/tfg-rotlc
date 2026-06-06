@@ -8,9 +8,20 @@ const RAYO_COORDS_BASE = [
 	Vector2i(5,0), Vector2i(5,1), Vector2i(5,2), Vector2i(5,3), Vector2i(5,4)
 ]
 const TILE_SIZE = 16
+const RAYOS_ENTORNO_SOUND := preload("res://music/scenes/costa_ambar/rayos_entorno.ogg")
+const ZONA_RADIO := 20.0
+
+var ambient_player: AudioStreamPlayer
+var zonas_activas := 0
 
 
 func _ready():
+	ambient_player = AudioStreamPlayer.new()
+	ambient_player.name = "AmbienteRayos"
+	ambient_player.stream = RAYOS_ENTORNO_SOUND
+	ambient_player.bus = &"EFX"
+	ambient_player.volume_db = -6.0
+	add_child(ambient_player)
 	_generar_luces()
 
 
@@ -33,7 +44,36 @@ func _generar_luces():
 		var pos_top = tilemap.map_to_local(Vector2i(col_x, celdas_y[0]))
 		var pos_centro = pos_top + Vector2(TILE_SIZE * 0.01, altura_px / 2.0 - 7.5)
 		_crear_luz(pos_centro, altura_px)
+		_crear_zona_proximidad(col_x, celdas_y[0], num_tiles)
 	
+
+func _crear_zona_proximidad(col_x: int, top_y: int, num_tiles: int) -> void:
+	var zona = Area2D.new()
+	zona.name = "ZonaProximidadRayo_%d" % col_x
+	zona.collision_mask = 4
+	var shape = CollisionShape2D.new()
+	var rect = RectangleShape2D.new()
+	rect.size = Vector2(TILE_SIZE * ZONA_RADIO, num_tiles * TILE_SIZE + TILE_SIZE * ZONA_RADIO)
+	shape.shape = rect
+	var pos_centro = tilemap.map_to_local(Vector2i(col_x, top_y)) + Vector2(0, num_tiles * TILE_SIZE / 2.0)
+	zona.position = pos_centro
+	zona.add_child(shape)
+	zona.body_entered.connect(_on_zona_body_entered)
+	zona.body_exited.connect(_on_zona_body_exited)
+	add_child(zona)
+
+func _on_zona_body_entered(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		zonas_activas += 1
+		if zonas_activas == 1:
+			ambient_player.play()
+
+func _on_zona_body_exited(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		zonas_activas -= 1
+		if zonas_activas <= 0:
+			zonas_activas = 0
+			ambient_player.stop()
 
 func _crear_luz(pos: Vector2, altura_px: float):
 	var luz = PointLight2D.new()

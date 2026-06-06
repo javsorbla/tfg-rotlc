@@ -325,7 +325,7 @@ position = Vector2(999, -120)
 [node name="Checkpoints" type="Node2D" parent="."]
 
 [node name="Checkpoint" parent="Checkpoints" instance=ExtResource("12_wryeu")]
-position = Vector2(2478, -1980)
+position = Vector2(1967, -1516)
 
 [node name="Checkpoint2" parent="Checkpoints" instance=ExtResource("12_wryeu")]
 position = Vector2(4386, -3372)
@@ -462,13 +462,13 @@ position = Vector2(1064, -472)
 position = Vector2(1544, -792)
 
 [node name="FuegoMorado8" parent="Entorno" instance=ExtResource("15_5ajew")]
-position = Vector2(2008, -1512)
+position = Vector2(2193, -1512)
 
 [node name="FuegoMorado9" parent="Entorno" instance=ExtResource("15_5ajew")]
-position = Vector2(1976, -1512)
+position = Vector2(2209, -1512)
 
 [node name="FuegoMorado10" parent="Entorno" instance=ExtResource("15_5ajew")]
-position = Vector2(1992, -1512)
+position = Vector2(2225, -1512)
 
 [node name="FuegoMorado11" parent="Entorno" instance=ExtResource("15_5ajew")]
 position = Vector2(3327, -2712)
@@ -498,7 +498,7 @@ position = Vector2(863, -203)
 shape = SubResource("RectangleShape2D_w1h6r")
 
 [node name="OrbeDeLuz" parent="Entorno" instance=ExtResource("12_e47pw")]
-position = Vector2(2325, -1516)
+position = Vector2(2900, -2177)
 
 [node name="OrbeDeLuz2" parent="Entorno" instance=ExtResource("12_e47pw")]
 position = Vector2(4126, -2544)
