@@ -3,7 +3,14 @@ extends Node2D
 const MONTANAS_SCENE := "res://scenes/MontañasDeCeniza.tscn"
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
-const CAMPOS_ZAFIRO_MUSIC := preload("res://music/campos_zafiro.ogg")
+const CAMPOS_ZAFIRO_MUSIC := preload("res://music/scenes/campos_zafiro/campos_zafiro.ogg")
+const VIENTO_SOUND := preload("res://music/scenes/campos_zafiro/viento.ogg")
+
+const WIND_ZONE_X_MIN: float = 9700
+const WIND_ZONE_X_MAX: float = 12800.0
+
+var wind_player: AudioStreamPlayer
+var _wind_tween: Tween
 
 
 # Called when the node enters the scene tree for the first time.
@@ -21,6 +28,7 @@ func _ready() -> void:
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
 	call_deferred("_start_level_music")
+	_setup_wind_player()
 
 func _ensure_pause_menu_layer() -> void:
 	if get_node_or_null("PauseMenuLayer") != null:
@@ -87,3 +95,35 @@ func _on_player_died(_owner: Node) -> void:
 
 func _start_level_music() -> void:
 	ProjectMusicController.play_stream(CAMPOS_ZAFIRO_MUSIC)
+
+func _process(_delta: float) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
+		return
+	var in_zone := player.global_position.x >= WIND_ZONE_X_MIN and player.global_position.x <= WIND_ZONE_X_MAX
+	if in_zone and not wind_player.playing:
+		_fade_wind_in()
+	elif not in_zone and wind_player.playing:
+		_fade_wind_out()
+
+func _setup_wind_player() -> void:
+	wind_player = AudioStreamPlayer.new()
+	wind_player.name = "WindPlayer"
+	wind_player.stream = VIENTO_SOUND
+	wind_player.bus = &"EFX"
+	wind_player.volume_db = -80.0
+	add_child(wind_player)
+
+func _fade_wind_in() -> void:
+	if _wind_tween and _wind_tween.is_valid():
+		_wind_tween.kill()
+	wind_player.play()
+	_wind_tween = create_tween()
+	_wind_tween.tween_property(wind_player, "volume_db", 0.0, 1.5)
+
+func _fade_wind_out() -> void:
+	if _wind_tween and _wind_tween.is_valid():
+		_wind_tween.kill()
+	_wind_tween = create_tween()
+	_wind_tween.tween_property(wind_player, "volume_db", -80.0, 1.5)
+	_wind_tween.tween_callback(wind_player.stop)

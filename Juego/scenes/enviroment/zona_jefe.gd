@@ -82,7 +82,11 @@ func _on_trigger_entered(body):
 			boss.activate()
 		
 		if boss_music != null:
+			ProjectMusicController.fade_out_duration = 1.5
+			ProjectMusicController.fade_in_duration = 1.5
 			ProjectMusicController.play_stream(boss_music)
+			ProjectMusicController.fade_out_duration = 0.0
+			ProjectMusicController.fade_in_duration = 0.0
 			_music_was_changed = true
 
 func _get_nearest_boss_to_room_center() -> Node:
@@ -125,8 +129,10 @@ func on_boss_defeated():
 	if _music_was_changed:
 		if level_music != null:
 			ProjectMusicController.fade_out_duration = 1.5
+			ProjectMusicController.fade_in_duration = 1.5
 			ProjectMusicController.play_stream(level_music)
 			ProjectMusicController.fade_out_duration = 0.0
+			ProjectMusicController.fade_in_duration = 0.0
 		elif is_instance_valid(ProjectMusicController.music_stream_player):
 			var tween := create_tween()
 			tween.tween_property(ProjectMusicController.music_stream_player, "volume_db", -80.0, 1.5)

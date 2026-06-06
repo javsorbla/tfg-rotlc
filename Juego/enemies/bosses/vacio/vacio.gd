@@ -10,7 +10,7 @@ const HEIGHT_OFFSET: float = -30.0
 const HITS_UNTIL_ORB: int = 10
 const MAX_ACTIVE_ORBS: int = 3
 const ORBE_LUZ_SCENE = preload("res://objects/OrbeDeLuz.tscn")
-var MUSICA_BATALLA = preload("res://music/batalla_vacio.ogg") 
+var MUSICA_BATALLA = preload("res://music/enemies/bosses/vacio/batalla_vacio.ogg") 
 
 # --- ESTADOS ---
 enum State { IDLE, CHASE, EXPAND, VANISH, APPEAR, AOE, SPIKE_RAIN, SHOOT, PHASE_TRANSITION, DYING, DEAD }

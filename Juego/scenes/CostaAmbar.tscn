@@ -1,4 +1,4 @@
-[gd_scene load_steps=120 format=4 uid="uid://dv7tvh0rknvv6"]
+[gd_scene load_steps=121 format=4 uid="uid://dv7tvh0rknvv6"]
 
 [ext_resource type="Texture2D" uid="uid://ckrlk2kf8xtpa" path="res://assets/tilesets/costa_ambar/coast-tileset.png" id="1_c0y7m"]
 [ext_resource type="Script" path="res://scenes/costa_ambar.gd" id="1_db77e"]
@@ -31,8 +31,9 @@
 [ext_resource type="Texture2D" uid="uid://cogo4f862q8ae" path="res://assets/backgrounds/costa_ambar/water.png" id="26_w81v2"]
 [ext_resource type="Script" path="res://scenes/zona_cueva_1.gd" id="27_afulq"]
 [ext_resource type="Script" path="res://scenes/zona_cueva_2.gd" id="28_nmaxo"]
-[ext_resource type="AudioStream" uid="uid://ic3tjaht44t2" path="res://music/tempestad_dorada.ogg" id="29_music_tempestad"]
-[ext_resource type="AudioStream" uid="uid://8e53o74wn4m6" path="res://music/umbra.ogg" id="30_music_umbra"]
+[ext_resource type="AudioStream" uid="uid://ic3tjaht44t2" path="res://music/enemies/bosses/tempestad_dorada/tempestad_dorada.ogg" id="29_music_tempestad"]
+[ext_resource type="AudioStream" uid="uid://8e53o74wn4m6" path="res://music/enemies/bosses/umbra/umbra.ogg" id="30_music_umbra"]
+[ext_resource type="AudioStream" uid="uid://bkm3xo0m7g046" path="res://music/scenes/costa_ambar/tormenta.ogg" id="31_music_tormenta"]
 
 [sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_xpnhm"]
 polygon = PackedVector2Array(-8, -8, -8, -8, -8, 8, -8, 8)
@@ -1826,7 +1827,7 @@ position = Vector2(706, -603)
 position = Vector2(11960.3, -1040.25)
 shape = SubResource("RectangleShape2D_qt0xi")
 
-[node name="ZonaCueva1" type="Area2D" parent="Entorno"]
+[node name="ZonaCueva1" type="Area2D" parent="Entorno" groups=["cave_zone"]]
 position = Vector2(2050, -23)
 collision_layer = 0
 collision_mask = 4
@@ -1836,7 +1837,7 @@ script = ExtResource("27_afulq")
 position = Vector2(490, -223)
 shape = SubResource("RectangleShape2D_oiqba")
 
-[node name="ZonaCueva2" type="Area2D" parent="Entorno"]
+[node name="ZonaCueva2" type="Area2D" parent="Entorno" groups=["cave_zone"]]
 position = Vector2(5639, 224)
 collision_layer = 0
 collision_mask = 4
@@ -1846,7 +1847,7 @@ script = ExtResource("28_nmaxo")
 position = Vector2(206.5, 453.5)
 shape = SubResource("RectangleShape2D_pl5d4")
 
-[node name="ZonaCueva3" type="Area2D" parent="Entorno"]
+[node name="ZonaCueva3" type="Area2D" parent="Entorno" groups=["cave_zone"]]
 position = Vector2(10803, -675)
 collision_layer = 0
 collision_mask = 4
@@ -1898,6 +1899,7 @@ position = Vector2(4089, -50)
 [node name="ZonaJefe" parent="Entorno" groups=["boss_room"] instance=ExtResource("11_w2q40")]
 position = Vector2(5402, 786)
 boss_music = ExtResource("30_music_umbra")
+level_music = ExtResource("31_music_tormenta")
 
 [node name="CollisionShape2D" parent="Entorno/ZonaJefe/Trigger" index="0"]
 position = Vector2(250.25, -99)
@@ -2006,6 +2008,7 @@ position = Vector2(10554, -618)
 [node name="ZonaJefe2" parent="Entorno" groups=["boss_room"] instance=ExtResource("11_w2q40")]
 position = Vector2(12831, -1097)
 boss_music = ExtResource("29_music_tempestad")
+level_music = ExtResource("31_music_tormenta")
 
 [node name="Trigger" parent="Entorno/ZonaJefe2" index="0"]
 position = Vector2(-369, 84)

@@ -2,7 +2,7 @@ extends Node2D
 
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
-const TORRE_VACIO_MUSIC := preload("res://music/torre_vacio.ogg")
+const TORRE_VACIO_MUSIC := preload("res://music/scenes/torre_vacio/torre_vacio.ogg")
 
 func _enter_tree() -> void:
 	GameState.current_level = 4

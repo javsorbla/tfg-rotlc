@@ -24,9 +24,9 @@
 [ext_resource type="Texture2D" uid="uid://qisdegip77v1" path="res://assets/backgrounds/campos_zafiro/Plan 3.png" id="21_plan3"]
 [ext_resource type="Texture2D" uid="uid://o46j7ocrndew" path="res://assets/backgrounds/campos_zafiro/Plan 2.png" id="22_plan2"]
 [ext_resource type="Texture2D" uid="uid://devc7nllhf3xj" path="res://assets/backgrounds/campos_zafiro/Plan 1.png" id="23_plan1"]
-[ext_resource type="AudioStream" uid="uid://busx5svs6hfwg" path="res://music/campos_zafiro.ogg" id="24_music_campos"]
-[ext_resource type="AudioStream" uid="uid://8e53o74wn4m6" path="res://music/umbra.ogg" id="25_music_umbra"]
-[ext_resource type="AudioStream" uid="uid://dvhtfly1u1l7p" path="res://music/guardian_hielo.ogg" id="26_music_guardian_hielo"]
+[ext_resource type="AudioStream" uid="uid://busx5svs6hfwg" path="res://music/scenes/campos_zafiro/campos_zafiro.ogg" id="24_music_campos"]
+[ext_resource type="AudioStream" uid="uid://8e53o74wn4m6" path="res://music/enemies/bosses/umbra/umbra.ogg" id="25_music_umbra"]
+[ext_resource type="AudioStream" uid="uid://dvhtfly1u1l7p" path="res://music/enemies/bosses/guardian_hielo/guardian_hielo.ogg" id="26_music_guardian_hielo"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k56g7"]
 texture = ExtResource("1_kj2pu")
