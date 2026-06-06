@@ -75,7 +75,7 @@ func _crear_luz_para_segmento(tm: TileMapLayer, x_start: int, x_end: int, y: int
 	luz.energy = 1.5
 	luz.blend_mode = Light2D.BLEND_MODE_ADD
 	luz.texture = _textura_luz
-	luz.scale = Vector2(BASE_SCALE * num_tiles, BASE_SCALE)
+	luz.scale = Vector2(BASE_SCALE * num_tiles/2, BASE_SCALE)
 
 	var offset = randf() * 2.0
 	await get_tree().create_timer(offset).timeout
