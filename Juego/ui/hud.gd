@@ -183,7 +183,6 @@ func update_cooldowns(cooldown_timers: Dictionary, active_power: String, unlocke
 			power_overlays[power].value = 1.0
 			power_overlays[power].modulate = Color(0.6, 0.6, 0.6, 1)
 			duration_bars[power].visible = false
-		_show_save_indicator(0.9)
 
 func _on_save_started(_reason: String) -> void:
 	_set_saving(true)

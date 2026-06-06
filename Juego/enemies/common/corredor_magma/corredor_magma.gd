@@ -479,4 +479,5 @@ func take_damage(amount: int) -> void:
 
 
 func die() -> void:
+	NakamaManager.add_enemy_kill()
 	_enter_state(State.DEAD)

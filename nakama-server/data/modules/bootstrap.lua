@@ -4,7 +4,7 @@ local M = {}
 
 local LEVEL_IDS = {"level_0", "level_1", "level_2", "level_3", "level_4"}
 local METRICS = {"time", "kills", "deaths", "damage_dealt", "damage_received", "prism_cores"}
-local CAMPAIGN_METRICS = {"time", "kills", "deaths", "damage_dealt", "damage_received", "prism_cores"}
+local CAMPAIGN_METRICS = {"score", "time", "kills", "deaths", "damage_dealt", "damage_received", "prism_cores"}
 
 function M.init()
   for _, level in ipairs(LEVEL_IDS) do

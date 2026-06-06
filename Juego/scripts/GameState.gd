@@ -75,7 +75,9 @@ func _make_default_player_progress() -> Dictionary:
 		"prism_core_collected_levels": {},
 		"unlocked_powers": _make_default_unlocked_powers(),
 		"nickname": "",
-		"campaign_stats": {}
+		"campaign_stats": {},
+		"pending_queue": [],
+		"local_best_runs": {}
 	}
 
 

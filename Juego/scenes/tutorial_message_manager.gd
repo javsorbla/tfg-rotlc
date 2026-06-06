@@ -90,6 +90,8 @@ func _play_next() -> void:
 	call_deferred("_play_next")
 
 func _show_message_blocking(text: String, duration: float, wait_for_input: bool, is_intro: bool = false) -> void:
+	if not is_inside_tree():
+		return
 	_is_showing = true
 	if _skip_requested and is_intro:
 		_is_showing = false
@@ -138,8 +140,12 @@ func _show_message_blocking(text: String, duration: float, wait_for_input: bool,
 			particles.z_index = 200
 		anim.speed_scale = fade_in_speed
 		anim.play("fade_in")
+		if not is_inside_tree():
+			return
 		await get_tree().process_frame
 		while anim.is_playing():
+			if not is_inside_tree():
+				return
 			if is_intro and _skip_requested:
 				anim.stop()
 				break
@@ -167,6 +173,8 @@ func _show_message_blocking(text: String, duration: float, wait_for_input: bool,
 		# If intro was skipped while waiting, don't block.
 		var timer := get_tree().create_timer(wait_time)
 		while timer.time_left > 0.0:
+			if not is_inside_tree():
+				return
 			if is_intro and _skip_requested:
 				break
 			if my_token != _cancel_token:
@@ -176,8 +184,12 @@ func _show_message_blocking(text: String, duration: float, wait_for_input: bool,
 	if anim != null and anim.has_animation("fade_out"):
 		anim.speed_scale = fade_out_speed
 		anim.play("fade_out")
+		if not is_inside_tree():
+			return
 		await get_tree().process_frame
 		while anim.is_playing():
+			if not is_inside_tree():
+				return
 			if is_intro and _skip_requested:
 				anim.stop()
 				break
