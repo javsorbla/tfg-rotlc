@@ -23,13 +23,13 @@ const DIVE_SLIDE_SPEED = 200.0
 const DIVE_COOLDOWN = 10.0
 const RETURN_SPEED = 250.0
 
-const WING_MAX_HEALTH: int = 10
+const WING_MAX_HEALTH: int = 14
 const WING_REGEN_DELAY: float = 1.0
-const WEAK_DURATION = 3.0
+const WEAK_DURATION = 2.75
 const WEAK_WALK_SPEED: float = 120.0
-const WEAK_MAX_DAMAGE: int = 10
+const WEAK_MAX_DAMAGE: int = 8
 
-const STUN_DURATION: float = 1.5
+const STUN_DURATION: float = 1.0
 const STUN_FALL_SPEED: float = 220.0
 
 const RAY_COOLDOWN = 15.0
@@ -46,6 +46,7 @@ const STORM_COUNT: int = 5
 const STORM_INTERVAL: float = 0.5
 
 const HIT_COOLDOWN: float = 0.1
+
 const BASE_LIGHT_ENERGY: float = 3.0
 const HIGH_LIGHT_ENERGY: float = 6.0
 const WEAK_LIGHT_ENERGY: float = 1.0
@@ -119,6 +120,8 @@ var original_pos_x = []
 var original_rot = []
 
 var hit_cooldown: float = 0.0
+var sfx_aleteo: AudioStreamPlayer
+var sfx_rugido: AudioStreamPlayer
 
 @onready var sprite = $AnimatedSprite2D
 @onready var wing_hurtbox_1 = $WingHurtbox1
@@ -204,6 +207,19 @@ func _ready():
 	_set_dive_shapes(false)
 	sprite.animation_finished.connect(_on_sprite_animation_finished)
 
+	sfx_aleteo = AudioStreamPlayer.new()
+	sfx_aleteo.name = "AleteoSfx"
+	sfx_aleteo.stream = load("res://music/enemies/bosses/tempestad_dorada/aleteo.ogg")
+	sfx_aleteo.bus = &"EFX"
+	sfx_aleteo.volume_db = 8.0
+	add_child(sfx_aleteo)
+
+	sfx_rugido = AudioStreamPlayer.new()
+	sfx_rugido.name = "RugidoSfx"
+	sfx_rugido.stream = load("res://music/enemies/bosses/tempestad_dorada/rugido_tempestad.ogg")
+	sfx_rugido.bus = &"EFX"
+	add_child(sfx_rugido)
+
 	luz = PointLight2D.new()
 	add_child(luz)
 	luz.blend_mode = Light2D.BLEND_MODE_ADD
@@ -251,6 +267,15 @@ func _process(_delta):
 	if is_dying:
 		luz.energy = move_toward(luz.energy, 0.0, 0.05)
 		return
+	
+	if sfx_aleteo:
+		var anim = sprite.animation
+		if is_active and anim == "fly":
+			sfx_aleteo.pitch_scale = sprite.speed_scale
+			if not sfx_aleteo.playing:
+				sfx_aleteo.play()
+		elif sfx_aleteo.playing:
+			sfx_aleteo.stop()
 		
 	_actualizar_luz()
 	if luz:
@@ -512,6 +537,9 @@ func _can_dive() -> bool:
 	return true
 
 func _start_dive():
+	if sfx_rugido:
+		sfx_rugido.volume_db = 0.0
+		sfx_rugido.play()
 
 	current_state = State.DIVE
 	dive_winding_up = true
@@ -524,6 +552,13 @@ func _start_dive():
 func _shoot_ray():
 	if not player:
 		return
+	var sfx = AudioStreamPlayer.new()
+	sfx.stream = load("res://music/enemies/bosses/tempestad_dorada/rayo_tempestad.ogg")
+	sfx.bus = &"Master"
+	sfx.volume_db = 0.0
+	sfx.finished.connect(sfx.queue_free)
+	player.add_child(sfx)
+	sfx.play()
 	ray_instance = ray_scene.instantiate()
 	ray_instance.active = true
 	get_parent().add_child(ray_instance)
@@ -667,6 +702,10 @@ func _enter_weak():
 	current_state = State.WEAK
 	is_weak = true
 	weak_timer = WEAK_DURATION
+	
+	if sfx_rugido:
+		sfx_rugido.volume_db = 4.0
+		sfx_rugido.play()
 	
 	# Cancelar estados activos
 	is_stunned = false
@@ -863,6 +902,13 @@ func die():
 	is_active = false
 	if luz:
 		luz.energy = 0.0
+
+	if sfx_rugido:
+		sfx_rugido.pitch_scale = 0.5
+		sfx_rugido.volume_db = 8.0
+		sfx_rugido.play()
+		var fade_tween = create_tween()
+		fade_tween.tween_property(sfx_rugido, "volume_db", -60.0, 8.0)
 
 	if ray_instance:
 		ray_instance.queue_free()

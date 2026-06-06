@@ -629,7 +629,7 @@ script = ExtResource("1_h0175")
 position = Vector2(0, 9.53674e-07)
 scale = Vector2(0.828125, 0.851563)
 sprite_frames = SubResource("SpriteFrames_4oaa8")
-animation = &"weak"
+animation = &"fly"
 
 [node name="CoreHurtbox" type="Area2D" parent="." groups=["boss_core"]]
 collision_layer = 16
