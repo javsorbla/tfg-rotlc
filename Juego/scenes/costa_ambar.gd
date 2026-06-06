@@ -2,12 +2,13 @@ extends Node2D
 
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
-const TORMENTA_MUSIC := preload("res://music/scenes/costa_ambar/tormenta.ogg")
+const COSTA_AMBAR_MUSIC := preload("res://music/scenes/costa_ambar/costa_ambar.ogg")
+const TORMENTA_SOUND := preload("res://music/scenes/costa_ambar/tormenta.ogg")
 const CAVE_VOLUME_DB: float = -10.0
 const VOLUME_FADE_DURATION: float = 1.5
 
 var _in_cave: bool = false
-var _prev_volume_target: float
+var storm_player: AudioStreamPlayer
 
 func _ready() -> void:
 	GameState.current_level = 3
@@ -21,6 +22,7 @@ func _ready() -> void:
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
 	call_deferred("_start_level_music")
+	call_deferred("_setup_storm_player")
 	call_deferred("_connect_cave_zones")
 
 func _ensure_pause_menu_layer() -> void:
@@ -70,29 +72,24 @@ func _mover_player() -> void:
 		else:
 			player.global_position = Vector2(-64, -14)
 
-func _process(_delta: float) -> void:
-	var actual_player = ProjectMusicController.music_stream_player
-	if not is_instance_valid(actual_player):
-		return
-	# Only adjust volume when tormenta is the current stream
-	if actual_player.stream != TORMENTA_MUSIC:
-		return
-	var target_db = CAVE_VOLUME_DB if _in_cave else 0.0
-	if not is_equal_approx(actual_player.volume_db, target_db):
-		ProjectMusicController.blend_to(target_db, VOLUME_FADE_DURATION)
-
 func _on_player_died(_owner: Node) -> void:
 	var death_screen = get_node_or_null("DeathScreenLayer/DeathScreen")
 	if death_screen != null and death_screen.has_method("show"):
 		death_screen.call_deferred("show")
 
 func _start_level_music() -> void:
-	ProjectMusicController.play_stream(TORMENTA_MUSIC)
+	ProjectMusicController.play_stream(COSTA_AMBAR_MUSIC)
+
+func _setup_storm_player() -> void:
+	storm_player = AudioStreamPlayer.new()
+	storm_player.name = "StormPlayer"
+	storm_player.stream = TORMENTA_SOUND
+	storm_player.bus = &"EFX"
+	add_child(storm_player)
+	storm_player.play()
 	_in_cave = _is_player_in_any_cave()
 	if _in_cave:
-		var p = ProjectMusicController.music_stream_player
-		if is_instance_valid(p):
-			p.volume_db = CAVE_VOLUME_DB
+		storm_player.volume_db = CAVE_VOLUME_DB
 
 func _connect_cave_zones() -> void:
 	for zone in get_tree().get_nodes_in_group("cave_zone"):
@@ -104,13 +101,13 @@ func _connect_cave_zones() -> void:
 func _on_cave_entered(body: Node) -> void:
 	if body.is_in_group("player") and not _in_cave:
 		_in_cave = true
-		_update_cave_volume()
+		_update_storm_volume()
 
 func _on_cave_exited(body: Node) -> void:
 	if body.is_in_group("player"):
 		_in_cave = _is_player_in_any_cave()
 		if not _in_cave:
-			_update_cave_volume()
+			_update_storm_volume()
 
 func _is_player_in_any_cave() -> bool:
 	var player := get_tree().get_first_node_in_group("player")
@@ -121,6 +118,9 @@ func _is_player_in_any_cave() -> bool:
 			return true
 	return false
 
-func _update_cave_volume() -> void:
+func _update_storm_volume() -> void:
 	var target_db = CAVE_VOLUME_DB if _in_cave else 0.0
-	ProjectMusicController.blend_to(target_db, VOLUME_FADE_DURATION)
+	if not is_instance_valid(storm_player):
+		return
+	var tween = create_tween()
+	tween.tween_property(storm_player, "volume_db", target_db, VOLUME_FADE_DURATION)
