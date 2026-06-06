@@ -435,6 +435,7 @@ radius = 19.0
 radius = 19.0
 
 [node name="NucleoInestable" type="CharacterBody2D"]
+z_index = 1
 collision_layer = 16
 script = ExtResource("1_8h5qr")
 
