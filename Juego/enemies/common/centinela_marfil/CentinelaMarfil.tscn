@@ -541,6 +541,7 @@ radius = 15.0
 height = 34.0
 
 [node name="CentinelaMarfil" type="CharacterBody2D"]
+z_index = 1
 collision_layer = 16
 script = ExtResource("1_rteh4")
 
