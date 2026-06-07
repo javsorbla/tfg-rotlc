@@ -80,6 +80,12 @@ var _runtime_player_attack_ticks := 0
 var _runtime_player_jump_events := 0
 var _runtime_left_side_ticks := 0
 var _runtime_right_side_ticks := 0
+var _runtime_player_dodge_ticks := 0
+var _runtime_attack_from_above_ticks := 0
+var _runtime_retreat_ticks := 0
+var _runtime_power_cyan_ticks := 0
+var _runtime_power_red_ticks := 0
+var _runtime_power_yellow_ticks := 0
 var _runtime_player_air_ticks := 0
 var _runtime_close_range_ticks := 0
 var _runtime_low_health_ticks := 0
@@ -134,6 +140,14 @@ const PRISM_CORE_SCENE := preload("res://objects/NucleoDePrisma.tscn")
 @export var invert_move_decode := false
 @export_range(5, 120, 1) var move_mapping_probe_samples := 25
 @export_range(0.5, 1.0, 0.01) var move_mapping_flip_threshold := 0.7
+
+# Umbrales de adaptación conductual (6 nuevos sesgos sobre player metrics)
+@export var bd_dodge_pursuit := 0.30
+@export var bd_above_antiair := 0.25
+@export var bd_retreat_pressure := 0.20
+@export var bd_power_aggression := 0.35
+@export var bd_close_range_bias := 0.15
+@export var bd_power_mirror := 0.10
 
 # Variables de poder
 var current_power = "none"  # none, cyan, red, yellow
@@ -343,6 +357,14 @@ func _update_model_indicator() -> void:
 	_model_indicator_label.add_theme_color_override("font_color", state["color"])
 	_model_indicator_label.position = get_global_transform_with_canvas().origin + Vector2(-20.0, -30.0)
 
+func _get_cooldown_for_power(power_name: String) -> float:
+	match power_name:
+		"cyan": return power_cooldown_cyan * _power_cooldown_scale
+		"red": return power_cooldown_red * _power_cooldown_scale
+		"yellow": return power_cooldown_yellow * _power_cooldown_scale
+		_: return 0.0
+
+
 func _assign_power():
 	if forced_power != "auto":
 		current_power = forced_power
@@ -450,13 +472,53 @@ func _apply_player_profile_adaptation() -> void:
 	var close_range_ratio := clampf(float(metrics.get("close_range_ratio", 0.0)), 0.0, 1.0)
 	var air_time_ratio := clampf(float(metrics.get("air_time_ratio", 0.0)), 0.0, 1.0)
 	var power_usage := clampf(float(metrics.get("power_usage_frequency", 0.0)), 0.0, 1.0)
+	var dodge := clampf(float(metrics.get("dodge_ratio", 0.0)), 0.0, 1.0)
+	var retreat := clampf(float(metrics.get("retreat_ratio", 0.0)), 0.0, 1.0)
 
-	_heuristic_dash_chance = clampf(_heuristic_dash_chance + dash_frequency * 0.25 + power_usage * 0.10, 0.18, 0.90)
+	_heuristic_dash_chance = clampf(_heuristic_dash_chance + dash_frequency * 0.25 + power_usage * 0.10 + dodge * 0.10 + retreat * 0.08, 0.18, 0.90)
 	_heuristic_jump_chance = clampf(_heuristic_jump_chance + jump_frequency * 0.20 + air_time_ratio * 0.12, 0.16, 0.85)
 	_attack_cooldown_runtime = clampf(_attack_cooldown_runtime - close_range_ratio * 0.22, 0.25, 3.0)
 	_darkness_cast_interval_runtime = clampf(_darkness_cast_interval_runtime - power_usage * 0.75, 1.8, 12.0)
 
 	_runtime_metrics_enabled = true
+	_apply_behavioral_adaptation()
+
+func _apply_behavioral_adaptation() -> void:
+	var metrics := GameState.get_umbra_player_metrics()
+	if metrics.is_empty():
+		return
+
+	var dodge := clampf(float(metrics.get("dodge_ratio", 0.0)), 0.0, 1.0)
+	var above_attack := clampf(float(metrics.get("attack_from_above_ratio", 0.0)), 0.0, 1.0)
+	var retreat := clampf(float(metrics.get("retreat_ratio", 0.0)), 0.0, 1.0)
+	var power_cyan := clampf(float(metrics.get("power_cyan_ratio", 0.0)), 0.0, 1.0)
+	var power_red := clampf(float(metrics.get("power_red_ratio", 0.0)), 0.0, 1.0)
+	var power_yellow := clampf(float(metrics.get("power_yellow_ratio", 0.0)), 0.0, 1.0)
+
+	# 1) Player esquiva mucho → Umbra persigue mas agresivamente
+	if dodge > bd_dodge_pursuit:
+		_heuristic_dash_chance = clampf(_heuristic_dash_chance + dodge * 0.18, 0.18, 0.90)
+
+	# 2) Player ataca desde arriba → Umbra contraataca en salto
+	if above_attack > bd_above_antiair:
+		_heuristic_jump_chance = clampf(_heuristic_jump_chance + above_attack * 0.22, 0.16, 0.85)
+
+	# 3) Player retrocede mucho → Umbra presiona mas
+	if retreat > bd_retreat_pressure:
+		_heuristic_dash_chance = clampf(_heuristic_dash_chance + retreat * 0.12, 0.18, 0.90)
+		_darkness_cast_interval_runtime = clampf(_darkness_cast_interval_runtime - retreat * 0.50, 1.8, 12.0)
+
+	# 4) Player usa poderes seguido → Umbra responde con mas agresividad
+	var total_power := power_cyan + power_red + power_yellow
+	if total_power > bd_power_aggression:
+		_attack_cooldown_runtime = clampf(_attack_cooldown_runtime - total_power * 0.12, 0.25, 3.0)
+
+	# 5) Player usa mucho un poder concreto → Umbra tantea contrapoder
+	if power_yellow > bd_power_mirror:
+		_heuristic_jump_chance = clampf(_heuristic_jump_chance + power_yellow * 0.15, 0.16, 0.85)
+	if power_red > bd_power_mirror:
+		_heuristic_dash_chance = clampf(_heuristic_dash_chance + power_red * 0.10, 0.18, 0.90)
+
 
 func _handle_timers(delta):
 	if dash_cooldown_timer > 0:
@@ -478,7 +540,7 @@ func _handle_gravity(delta):
 		velocity += get_gravity() * delta
 
 func _handle_movement(delta):
-	if _casting_darkness or is_dashing:
+	if _casting_darkness or is_dashing or (current_power == "yellow" and _power_active):
 		return
 	if ai_move_direction != 0:
 		last_direction = ai_move_direction
@@ -490,7 +552,7 @@ func _get_speed():
 	return color_manager.get_speed()
 
 func _handle_jump(jump_requested: bool):
-	if _casting_darkness:
+	if _casting_darkness or (current_power == "yellow" and _power_active):
 		return
 	# Preserve double-jump availability while falling, even if jump is not pressed this frame.
 	if was_on_floor and not is_on_floor() and velocity.y >= 0:
@@ -521,6 +583,7 @@ func _handle_dash(delta, dash_requested: bool):
 		return
 
 	if is_dashing:
+		# Finish current dash even if yellow shield is active
 		dash_timer -= delta
 		if dash_timer <= 0:
 			is_dashing = false
@@ -533,6 +596,9 @@ func _handle_dash(delta, dash_requested: bool):
 				if tex != null:
 					_spawn_afterimage(tex)
 				_afterimage_timer = AFTERIMAGE_SPAWN_INTERVAL
+		return
+	
+	if current_power == "yellow" and _power_active:
 		return
 	
 	if dash_requested and dash_cooldown_timer <= 0 and (is_on_floor() or not air_dash_used):
@@ -854,7 +920,22 @@ func set_ai_action(action):
 	ai_should_jump = int(normalized.get("jump", 0)) == 1
 	ai_should_attack = int(normalized.get("attack", 0)) == 1
 	ai_should_dash = int(normalized.get("dash", 0)) == 1
-	ai_should_use_power = int(normalized.get("power", 0)) == 1
+	var raw_power := int(normalized.get("power", 0))
+	if raw_power == 0:
+		ai_should_use_power = false
+		if _power_active:
+			_power_active = false
+			_power_cooldown_timer = _get_cooldown_for_power(current_power)
+	else:
+		var power_names := ["", "cyan", "red", "yellow"]
+		if raw_power > 0 and raw_power < power_names.size():
+			var desired: String = power_names[raw_power]
+			if desired != current_power or not _power_active:
+				if _power_active:
+					_power_active = false
+					_power_cooldown_timer = _get_cooldown_for_power(current_power)
+				current_power = desired
+			ai_should_use_power = true
 
 
 func _debug_policy_trace_tick() -> void:
@@ -1140,6 +1221,12 @@ func _reset_runtime_metrics() -> void:
 	_runtime_close_range_ticks = 0
 	_runtime_low_health_ticks = 0
 	_runtime_power_active_ticks = 0
+	_runtime_player_dodge_ticks = 0
+	_runtime_attack_from_above_ticks = 0
+	_runtime_retreat_ticks = 0
+	_runtime_power_cyan_ticks = 0
+	_runtime_power_red_ticks = 0
+	_runtime_power_yellow_ticks = 0
 
 	var player := get_tree().get_first_node_in_group("player") as CharacterBody2D
 	if player != null:
@@ -1168,11 +1255,28 @@ func _collect_runtime_player_metrics() -> void:
 	if bool(player.get("is_dashing")):
 		_runtime_player_dash_ticks += 1
 
+	# Player dodges away from Umbra
+	if bool(player.get("is_dashing")):
+		var player_dir := signf(player.velocity.x)
+		var umbra_dir := signf(global_position.x - player.global_position.x)
+		if player_dir != 0 and player_dir == umbra_dir:
+			_runtime_player_dodge_ticks += 1
+
+	# Player retreats (moves away from Umbra)
+	var player_vx := float(player.velocity.x)
+	if absf(player_vx) > 20.0:
+		var rel_to_player := global_position.x - player.global_position.x
+		if (player_vx > 0 and rel_to_player < 0) or (player_vx < 0 and rel_to_player > 0):
+			_runtime_retreat_ticks += 1
+
 	var combat_node = player.get_node_or_null("Combat")
+	var current_on_floor: bool = player.is_on_floor()
 	if combat_node and bool(combat_node.get("is_attacking")):
 		_runtime_player_attack_ticks += 1
+		# Player attacks from above (in air + above Umbra)
+		if not current_on_floor and player.global_position.y < global_position.y - 20.0:
+			_runtime_attack_from_above_ticks += 1
 
-	var current_on_floor: bool = player.is_on_floor()
 	if not current_on_floor:
 		_runtime_player_air_ticks += 1
 
@@ -1183,9 +1287,15 @@ func _collect_runtime_player_metrics() -> void:
 	if health_node != null and float(health_node.get("current_health")) <= float(health_node.get("MAX_HEALTH")) * 0.35:
 		_runtime_low_health_ticks += 1
 
-	var color_manager = player.get_node_or_null("ColorManager")
-	if color_manager and bool(color_manager.get("power_active")):
-		_runtime_power_active_ticks += 1
+	var cm = player.get_node_or_null("ColorManager")
+	if cm:
+		if bool(cm.get("power_active")):
+			_runtime_power_active_ticks += 1
+		var ap = str(cm.get("active_power"))
+		match ap:
+			"cyan": _runtime_power_cyan_ticks += 1
+			"red": _runtime_power_red_ticks += 1
+			"yellow": _runtime_power_yellow_ticks += 1
 
 	if _runtime_prev_player_on_floor and not current_on_floor and float(player.velocity.y) < 0.0:
 		_runtime_player_jump_events += 1
@@ -1220,7 +1330,13 @@ func _build_runtime_snapshot(umbra_won: bool) -> Dictionary:
 		"air_time_ratio": float(_runtime_player_air_ticks) / count,
 		"close_range_ratio": float(_runtime_close_range_ticks) / count,
 		"low_health_ratio": float(_runtime_low_health_ticks) / count,
-		"power_usage_frequency": float(_runtime_power_active_ticks) / count
+		"power_usage_frequency": float(_runtime_power_active_ticks) / count,
+		"dodge_ratio": float(_runtime_player_dodge_ticks) / count,
+		"attack_from_above_ratio": float(_runtime_attack_from_above_ticks) / count,
+		"retreat_ratio": float(_runtime_retreat_ticks) / count,
+		"power_cyan_ratio": float(_runtime_power_cyan_ticks) / count,
+		"power_red_ratio": float(_runtime_power_red_ticks) / count,
+		"power_yellow_ratio": float(_runtime_power_yellow_ticks) / count
 	}
 
 	return {

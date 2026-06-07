@@ -19,6 +19,7 @@ enum ControlMode {
 @export var bot_strafe_distance := 90.0
 @export var bot_react_interval := 0.12
 @export var bot_jump_chance := 0.12
+@export var bot_voluntary_jump_chance := 0.02
 @export var bot_attack_range := 70.0
 @export var bot_dash_range := 120.0
 @export var debug_bot_logs := false
@@ -44,6 +45,11 @@ var _desired_dir := 0.0
 var _strafe_sign := 1.0
 var _react_timer := 0.0
 
+var _bot_power_timer := 0.0
+var _bot_power_cooldown_timer := 0.0
+var _bot_wants_power := ""
+var _bot_power_active := false
+
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
 @onready var health = $Health
@@ -62,6 +68,7 @@ func _physics_process(delta):
 
 	_handle_dash(delta)
 	_handle_attack(delta)
+	_handle_bot_powers(delta)
 
 	match control_mode:
 		ControlMode.HUMAN:
@@ -101,6 +108,14 @@ func reset_for_training(spawn_pos: Vector2) -> void:
 	health.is_invincible = false
 	health.invincibility_timer = 0.0
 	hurtbox.monitorable = true
+	_bot_power_timer = 0.0
+	_bot_power_cooldown_timer = 0.0
+	_bot_wants_power = ""
+	_bot_power_active = false
+	if color_manager:
+		color_manager.apply_unlocked_powers({"cyan": true, "red": true, "yellow": true})
+		if color_manager.power_active:
+			color_manager.change_state(color_manager.neutral_state)
 
 
 func _human_control(_delta: float) -> void:
@@ -138,8 +153,18 @@ func _smart_bot_control(_delta: float) -> void:
 	else:
 		_desired_dir = _strafe_sign
 
-	if is_on_floor() and rel.y < -48.0 and randf() < bot_jump_chance:
-		velocity.y = JUMP_VELOCITY
+	if is_on_floor():
+		var wants_jump := false
+		if not umbra.is_on_floor():
+			wants_jump = true
+		elif rel.y < -48.0 and randf() < bot_jump_chance:
+			wants_jump = true
+		elif randf() < bot_voluntary_jump_chance:
+			wants_jump = true
+		elif umbra.is_attacking and abs_x < bot_strafe_distance and randf() < 0.15:
+			wants_jump = true
+		if wants_jump:
+			velocity.y = JUMP_VELOCITY
 
 	if is_on_floor() and umbra.is_attacking and abs_x < bot_strafe_distance and dash_cooldown_timer <= 0.0:
 		_start_dash(-sign(rel.x))
@@ -148,6 +173,40 @@ func _smart_bot_control(_delta: float) -> void:
 
 	if abs_x <= bot_attack_range and attack_cooldown_timer <= 0.0:
 		_trigger_attack()
+
+	if _bot_power_cooldown_timer <= 0.0 and not color_manager.power_active:
+		if health.current_health <= 2 or (umbra.is_attacking and abs_x < bot_strafe_distance):
+			_bot_wants_power = "yellow"
+		elif abs_x <= bot_attack_range * 1.2 and attack_cooldown_timer <= ATTACK_COOLDOWN * 0.5:
+			_bot_wants_power = "red"
+		elif abs_x > bot_dash_range * 0.8:
+			_bot_wants_power = "cyan"
+		else:
+			_bot_wants_power = ""
+
+	if _bot_wants_power != "" and _bot_wants_power != color_manager.active_power:
+		match _bot_wants_power:
+			"cyan":
+				if color_manager.unlocked["cyan"] and color_manager.cooldown_timers["cyan"] <= 0.0:
+					color_manager.change_state(color_manager.cyan_state)
+					_bot_power_active = true
+			"red":
+				if color_manager.unlocked["red"] and color_manager.cooldown_timers["red"] <= 0.0:
+					color_manager.change_state(color_manager.red_state)
+					_bot_power_active = true
+			"yellow":
+				if color_manager.unlocked["yellow"] and color_manager.cooldown_timers["yellow"] <= 0.0:
+					color_manager.change_state(color_manager.yellow_state)
+					_bot_power_active = true
+
+
+func _handle_bot_powers(delta: float) -> void:
+	if _bot_power_cooldown_timer > 0.0:
+		_bot_power_cooldown_timer -= delta
+
+	if _bot_power_active and not color_manager.power_active:
+		_bot_power_active = false
+		_bot_power_cooldown_timer = 2.0
 
 
 func _start_dash(dir: float) -> void:

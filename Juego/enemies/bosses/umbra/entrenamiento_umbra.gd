@@ -22,6 +22,8 @@ enum TrainingPreset {
 @export var debug_overlay_refresh_interval := 0.2
 @export var randomize_spawn_mirroring := true
 @export var spawn_jitter_x := 24.0
+@export var training_power_mode := "cycle"
+@export var human_player_spawn_max_health := 5
 
 @onready var umbra = $Umbra
 @onready var player_dummy = $Player
@@ -58,6 +60,12 @@ func _ready():
 	_apply_mode_from_preset()
 	_set_training_mode(human_training_mode)
 	umbra.ai_controller.init(_active_player)
+
+	var cam := get_node_or_null("Camera2D") as Camera2D
+	if cam and not cam.is_in_group("camera"):
+		cam.add_to_group("camera")
+
+	_apply_training_power()
 	umbra.activate()
 	_episode_start_msec = Time.get_ticks_msec()
 	print("Entrenamiento Umbra | F9 reset aprendizaje | F10 resumen progreso")
@@ -270,6 +278,26 @@ func _update_debug_overlay(delta: float) -> void:
 	_overlay_label.append_text(bb)
 
 
+func _apply_training_power() -> void:
+	match training_power_mode:
+		"fixed_cyan":
+			umbra.forced_power = "cyan"
+		"fixed_red":
+			umbra.forced_power = "red"
+		"fixed_yellow":
+			umbra.forced_power = "yellow"
+		"cycle":
+			var powers := ["cyan", "red", "yellow"]
+			umbra.forced_power = powers[_episode_index % powers.size()]
+		"random":
+			var powers := ["cyan", "red", "yellow"]
+			umbra.forced_power = powers[randi() % powers.size()]
+		_:
+			umbra.forced_power = "auto"
+	umbra._assign_power()
+	umbra.color_manager._ensure_visual_shader()
+
+
 func _set_training_mode(is_human: bool) -> void:
 	if is_human:
 		_set_dummy_enabled(false)
@@ -277,6 +305,15 @@ func _set_training_mode(is_human: bool) -> void:
 			_human_player = HUMAN_PLAYER_SCENE.instantiate()
 			_human_player.name = "TrainingHumanPlayer"
 			add_child(_human_player)
+			_human_player.input_enabled = true
+			_human_player.can_attack = true
+			var cm := _human_player.get_node_or_null("ColorManager")
+			if cm and cm.has_method("apply_unlocked_powers"):
+				cm.apply_unlocked_powers({"cyan": true, "red": true, "yellow": true})
+			var hp := _human_player.get_node_or_null("Health")
+			if hp and hp.has_method("_sync_max_health_from_progress"):
+				hp.MAX_HEALTH = human_player_spawn_max_health
+				hp.current_health = human_player_spawn_max_health
 		_active_player = _human_player
 		_wire_player_death_callback(_active_player)
 	else:
@@ -386,6 +423,7 @@ func _reset():
 
 	umbra.global_position = umbra_spawn_pos
 	umbra.current_health = umbra.max_health
+	_apply_training_power()
 	umbra.activate()
 	if umbra.ai_controller and umbra.ai_controller.has_method("reset"):
 		umbra.ai_controller.reset()

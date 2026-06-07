@@ -35,7 +35,13 @@ const DEFAULT_UMBRA_PLAYER_METRICS := {
 	"air_time_ratio": 0.0,
 	"close_range_ratio": 0.0,
 	"low_health_ratio": 0.0,
-	"power_usage_frequency": 0.0
+	"power_usage_frequency": 0.0,
+	"dodge_ratio": 0.0,
+	"attack_from_above_ratio": 0.0,
+	"retreat_ratio": 0.0,
+	"power_cyan_ratio": 0.0,
+	"power_red_ratio": 0.0,
+	"power_yellow_ratio": 0.0
 }
 
 const BASE_PLAYER_MAX_HEALTH := 3
@@ -935,7 +941,8 @@ func register_umbra_encounter(encounter_data: Dictionary) -> void:
 	var blended: Dictionary = previous_metrics.duplicate(true)
 
 	# Blend metrics to preserve long-term tendencies while adapting each encounter.
-	for metric_key in previous_metrics.keys():
+	var all_keys: Array = previous_metrics.keys() + incoming_metrics.keys()
+	for metric_key in all_keys:
 		var previous_value := float(previous_metrics.get(metric_key, 0.0))
 		var incoming_value := float(incoming_metrics.get(metric_key, previous_value))
 		blended[metric_key] = lerp(previous_value, incoming_value, 0.35)

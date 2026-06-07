@@ -152,7 +152,8 @@ func get_obs() -> Dictionary:
 				1.0, 0.0, 0.0,
 				1.0,
 				1.0, 0.0,
-				0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+				0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+				1.0, 0.0, 0.0, 0.0
 			]
 		}
 	
@@ -196,6 +197,13 @@ func get_obs() -> Dictionary:
 	obs.append(clamp(player_metrics["low_health_ratio"], 0.0, 1.0))
 	obs.append(clamp(player_metrics["power_usage_frequency"], 0.0, 1.0))
 	
+	# Poder actual de Umbra (one-hot: none, cyan, red, yellow)
+	var umbra_power: String = _umbra.current_power
+	obs.append(1.0 if umbra_power == "none" else 0.0)
+	obs.append(1.0 if umbra_power == "cyan" else 0.0)
+	obs.append(1.0 if umbra_power == "red" else 0.0)
+	obs.append(1.0 if umbra_power == "yellow" else 0.0)
+	
 	return {"obs": obs}
 
 func get_action_space() -> Dictionary:
@@ -206,7 +214,7 @@ func get_action_space() -> Dictionary:
 		"dash": {"size": 2, "action_type": "discrete"},
 		"jump": {"size": 2, "action_type": "discrete"},
 		"move": {"size": 3, "action_type": "discrete"},
-		"power": {"size": 2, "action_type": "discrete"},
+		"power": {"size": 4, "action_type": "discrete"},
 	}
 
 func get_reward() -> float:
@@ -264,6 +272,15 @@ func get_reward() -> float:
 		r -= 0.0035 * float(min(_direction_mismatch_streak - 10, 40))
 
 	_update_move_diagnostics(rel_x, move_dir, desired_move)
+
+	# Recompensa/recompensa vertical: incentivar a Umbra a alcanzar la altura del jugador.
+	var rel_y := _player.global_position.y - _umbra.global_position.y
+	if absf(rel_y) < 20.0:
+		r += 0.003
+	elif rel_y < -80.0:
+		r -= 0.002
+	elif rel_y > 80.0:
+		r += 0.001
 
 	# Regularización anti-colapso: penaliza mantener la misma direccion demasiado tiempo
 	# cuando no hay mejora real de distancia.

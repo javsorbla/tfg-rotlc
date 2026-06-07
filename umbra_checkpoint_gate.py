@@ -12,21 +12,23 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 class DummyUmbraEnv(gym.Env):
     metadata = {}
 
+    OBS_DIM = 23
+
     def __init__(self, nvec: np.ndarray):
         self.observation_space = spaces.Dict(
-            {"obs": spaces.Box(low=-1.0, high=1.0, shape=(19,), dtype=np.float32)}
+            {"obs": spaces.Box(low=-1.0, high=1.0, shape=(self.OBS_DIM,), dtype=np.float32)}
         )
         self.action_space = spaces.MultiDiscrete(nvec.astype(np.int64))
 
     def reset(self, seed=None, options=None):
-        return {"obs": np.zeros((19,), dtype=np.float32)}, {}
+        return {"obs": np.zeros((self.OBS_DIM,), dtype=np.float32)}, {}
 
     def step(self, action):
-        return {"obs": np.zeros((19,), dtype=np.float32)}, 0.0, True, False, {}
+        return {"obs": np.zeros((self.OBS_DIM,), dtype=np.float32)}, 0.0, True, False, {}
 
 
 def sample_obs(batch: int) -> np.ndarray:
-    x = np.zeros((batch, 19), dtype=np.float32)
+    x = np.zeros((batch, 23), dtype=np.float32)
     x[:, 0] = np.random.uniform(-1, 1, size=batch)  # rel_x
     x[:, 1] = np.random.uniform(-0.8, 0.8, size=batch)  # rel_y
 
@@ -49,6 +51,11 @@ def sample_obs(batch: int) -> np.ndarray:
     x[:, 16] = np.random.uniform(0.0, 0.8, size=batch)
     x[:, 17] = np.random.uniform(0.0, 0.4, size=batch)
     x[:, 18] = np.random.uniform(0.0, 0.5, size=batch)
+    # Power one-hot: none (default)
+    x[:, 19] = 1.0
+    x[:, 20] = 0.0
+    x[:, 21] = 0.0
+    x[:, 22] = 0.0
     return x
 
 
