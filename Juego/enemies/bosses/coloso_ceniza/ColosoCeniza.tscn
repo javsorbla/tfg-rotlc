@@ -868,7 +868,7 @@ script = ExtResource("1_8pb1f")
 position = Vector2(4.76837e-07, 0)
 scale = Vector2(0.988281, 1.02148)
 sprite_frames = SubResource("SpriteFrames_26eiy")
-animation = &"rage_walk"
+animation = &"roar"
 
 [node name="NormalHurtbox" type="Area2D" parent="." groups=["boss_hurtbox"]]
 collision_layer = 16
