@@ -69,8 +69,14 @@ var lava_timer: float = LAVA_COOLDOWN
 
 var recover_timer: float = 0.0
 var phase_two: bool = false
+var _was_moving: bool = false
+var _spike_counter: int = 0
+var sfx_movimiento: AudioStreamPlayer
+var sfx_pinchos: AudioStreamPlayer
 
 @onready var sprite = $AnimatedSprite2D
+
+var luz: PointLight2D
 @onready var body_hitbox = $AttackHitbox
 @onready var normal_hurtbox = $NormalHurtbox
 @onready var core_hurtbox = $CoreHurtbox
@@ -78,6 +84,13 @@ var phase_two: bool = false
 @onready var lava_scene = preload("res://enemies/bosses/coloso_ceniza/ChorroLava.tscn")
 
 const CRYSTAL_SCENE: PackedScene = preload("res://objects/Cristal.tscn")
+
+const MOVIMIENTO_COLOSO := preload("res://music/enemies/bosses/coloso_ceniza/movimiento_coloso.ogg")
+const CAIDA_COLOSO := preload("res://music/enemies/bosses/coloso_ceniza/caida_coloso.ogg")
+const ATAQUE_PINCHOS := preload("res://music/enemies/bosses/coloso_ceniza/ataque_pinchos.ogg")
+const PUNO_COLOSO := preload("res://music/enemies/bosses/coloso_ceniza/puño_coloso.ogg")
+const RUGIDO_PINCHOS := preload("res://music/enemies/bosses/coloso_ceniza/rugido_pinchos.ogg")
+const RUGIDO_COLOSO := preload("res://music/enemies/bosses/coloso_ceniza/rugido_coloso.ogg")
 
 func _spawn_final_boss_crystal(variant_idx: int = 1, offset := Vector2(0, -34)) -> void:
 	if CRYSTAL_SCENE == null:
@@ -144,6 +157,47 @@ func _ready():
 	core_hurtbox.monitoring = false
 	core_hurtbox.monitorable = false
 
+	luz = PointLight2D.new()
+	add_child(luz)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+	luz.color = Color(1.0, 0.35, 0.05)
+	luz.z_index = 100
+	luz.energy = 0.0
+
+	var imagen: Image = Image.create(128, 128, false, Image.FORMAT_RGBA8)
+	for x in 128:
+		for y in 128:
+			var dx: float = (x - 64.0) / 64.0
+			var dy: float = (y - 64.0) / 64.0
+			var dist: float = sqrt(dx*dx + dy*dy)
+			var alpha: float = clamp(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.8)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.texture_scale = 1.5
+
+	sfx_movimiento = AudioStreamPlayer.new()
+	sfx_movimiento.stream = MOVIMIENTO_COLOSO
+	sfx_movimiento.bus = &"EFX"
+	sfx_movimiento.volume_db = 15.0
+	add_child(sfx_movimiento)
+
+	sfx_pinchos = AudioStreamPlayer.new()
+	sfx_pinchos.stream = ATAQUE_PINCHOS
+	sfx_pinchos.bus = &"EFX"
+	sfx_pinchos.volume_db = -3.0
+	add_child(sfx_pinchos)
+
+
+func _play_one_shot(stream: AudioStream, vol: float = 0.0) -> void:
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
 
 func _physics_process(delta):
 	if not is_active:
@@ -193,6 +247,15 @@ func _physics_process(delta):
 	if lava_timer > 0.0 and current_state != State.HURT:
 		lava_timer -= delta
 
+	var is_moving: bool = current_state == State.IDLE and sprite.animation in ["walk", "rage_walk"]
+	if is_moving and not _was_moving:
+		sfx_movimiento.play()
+	elif not is_moving and _was_moving:
+		sfx_movimiento.stop()
+	if is_moving:
+		sfx_movimiento.pitch_scale = 1.0 + (move_speed - 40.0) / 80.0
+	_was_moving = is_moving
+
 	_check_phase()
 	_handle_state(delta)
 
@@ -225,6 +288,7 @@ func _enter_phase_two():
 		_recover_from_hurt()
 		return
 	
+	_play_one_shot(RUGIDO_COLOSO, 12.0)
 	sprite.play(_anim("roar"))
 	
 	if not sprite.animation_finished.is_connected(_on_phase_two_roar_finished):
@@ -297,6 +361,8 @@ func _enter_hurt():
 	hurt_timer = HURT_DURATION
 	is_vulnerable = false
 	move_direction = Vector2.ZERO
+
+	_play_one_shot(CAIDA_COLOSO, 9.0)
 	
 	sprite.stop()
 	sprite.animation = "hurt"
@@ -336,6 +402,10 @@ func _recover_from_hurt():
 	var roar_duration = sprite.sprite_frames.get_frame_count("roar") / sprite.sprite_frames.get_animation_speed("roar")
 	recover_timer = roar_duration
 
+	if phase_two:
+		_play_one_shot(RUGIDO_COLOSO, 12.0)
+	else:
+		_play_one_shot(RUGIDO_PINCHOS, 18.0)
 	sprite.play(_anim("roar"))
 
 	body_hitbox.set_deferred("monitoring", true)
@@ -409,10 +479,11 @@ func _do_punch():
 
 
 func _on_punch_frame_changed():
-	if sprite.animation != "punch":
+	if sprite.animation != "punch" and sprite.animation != "rage_punch":
 		return
 	if sprite.frame == 5 and not punch_hit_done:
 		punch_hit_done = true
+		_play_one_shot(PUNO_COLOSO, 9.0)
 		_do_punch()
 		sprite.frame_changed.disconnect(_on_punch_frame_changed)
 
@@ -443,7 +514,8 @@ func _start_spike_attack():
 	if dist > 150.0:
 		return
 	
-	is_spike_attacking = true 
+	is_spike_attacking = true
+	_play_one_shot(RUGIDO_PINCHOS, 18.0)
 	sprite.play(_anim("roar"))
 	var push_x = sign(p.global_position.x - global_position.x)
 	p.velocity.x = push_x * SPIKE_SHOCKWAVE_FORCE
@@ -486,6 +558,21 @@ func _spawn_spike(spawn_x: float):
 	var spike = pincho_scene.instantiate()
 	get_parent().add_child(spike)
 	spike.global_position = Vector2(spawn_x, room_bottom_limit - 8.0)
+
+	_spike_counter += 1
+	if _spike_counter == 1:
+		sfx_pinchos.play()
+	spike.tree_exited.connect(_on_spike_tree_exited)
+
+
+
+func _on_spike_tree_exited():
+	if current_state == State.DEAD or not is_instance_valid(sfx_pinchos):
+		return
+	_spike_counter -= 1
+	if _spike_counter <= 0:
+		_spike_counter = 0
+		sfx_pinchos.stop()
 	
 
 func _start_lava_attack():
@@ -557,6 +644,8 @@ func _update_flip(should_face_left: bool):
 
 func activate():
 	_reset_for_encounter(true)
+	if luz:
+		luz.energy = 4.0
 	sprite.play(_anim("walk"))
 
 
@@ -568,6 +657,11 @@ func _reset_for_encounter(make_active: bool) -> void:
 	if damage_flash_tween:
 		damage_flash_tween.kill()
 		damage_flash_tween = null
+
+	sfx_movimiento.stop()
+	sfx_pinchos.stop()
+	_was_moving = false
+	_spike_counter = 0
 
 	global_position = spawn_position
 	current_health = MAX_HEALTH
@@ -595,6 +689,9 @@ func _reset_for_encounter(make_active: bool) -> void:
 	normal_hurtbox.set_deferred("monitorable", true)
 
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+	if luz:
+		luz.energy = 0.0
 
 	if player:
 		var desired_left = player.global_position.x < global_position.x
@@ -681,6 +778,12 @@ func die():
 	NakamaManager.add_enemy_kill()
 	current_state = State.DEAD
 	is_active = false
+	sfx_movimiento.stop()
+	sfx_pinchos.stop()
+	_spike_counter = 0
+	if luz:
+		var tween := create_tween()
+		tween.tween_property(luz, "energy", 0.0, 1.5)
 	_spawn_final_boss_crystal(1)
 	
 	body_hitbox.set_deferred("monitoring", false)
@@ -690,6 +793,7 @@ func die():
 	core_hurtbox.set_deferred("monitoring", false)
 	core_hurtbox.set_deferred("monitorable", false)
 	
+	_play_one_shot(RUGIDO_COLOSO, 15.0)
 	sprite.play("dead")
 	
 	var closest_boss_room = null

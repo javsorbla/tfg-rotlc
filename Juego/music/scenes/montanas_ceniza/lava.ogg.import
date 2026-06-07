@@ -12,7 +12,7 @@ dest_files=["res://.godot/imported/lava.ogg-fcae368b42187c881e2acc54877c43dc.ogg
 
 [params]
 
-loop=false
+loop=true
 loop_offset=0
 bpm=0
 beat_count=0

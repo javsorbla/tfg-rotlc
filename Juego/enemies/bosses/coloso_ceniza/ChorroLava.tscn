@@ -52,6 +52,9 @@ region = Rect2(448, 0, 64, 64)
 atlas = ExtResource("3_47ck6")
 region = Rect2(512, 0, 64, 64)
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_n50h2"]
+blend_mode = 1
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_i1id6"]
 animations = [{
 "frames": [{
@@ -109,6 +112,14 @@ script = ExtResource("1_l1g2d")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -67)
 scale = Vector2(1.53125, 3.125)
+sprite_frames = SubResource("SpriteFrames_i1id6")
+animation = &"base"
+
+[node name="AnimatedSprite2DGlow" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -67)
+scale = Vector2(1.8, 3.5)
+modulate = Color(1, 0.4, 0.05, 0.35)
+material = SubResource("CanvasItemMaterial_n50h2")
 sprite_frames = SubResource("SpriteFrames_i1id6")
 animation = &"base"
 
