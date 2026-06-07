@@ -330,6 +330,9 @@ position = Vector2(1967, -1515)
 [node name="Checkpoint2" parent="Checkpoints" instance=ExtResource("12_wryeu")]
 position = Vector2(4386, -3371)
 
+[node name="Checkpoint3" parent="Checkpoints" instance=ExtResource("12_wryeu")]
+position = Vector2(68, -27)
+
 [node name="Entorno" type="Node2D" parent="."]
 
 [node name="PlataformaMagica1" parent="Entorno" node_paths=PackedStringArray("plataforma_siguiente") instance=ExtResource("2_mbkwy")]
@@ -663,10 +666,10 @@ color_default = Color(0.594418, 0.534013, 0.854205, 1)
 [node name="Luces" type="Node2D" parent="."]
 
 [node name="AntorchaSuelo" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(94, -30)
+position = Vector2(173, -31)
 
 [node name="AntorchaSuelo2" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(288, -31)
+position = Vector2(374, -31)
 
 [node name="AntorchaSuelo3" parent="Luces" instance=ExtResource("26_51j7u")]
 position = Vector2(554, -111)

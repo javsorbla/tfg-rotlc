@@ -6,11 +6,21 @@ const LAVA_SOURCE_ID = 2
 const LAVA_COORDS_NIVEL = [Vector2i(9,0)]
 const TILE_SIZE = 16
 const BASE_SCALE = 0.9
+const LAVA_SOUND := preload("res://music/scenes/montanas_ceniza/lava.ogg")
+const ZONA_RADIO := 35.0
 
 var _textura_luz: ImageTexture = _crear_textura_luz()
+var ambient_player: AudioStreamPlayer
+var zonas_activas := 0
 
 
 func _ready():
+	ambient_player = AudioStreamPlayer.new()
+	ambient_player.name = "AmbienteLava"
+	ambient_player.stream = LAVA_SOUND
+	ambient_player.bus = &"EFX"
+	ambient_player.volume_db = 3.0
+	add_child(ambient_player)
 	_generar_luces()
 
 
@@ -83,3 +93,36 @@ func _crear_luz_para_segmento(tm: TileMapLayer, x_start: int, x_end: int, y: int
 	var tween = create_tween().set_loops()
 	tween.tween_property(luz, "energy", 2.0, 1.2).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(luz, "energy", 1.2, 1.2).set_trans(Tween.TRANS_SINE)
+
+	_crear_zona_proximidad(tm, x_start, x_end, y)
+
+func _crear_zona_proximidad(tm: TileMapLayer, x_start: int, x_end: int, y: int) -> void:
+	var num_tiles = x_end - x_start + 1
+	var pos_start = tm.map_to_local(Vector2i(x_start, y))
+	var pos_end = tm.map_to_local(Vector2i(x_end, y))
+	var pos = (pos_start + pos_end) / 2.0
+	var zona = Area2D.new()
+	zona.name = "ZonaProximidadLava_%d_%d" % [x_start, y]
+	zona.collision_mask = 4
+	var shape = CollisionShape2D.new()
+	var rect = RectangleShape2D.new()
+	rect.size = Vector2(num_tiles * TILE_SIZE + TILE_SIZE * ZONA_RADIO, TILE_SIZE * ZONA_RADIO)
+	shape.shape = rect
+	zona.position = pos
+	zona.add_child(shape)
+	zona.body_entered.connect(_on_zona_body_entered)
+	zona.body_exited.connect(_on_zona_body_exited)
+	add_child(zona)
+
+func _on_zona_body_entered(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		zonas_activas += 1
+		if zonas_activas == 1:
+			ambient_player.play()
+
+func _on_zona_body_exited(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		zonas_activas -= 1
+		if zonas_activas <= 0:
+			zonas_activas = 0
+			ambient_player.stop()
