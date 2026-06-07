@@ -1,5 +1,6 @@
 extends Node2D
 
+const TORRE_SCENE := "res://scenes/TorreDelVacio.tscn"
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
 const COSTA_AMBAR_MUSIC := preload("res://music/scenes/costa_ambar/costa_ambar.ogg")
@@ -10,9 +11,11 @@ const VOLUME_FADE_DURATION: float = 1.5
 var _in_cave: bool = false
 var storm_player: AudioStreamPlayer
 
-func _ready() -> void:
+func _enter_tree() -> void:
 	GameState.current_level = 3
 	GameState.current_level_path = "res://scenes/CostaAmbar.tscn"
+
+func _ready() -> void:
 	if GameState.has_method("auto_unlock_power_for_level"):
 		GameState.auto_unlock_power_for_level()
 	NakamaManager.start_run(GameState.current_level)
@@ -71,6 +74,12 @@ func _mover_player() -> void:
 			player.global_position = GameState.spawn_position
 		else:
 			player.global_position = Vector2(-64, -14)
+
+func _on_final_body_entered(body) -> void:
+	if body is CharacterBody2D:
+		GameState.coming_from_transition = true
+		ProjectMusicController.stop()
+		get_tree().call_deferred("change_scene_to_file", TORRE_SCENE)
 
 func _on_player_died(_owner: Node) -> void:
 	var death_screen = get_node_or_null("DeathScreenLayer/DeathScreen")

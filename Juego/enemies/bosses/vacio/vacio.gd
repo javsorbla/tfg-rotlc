@@ -10,7 +10,13 @@ const HEIGHT_OFFSET: float = -30.0
 const HITS_UNTIL_ORB: int = 10
 const MAX_ACTIVE_ORBS: int = 3
 const ORBE_LUZ_SCENE = preload("res://objects/OrbeDeLuz.tscn")
-var MUSICA_BATALLA = preload("res://music/enemies/bosses/vacio/batalla_vacio.ogg") 
+var MUSICA_BATALLA = preload("res://music/enemies/bosses/vacio/batalla_vacio.ogg")
+const TELEPORT_SOUND := preload("res://music/enemies/bosses/vacio/teleport_vacio.ogg")
+const LAUGH_SOUND := preload("res://music/enemies/bosses/vacio/risa_vacio.ogg")
+const EXPLOSION_AOE_SOUND := preload("res://music/enemies/bosses/vacio/explosion_vacio.ogg")
+const BOLA_SOUND := preload("res://music/enemies/bosses/vacio/bola_vacio.ogg")
+const MUERTE_SOUND := preload("res://music/enemies/bosses/vacio/muerte_vacio.ogg")
+const TRAMPA_PINCHOS_SOUND := preload("res://music/scenes/torre_vacio/trampa_pinchos.ogg")
 
 # --- ESTADOS ---
 enum State { IDLE, CHASE, EXPAND, VANISH, APPEAR, AOE, SPIKE_RAIN, SHOOT, PHASE_TRANSITION, DYING, DEAD }
@@ -51,6 +57,13 @@ var damage_flash_tween: Tween = null
 var action_tween: Tween = null
 
 var hits_received: int = 0
+var laugh_timer: float = 0.0
+var sfx_teleport: AudioStreamPlayer2D
+var sfx_laugh: AudioStreamPlayer2D
+var sfx_laugh_expand: AudioStreamPlayer2D
+var sfx_bola: AudioStreamPlayer2D
+var sfx_spikes: AudioStreamPlayer2D
+var carga_aoe_player: AudioStreamPlayer2D
 
 var dying_center: Vector2 = Vector2.ZERO
 var dying_phrases: Array = [
@@ -79,7 +92,50 @@ func _ready() -> void:
 		body_hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
 	if not normal_hurtbox.area_entered.is_connected(_on_normal_hurtbox_area_entered):
 		normal_hurtbox.area_entered.connect(_on_normal_hurtbox_area_entered)
-		
+
+	sfx_teleport = AudioStreamPlayer2D.new()
+	sfx_teleport.name = "TeleportSfx"
+	sfx_teleport.stream = TELEPORT_SOUND
+	sfx_teleport.bus = &"EFX"
+	sfx_teleport.volume_db = 8.0
+	sfx_teleport.max_distance = 1000.0
+	add_child(sfx_teleport)
+
+	sfx_laugh = AudioStreamPlayer2D.new()
+	sfx_laugh.name = "LaughSfx"
+	sfx_laugh.stream = LAUGH_SOUND
+	sfx_laugh.bus = &"EFX"
+	sfx_laugh.volume_db = 6.0
+	sfx_laugh.max_distance = 1000.0
+	add_child(sfx_laugh)
+
+	sfx_laugh_expand = AudioStreamPlayer2D.new()
+	sfx_laugh_expand.name = "LaughExpandSfx"
+	sfx_laugh_expand.stream = LAUGH_SOUND
+	sfx_laugh_expand.bus = &"EFX"
+	sfx_laugh_expand.volume_db = 10.0
+	sfx_laugh_expand.pitch_scale = 0.6
+	sfx_laugh_expand.max_distance = 1200.0
+	add_child(sfx_laugh_expand)
+
+	sfx_bola = AudioStreamPlayer2D.new()
+	sfx_bola.name = "BolaSfx"
+	sfx_bola.stream = BOLA_SOUND
+	sfx_bola.bus = &"EFX"
+	sfx_bola.volume_db = 6.0
+	sfx_bola.max_distance = 1000.0
+	add_child(sfx_bola)
+
+	sfx_spikes = AudioStreamPlayer2D.new()
+	sfx_spikes.name = "SpikesSfx"
+	sfx_spikes.stream = TRAMPA_PINCHOS_SOUND
+	sfx_spikes.bus = &"EFX"
+	sfx_spikes.volume_db = 0.0
+	sfx_spikes.max_distance = 1000.0
+	add_child(sfx_spikes)
+
+	laugh_timer = randf_range(7.0, 10.0)
+
 	_enter_state(State.IDLE)
 
 
@@ -126,20 +182,26 @@ func _enter_state(new_state: State) -> void:
 				action_timer = randf_range(4.0, 7.0) 
 				sprite.modulate = Color(1, 1, 1, 1)
 		State.EXPAND:
-			state_timer = 2.5 if in_phase_2 else 3.0 
+			state_timer = 2.5 if in_phase_2 else 3.0
 			_start_expansion()
+			sfx_laugh_expand.stop()
+			sfx_laugh_expand.play()
 		State.VANISH:
-			state_timer = 1.0 
-			_set_hitboxes_active(false) 
+			state_timer = 1.0
+			_set_hitboxes_active(false)
 			if action_tween: action_tween.kill()
 			action_tween = create_tween()
-			action_tween.tween_property(self, "modulate:a", 0.0, 1.0) 
+			action_tween.tween_property(self, "modulate:a", 0.0, 1.0)
+			sfx_teleport.stop()
+			sfx_teleport.play()
 		State.APPEAR:
-			state_timer = 1.0 if in_phase_2 else 1.5 
+			state_timer = 1.0 if in_phase_2 else 1.5
 			if player: global_position = player.global_position + Vector2(0, HEIGHT_OFFSET)
 			if action_tween: action_tween.kill()
 			action_tween = create_tween()
-			action_tween.tween_property(self, "modulate:a", 0.4, 0.2) 
+			action_tween.tween_property(self, "modulate:a", 0.4, 0.2)
+			sfx_teleport.stop()
+			sfx_teleport.play()
 		State.AOE:
 			_start_aoe_attack()
 		State.SPIKE_RAIN:
@@ -149,6 +211,24 @@ func _enter_state(new_state: State) -> void:
 		State.PHASE_TRANSITION:
 			_start_phase_transition()
 		State.DYING:
+			sfx_laugh.stop()
+			sfx_laugh_expand.stop()
+			sfx_bola.stop()
+			sfx_spikes.stop()
+			if carga_aoe_player:
+				carga_aoe_player.stop()
+				carga_aoe_player.queue_free()
+				carga_aoe_player = null
+			var muerte = AudioStreamPlayer2D.new()
+			muerte.stream = MUERTE_SOUND
+			muerte.bus = &"EFX"
+			muerte.volume_db = 20.0
+			muerte.max_distance = 1200.0
+			add_child(muerte)
+			muerte.play()
+			var fade = create_tween()
+			fade.tween_property(muerte, "volume_db", -60.0, 5.0)
+			fade.tween_callback(muerte.queue_free)
 			if action_tween: action_tween.kill()
 			_set_hitboxes_active(false)
 			is_invulnerable = true
@@ -173,9 +253,19 @@ func _enter_state(new_state: State) -> void:
 			var boss_room = get_tree().get_first_node_in_group("boss_room")
 			if boss_room and boss_room.has_method("on_boss_defeated"):
 				boss_room.on_boss_defeated()
+			if MUSICA_BATALLA and ProjectMusicController.has_method("play_stream") and is_instance_valid(ProjectMusicController.music_stream_player):
+				if ProjectMusicController.music_stream_player.stream != MUSICA_BATALLA:
+					ProjectMusicController.play_stream(MUSICA_BATALLA)
+					ProjectMusicController.blend_to(4.0, 0.0)
 			queue_free()
 
 func _on_level_reset() -> void:
+	sfx_bola.stop()
+	sfx_spikes.stop()
+	if carga_aoe_player:
+		carga_aoe_player.stop()
+		carga_aoe_player.queue_free()
+		carga_aoe_player = null
 	if action_tween: action_tween.kill()
 	if damage_flash_tween: damage_flash_tween.kill()
 	global_position = spawn_position
@@ -198,23 +288,28 @@ func _on_level_reset() -> void:
 	dying_phrase_timer = 0.0
 	dying_reached_center = false
 	hits_received = 0
+	laugh_timer = randf_range(7.0, 10.0)
 	_enter_state(State.IDLE)
 
 
 # --- FUNCIONES DE ESTADO DE IA ---
 
 func _state_chase(delta: float) -> void:
-	# Los ataques van por bolsa para que pase por todos antes de repetir, y se mezclan al azar cada vez que se llenan
 	if not player: return
 	var target_pos = player.global_position + Vector2(0, HEIGHT_OFFSET)
 	var speed = CHASE_SPEED_P2 if in_phase_2 else CHASE_SPEED_P1
 	global_position += (target_pos - global_position).normalized() * speed * delta
-	
+
 	action_timer -= delta
 	if action_timer <= 0:
-		var siguiente_ataque = _sacar_ataque_de_bolsa()
-		
-		_enter_state(siguiente_ataque)
+		_enter_state(_sacar_ataque_de_bolsa())
+		return
+
+	laugh_timer -= delta
+	if laugh_timer <= 0:
+		laugh_timer = randf_range(7.0, 10.0)
+		sfx_laugh.stop()
+		sfx_laugh.play()
 
 func _state_expand(delta: float) -> void:
 	state_timer -= delta
@@ -250,7 +345,15 @@ func _sacar_ataque_de_bolsa() -> State:
 
 func _start_spike_rain() -> void:
 	state_timer = 2.0
-	
+	sfx_spikes.stop()
+	sfx_spikes.play()
+	var spike_len = sfx_spikes.stream.get_length()
+	if spike_len > 0:
+		get_tree().create_timer(spike_len).timeout.connect(func():
+			sfx_spikes.stop()
+			sfx_spikes.play()
+		, CONNECT_ONE_SHOT)
+
 	if action_tween: action_tween.kill()
 	action_tween = create_tween()
 	action_tween.tween_property(self, "global_position:y", global_position.y - 20, 0.2)
@@ -269,13 +372,11 @@ func _spawn_spikes() -> void:
 		
 		var altura_techo = spawn_position.y - 300.0 
 		var distancia_total = right - left
-		
 
 		var ancho_pincho = 29.0 
-		
 
 		var numero_pinchos = int(distancia_total / ancho_pincho)
-		
+
 		for i in range(numero_pinchos + 1):
 			var pincho = escena_pincho.instantiate()
 			get_parent().add_child(pincho)
@@ -302,8 +403,19 @@ func _state_phase_transition(delta: float) -> void:
 		_enter_state(State.CHASE)
 
 func _start_aoe_attack() -> void:
-	state_timer = 4.0 
-	_set_hitboxes_active(false) 
+	state_timer = 4.0
+	_set_hitboxes_active(false)
+	if carga_aoe_player:
+		carga_aoe_player.stop()
+		carga_aoe_player.queue_free()
+	carga_aoe_player = AudioStreamPlayer2D.new()
+	carga_aoe_player.name = "CargaAoeSfx"
+	carga_aoe_player.stream = preload("res://music/enemies/bosses/vacio/carga_vacio.ogg")
+	carga_aoe_player.bus = &"EFX"
+	carga_aoe_player.volume_db = 12.0
+	carga_aoe_player.max_distance = 1200.0
+	add_child(carga_aoe_player)
+	carga_aoe_player.play()
 	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("explosion"):
 		sprite.play("explosion")
 		sprite.stop()
@@ -322,8 +434,8 @@ func _start_aoe_attack() -> void:
 		global_position.y = spawn_position.y
 	if action_tween: action_tween.kill()
 	action_tween = create_tween()
-	action_tween.tween_property(flash_pantalla, "color:a", 0.6, 2.5) 
-	action_tween.parallel().tween_property(sprite, "modulate", Color(3, 0, 3, 1), 2.5) 
+	action_tween.tween_property(flash_pantalla, "color:a", 0.6, 2.5)
+	action_tween.parallel().tween_property(sprite, "modulate", Color(3, 0, 3, 1), 2.5)
 
 func _state_aoe(delta: float) -> void:
 	state_timer -= delta
@@ -338,6 +450,18 @@ func _state_aoe(delta: float) -> void:
 			sprite.frame = 6
 			_execute_aoe_damage()
 			aoe_damage_done = true
+			if carga_aoe_player:
+				carga_aoe_player.stop()
+			var explosion = AudioStreamPlayer2D.new()
+			explosion.stream = EXPLOSION_AOE_SOUND
+			explosion.bus = &"EFX"
+			explosion.volume_db = 6.0
+			explosion.max_distance = 1200.0
+			add_child(explosion)
+			explosion.play()
+			var fade = create_tween()
+			fade.tween_property(explosion, "volume_db", -60.0, 6.0)
+			fade.tween_callback(explosion.queue_free)
 		elif state_timer > 0.9:
 			sprite.frame = 7
 			aoe_explosion_shown = true
@@ -348,6 +472,10 @@ func _state_aoe(delta: float) -> void:
 			sprite.frame = 9
 			aoe_frame_9_shown = true
 	if state_timer <= 0:
+		if carga_aoe_player:
+			carga_aoe_player.stop()
+			carga_aoe_player.queue_free()
+			carga_aoe_player = null
 		if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("default"):
 			sprite.play("default")
 			sprite.frame = 0
@@ -474,6 +602,9 @@ func activate() -> void:
 	is_active = true
 	if MUSICA_BATALLA and ProjectMusicController.has_method("play_stream"):
 		ProjectMusicController.play_stream(MUSICA_BATALLA)
+		ProjectMusicController.blend_to(4.0, 0.0)
+	sfx_laugh.stop()
+	sfx_laugh.play()
 	_enter_state(State.CHASE)
 
 func _update_facing() -> void:
@@ -550,6 +681,8 @@ func _play_damage_flash() -> void:
 
 func _start_shoot() -> void:
 	state_timer = 2.5
+	sfx_bola.stop()
+	sfx_bola.play()
 
 	if action_tween: action_tween.kill()
 	action_tween = create_tween()
@@ -581,6 +714,10 @@ func _spawn_bola() -> void:
 
 	var target_pos = player.global_position + Vector2(0, HEIGHT_OFFSET)
 	bola.direction = (target_pos - global_position).normalized()
+
+	bola.tree_exited.connect(func():
+		sfx_bola.stop()
+	, CONNECT_ONE_SHOT)
 
 
 func _spawn_healing_orb() -> void:

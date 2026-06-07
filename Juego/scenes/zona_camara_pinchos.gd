@@ -1,9 +1,10 @@
 extends Area2D
 
-# Arrastraremos aquí la cámara fija que creamos en el Paso 1
 @export var camara_fija: Camera2D
 
-# Cuando el jugador ENTRA en la zona de los pinchos
+func _ready():
+	add_to_group("spike_camera_zone")
+
 func _on_body_entered(body):
 	if body.is_in_group("player"):
 		if camara_fija != null:
