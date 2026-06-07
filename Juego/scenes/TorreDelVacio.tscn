@@ -518,7 +518,7 @@ separacion_pinchos = 12.0
 zoom = Vector2(1, 1)
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("15_4xeyx")]
-position = Vector2(26, -29)
+position = Vector2(31, -31)
 collision_mask = 5
 
 [node name="Sync" type="Node" parent="."]
@@ -529,6 +529,7 @@ onnx_model_path = "res://umbra.onnx"
 
 [node name="ZonaJefe" parent="." groups=["boss_room"] instance=ExtResource("18_vsa3d")]
 position = Vector2(5115, -3936)
+skip_music_on_defeat = true
 
 [node name="Trigger" parent="ZonaJefe" index="0"]
 position = Vector2(56, 37)

@@ -59,8 +59,11 @@ func _mover_player() -> void:
 		if GameState.coming_from_transition:
 			GameState.coming_from_transition = false
 			GameState.checkpoint_activated = false
+			player.global_position = Vector2(31, -31)
 		elif GameState.checkpoint_activated:
 			player.global_position = GameState.spawn_position
+		else:
+			player.global_position = Vector2(31, -31)
 
 func _on_player_died(_owner: Node) -> void:
 	var death_screen = get_node_or_null("DeathScreenLayer/DeathScreen")

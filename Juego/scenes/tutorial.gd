@@ -6,9 +6,11 @@ const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
 
 @onready var message_manager: Node = get_node_or_null("TutorialMessageManager")
 
-func _ready() -> void:
+func _enter_tree() -> void:
 	GameState.current_level = 0
 	GameState.current_level_path = "res://scenes/Tutorial.tscn"
+
+func _ready() -> void:
 
 	if GameState.has_method("auto_unlock_power_for_level"):
 		GameState.auto_unlock_power_for_level()

@@ -14,9 +14,11 @@ var _wind_tween: Tween
 
 
 # Called when the node enters the scene tree for the first time.
-func _ready() -> void:
+func _enter_tree() -> void:
 	GameState.current_level = 1
 	GameState.current_level_path = "res://scenes/CamposDeZafiro.tscn"
+
+func _ready() -> void:
 
 	if GameState.has_method("auto_unlock_power_for_level"):
 		GameState.auto_unlock_power_for_level()

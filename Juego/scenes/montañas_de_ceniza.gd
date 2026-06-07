@@ -25,9 +25,11 @@ var id_tileset = 1
 var coordenadas_imagen = Vector2i(2, 1) 
 
 
-func _ready() -> void:
+func _enter_tree() -> void:
 	GameState.current_level = 2
 	GameState.current_level_path = "res://scenes/MontañasDeCeniza.tscn"
+
+func _ready() -> void:
 	
 	if GameState.has_method("auto_unlock_power_for_level"):
 		GameState.auto_unlock_power_for_level()
