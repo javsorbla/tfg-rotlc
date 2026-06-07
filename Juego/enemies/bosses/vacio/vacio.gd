@@ -474,6 +474,7 @@ func activate() -> void:
 	is_active = true
 	if MUSICA_BATALLA and ProjectMusicController.has_method("play_stream"):
 		ProjectMusicController.play_stream(MUSICA_BATALLA)
+		ProjectMusicController.blend_to(6.0, 0.0)
 	_enter_state(State.CHASE)
 
 func _update_facing() -> void:
