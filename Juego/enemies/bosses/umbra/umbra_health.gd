@@ -10,6 +10,9 @@ const MAX_ACTIVE_ORBS := 4
 
 const ORBE_LUZ_SCENE := preload("res://objects/OrbeDeLuz.tscn")
 
+const DAMAGE_FLASH_TIME := 0.08
+var _damage_flash_tween: Tween = null
+
 
 func setup() -> void:
 	hurtbox.set_deferred("monitorable", true)
@@ -34,6 +37,7 @@ func take_damage(amount: int) -> void:
 		return
 
 	umbra.current_health -= amount
+	_play_damage_flash()
 	umbra.is_invincible = true
 	umbra.invincibility_timer = umbra.INVINCIBILITY_DURATION
 	hurtbox.set_deferred("monitorable", false)
@@ -46,6 +50,20 @@ func take_damage(amount: int) -> void:
 	
 	if umbra.current_health <= 0:
 		umbra.die()
+
+
+func _play_damage_flash() -> void:
+	var sprite: AnimatedSprite2D = umbra.get_node("AnimatedSprite2D")
+	if sprite == null or sprite.material == null:
+		return
+	if _damage_flash_tween:
+		_damage_flash_tween.kill()
+	sprite.material.set_shader_parameter("flash_amount", 1.0)
+	_damage_flash_tween = create_tween()
+	_damage_flash_tween.tween_method(
+		func(v: float): sprite.material.set_shader_parameter("flash_amount", v),
+		1.0, 0.0, DAMAGE_FLASH_TIME
+	)
 
 
 func _spawn_healing_orb() -> void:

@@ -257,6 +257,11 @@ func _on_level_reset():
 	attack_hitbox.set_deferred("monitorable", false)
 	hurtbox.set_deferred("monitorable", true)
 
+	# Limpiar zonas de oscuridad que hayan quedado en escena al reiniciar.
+	for zone in get_tree().get_nodes_in_group("darkness_zone"):
+		if is_instance_valid(zone):
+			zone.queue_free()
+
 func _setup_model_indicator() -> void:
 	if not debug_model_indicator:
 		return

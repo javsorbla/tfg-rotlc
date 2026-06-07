@@ -144,7 +144,9 @@ func _spawn_darkness_zone(spawn_pos: Vector2) -> void:
 	var circle := CircleShape2D.new()
 	circle.radius = umbra.darkness_zone_radius
 	shape.shape = circle
+	shape.visible = false
 	zone.add_child(shape)
+	zone.add_to_group("darkness_zone")
 
 	if zone.has_method("configure"):
 		zone.configure(
