@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ddxhes4nqbet3"
-path="res://.godot/imported/bfc50400-557e-4458-91cd-e50c5af297d8.png-2d7cd09dbbb039e3fc47f32b87291233.ctex"
+uid="uid://cunnkh134aero"
+path="res://.godot/imported/vanish_sheet.png-72a39e381a7f091be4c4a20efe860235.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/gdUnit4/tmp-update/bfc50400-557e-4458-91cd-e50c5af297d8.png"
-dest_files=["res://.godot/imported/bfc50400-557e-4458-91cd-e50c5af297d8.png-2d7cd09dbbb039e3fc47f32b87291233.ctex"]
+source_file="res://assets/enemies/bosses/umbra/vanish_sheet.png"
+dest_files=["res://.godot/imported/vanish_sheet.png-72a39e381a7f091be4c4a20efe860235.ctex"]
 
 [params]
 

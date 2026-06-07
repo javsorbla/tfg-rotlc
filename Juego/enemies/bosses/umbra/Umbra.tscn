@@ -8,14 +8,13 @@
 [ext_resource type="Script" path="res://enemies/bosses/umbra/umbra_colors.gd" id="6_6qn2i"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ifwve"]
-radius = 12.0
-height = 40.0
+height = 34.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3di5o"]
-size = Vector2(38, 47)
+size = Vector2(30, 44)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1digt"]
-radius = 12.0
+radius = 13.0
 height = 40.0
 
 [node name="Umbra" type="CharacterBody2D"]
@@ -42,17 +41,16 @@ script = ExtResource("6_6qn2i")
 shape = SubResource("CapsuleShape2D_ifwve")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(-1, -18)
+position = Vector2(-5.96046e-08, -2)
 scale = Vector2(0.684615, 0.746154)
 sprite_frames = ExtResource("3_8gdcn")
-animation = &"use_shield"
+animation = &"defeat"
 
 [node name="AttackHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
-position = Vector2(1, -0.5)
 shape = SubResource("RectangleShape2D_3di5o")
 debug_color = Color(0.905808, 0.272961, 0.350986, 0.42)
 

@@ -10,6 +10,10 @@ const DASH_DURATION = 0.20
 const ACCELERATION = 900.0
 const FRICTION = 650.0
 
+# Constantes de after-image
+const AFTERIMAGE_LIFETIME = 0.20
+const AFTERIMAGE_SPAWN_INTERVAL = 0.06
+
 # Constantes de combate
 const DAMAGE = 1
 const ATTACK_DURATION = 0.3
@@ -27,6 +31,8 @@ var dash_cooldown_timer = 0.0
 var dash_direction = 1.0
 var air_dash_used = false
 var last_direction = 1
+var dash_started_on_floor = false
+var _afterimage_timer = 0.0
 var spawn_position = Vector2.ZERO
 
 # Variables de combate
@@ -91,7 +97,7 @@ const PRISM_CORE_SCENE := preload("res://objects/NucleoDePrisma.tscn")
 @export var force_heuristic_only := false
 @export var debug_combat_logs := false
 @export var debug_mobility_logs := false
-@export var despawn_on_death := true
+@export var despawn_on_death := false
 @export var jump_cooldown_seconds := 0.85
 @export var double_jump_cooldown_seconds := 1.30
 @export var dash_cooldown_seconds := 2.35
@@ -152,12 +158,20 @@ var _move_collapse_active := false
 var _move_dominant_raw := 1
 var _recent_raw_moves: Array[int] = []
 
+# Variables de animación
+var _casting_darkness := false
+var _attack_anim_playing := false
+var _is_dying := false
+
 func _ready():
 	add_to_group("umbra_boss")
 	spawn_position = global_position
 	combat.setup()
 	health.setup()
 	color_manager.setup()
+	_ensure_attack_animations_no_loop()
+	if sprite:
+		sprite.animation_finished.connect(_on_sprite_animation_finished)
 	# Asignar poder según nivel
 	_assign_power()
 	_apply_level_balance()
@@ -174,6 +188,19 @@ func _ready():
 	call_deferred("_log_model_indicator_snapshot")
 	if not GameState.level_reset.is_connected(_on_level_reset):
 		GameState.level_reset.connect(_on_level_reset)
+
+
+func _ensure_attack_animations_no_loop() -> void:
+	if not sprite or not sprite.sprite_frames:
+		return
+	var attack_names := [
+		"attack", "attack_run", "attack_up", "attack_up_run", "attack_up_jump",
+		"attack_down", "attack_down_run", "attack_down_jump", "attack_jump",
+		"spawn_dark_zone", "defeat", "vanish"
+	]
+	for name in attack_names:
+		if sprite.sprite_frames.has_animation(name):
+			sprite.sprite_frames.set_animation_loop(name, false)
 
 
 func _process(_delta):
@@ -223,6 +250,9 @@ func _on_level_reset():
 	_has_received_valid_action = false
 	_last_action_received_time = Time.get_ticks_msec() / 1000.0
 	_encounter_reported = false
+	_casting_darkness = false
+	_attack_anim_playing = false
+	_is_dying = false
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
 	hurtbox.set_deferred("monitorable", true)
@@ -320,7 +350,11 @@ func _assign_power():
 		3: current_power = "yellow"
 
 func _physics_process(delta):
-	if not is_active:
+	if not is_active and not _is_dying:
+		return
+
+	if _is_dying:
+		_update_animation()
 		return
 
 	if ai_controller != null and ai_controller.control_mode == ai_controller.ControlModes.ONNX_INFERENCE:
@@ -433,11 +467,13 @@ func _handle_timers(delta):
 	health.process_timers(delta)
 
 func _handle_gravity(delta):
+	if _casting_darkness:
+		return
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 
 func _handle_movement(delta):
-	if is_dashing:
+	if _casting_darkness or is_dashing:
 		return
 	if ai_move_direction != 0:
 		last_direction = ai_move_direction
@@ -449,6 +485,8 @@ func _get_speed():
 	return color_manager.get_speed()
 
 func _handle_jump(jump_requested: bool):
+	if _casting_darkness:
+		return
 	# Preserve double-jump availability while falling, even if jump is not pressed this frame.
 	if was_on_floor and not is_on_floor() and velocity.y >= 0:
 		can_double_jump = true
@@ -474,6 +512,9 @@ func _handle_jump(jump_requested: bool):
 			print("Umbra DOUBLE JUMP start")
 
 func _handle_dash(delta, dash_requested: bool):
+	if _casting_darkness:
+		return
+
 	if is_dashing:
 		dash_timer -= delta
 		if dash_timer <= 0:
@@ -481,12 +522,19 @@ func _handle_dash(delta, dash_requested: bool):
 			velocity.x = dash_direction * SPEED * 0.2
 		else:
 			velocity.x = dash_direction * DASH_SPEED
+			_afterimage_timer -= delta
+			if _afterimage_timer <= 0.0:
+				var tex: Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+				if tex != null:
+					_spawn_afterimage(tex)
+				_afterimage_timer = AFTERIMAGE_SPAWN_INTERVAL
 		return
 	
 	if dash_requested and dash_cooldown_timer <= 0 and (is_on_floor() or not air_dash_used):
 		if is_attacking:
 			_cancel_attack_state()
 		is_dashing = true
+		dash_started_on_floor = is_on_floor() and absf(velocity.x) <= 0.1
 		dash_timer = DASH_DURATION
 		dash_cooldown_timer = _dash_cooldown_runtime
 		if not is_on_floor():
@@ -503,6 +551,10 @@ func _handle_dash(delta, dash_requested: bool):
 			else:
 				dash_direction = float(last_direction)
 		velocity.y = 0
+		var tex0: Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+		if tex0 != null:
+			_spawn_afterimage(tex0)
+		_afterimage_timer = AFTERIMAGE_SPAWN_INTERVAL
 		if debug_mobility_logs:
 			print("Umbra DASH start dir=", dash_direction, " floor=", is_on_floor())
 
@@ -515,6 +567,7 @@ func _handle_attack(delta):
 
 func _cancel_attack_state() -> void:
 	combat.cancel_attack_state()
+	_attack_anim_playing = false
 		
 
 
@@ -541,61 +594,182 @@ func _handle_power():
 	combat.handle_darkness_attack()
 
 func _update_animation():
+	if _is_dying:
+		return
+	if _casting_darkness:
+		if sprite.animation != "spawn_dark_zone":
+			sprite.play("spawn_dark_zone")
+			sprite.speed_scale = 1.0
+		return
+
 	if is_dashing:
+		if sprite.animation != "dash":
+			sprite.play("dash")
+			sprite.speed_scale = 0.0
+		if dash_timer > DASH_DURATION * 0.9:
+			if dash_started_on_floor:
+				sprite.frame = 0
+			else:
+				sprite.frame = 1
+		elif dash_timer > DASH_DURATION * 0.1:
+			sprite.frame = 2
+		else:
+			sprite.frame = 3
 		return
+
 	if is_attacking:
-		sprite.play("attack")
+		var player := _resolve_player_target()
+		var aim_up := false
+		var aim_down := false
+		if player != null:
+			var rel_y := player.global_position.y - global_position.y
+			if rel_y < -20.0:
+				aim_up = true
+			elif rel_y > 20.0:
+				aim_down = true
+		var moving := not is_on_floor() or absf(velocity.x) > 0.1
+
+		var anim := ""
+		if aim_down:
+			if moving and not is_on_floor():
+				anim = "attack_down_jump"
+			elif moving:
+				anim = "attack_down_run"
+			else:
+				anim = "attack_down"
+		elif aim_up:
+			if moving and not is_on_floor():
+				anim = "attack_up_jump"
+			elif moving:
+				anim = "attack_up_run"
+			else:
+				anim = "attack_up"
+		else:
+			if moving and not is_on_floor():
+				anim = "attack_jump"
+			elif moving:
+				anim = "attack_run"
+			else:
+				anim = "attack"
+
+		if anim != "" and sprite.sprite_frames.has_animation(anim):
+			if sprite.animation != anim:
+				sprite.play(anim)
+				sprite.frame = 0
+				_attack_anim_playing = true
+			sprite.speed_scale = 1.0
+		else:
+			if sprite.animation != "attack":
+				sprite.play("attack")
+				sprite.frame = 0
+				_attack_anim_playing = true
+			sprite.speed_scale = 1.0
+		_update_sprite_flip()
 		return
+
 	if not is_on_floor():
-		pass
-	elif velocity.x > 0:
-		sprite.play("run")
-	elif velocity.x < 0:
-		sprite.play("run")
+		if sprite.animation != "jump":
+			sprite.play("jump")
+			sprite.speed_scale = 0.0
+		if was_on_floor:
+			sprite.frame = 2
+		elif velocity.y < -30.0:
+			sprite.frame = 3
+		else:
+			sprite.frame = 4
+		_update_sprite_flip()
+		return
+
+	sprite.speed_scale = 1.0
+	if absf(velocity.x) > 0.1:
+		if sprite.animation != "run":
+			sprite.play("run")
 	else:
-		sprite.play("idle")
-	
+		if sprite.animation != "idle":
+			sprite.play("idle")
+
+	_update_sprite_flip()
+
+
+func _update_sprite_flip() -> void:
 	if velocity.x > 0:
 		sprite.flip_h = false
 	elif velocity.x < 0:
 		sprite.flip_h = true
+	elif last_direction != 0:
+		sprite.flip_h = last_direction < 0
+
+func _spawn_afterimage(tex: Texture2D) -> void:
+	var si := Sprite2D.new()
+	si.texture = tex
+	si.global_position = global_position
+	si.flip_h = sprite.flip_h
+	si.scale = sprite.scale
+	si.z_as_relative = z_as_relative
+	si.z_index = z_index
+	var pcol := Color(1, 1, 1, 0.85)
+	if sprite.material != null and sprite.material.has_method("get_shader_parameter"):
+		var sc = sprite.material.get_shader_parameter("power_tint")
+		if sc != null:
+			pcol = Color(sc.r, sc.g, sc.b, 0.85)
+	si.modulate = pcol
+	var parent_node := get_parent()
+	if parent_node != null:
+		parent_node.add_child(si)
+		var umbra_index := get_index()
+		parent_node.move_child(si, umbra_index)
+	else:
+		add_child(si)
+	var tw := si.create_tween()
+	tw.tween_property(si, "modulate:a", 0.0, AFTERIMAGE_LIFETIME)
+	tw.tween_property(si, "scale", si.scale * 0.85, AFTERIMAGE_LIFETIME)
+	tw.finished.connect(Callable(si, "queue_free"))
+
 
 func take_damage(amount: int):
 	health.take_damage(amount)
 
 func die():
+	if _is_dying:
+		return
+	_is_dying = true
+
 	NakamaManager.add_enemy_kill()
-	# Guardar métricas para el siguiente encuentro
 	_report_encounter(false)
 	if use_runtime_finetuned_model:
 		GameState.start_finetuning(2000)
 	emit_signal("defeated", false)
-	_spawn_prism_core_drop()
 	is_active = false
-	
+
 	# Notify boss room to deactivate walls
 	var closest_boss_room = null
 	var closest_distance = INF
 	var boss_rooms = get_tree().get_nodes_in_group("boss_room")
-	
 	for room in boss_rooms:
 		var distance = global_position.distance_to(room.global_position)
 		if distance < closest_distance:
 			closest_distance = distance
 			closest_boss_room = room
-	
 	if closest_boss_room:
 		closest_boss_room.on_boss_defeated()
-	
+
 	if despawn_on_death:
+		_spawn_prism_core_drop()
 		queue_free()
 		return
 
 	velocity = Vector2.ZERO
 	is_attacking = false
 	is_dashing = false
+	_attack_anim_playing = false
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
+	hurtbox.set_deferred("monitoring", false)
+	hurtbox.set_deferred("monitorable", false)
+
+	sprite.play("defeat")
+	sprite.speed_scale = 1.0
+	sprite.frame = 0
 
 
 func _spawn_prism_core_drop() -> void:
@@ -887,6 +1061,40 @@ func _use_heuristic() -> void:
 
 func _update_power_visuals() -> void:
 	color_manager.update_power_visuals()
+
+
+func _on_sprite_animation_finished() -> void:
+	var anim: String = sprite.animation
+	if anim == "spawn_dark_zone":
+		_casting_darkness = false
+	elif anim == "defeat":
+		sprite.play("vanish")
+		sprite.speed_scale = 1.0
+		sprite.frame = 0
+	elif anim == "vanish":
+		_finish_death_sequence()
+	elif _attack_anim_playing:
+		_attack_anim_playing = false
+
+
+func play_spawn_dark_zone() -> void:
+	if _casting_darkness:
+		return
+	if sprite.animation == "spawn_dark_zone" and not sprite.playing:
+		return
+	_casting_darkness = true
+	is_attacking = false
+	is_dashing = false
+	_attack_anim_playing = false
+	velocity = Vector2.ZERO
+	sprite.play("spawn_dark_zone")
+	sprite.speed_scale = 1.0
+	sprite.frame = 0
+
+
+func _finish_death_sequence() -> void:
+	_spawn_prism_core_drop()
+	queue_free()
 
 
 func _report_encounter(umbra_won: bool) -> void:

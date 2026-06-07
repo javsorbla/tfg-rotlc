@@ -110,6 +110,7 @@ func _try_cast_darkness_zone() -> void:
 
 	var spawn_pos := player.global_position + Vector2(umbra.darkness_spawn_offset_x, umbra.darkness_spawn_offset_y)
 	_spawn_darkness_zone(spawn_pos)
+	umbra.play_spawn_dark_zone()
 	umbra._darkness_cooldown_timer = umbra._darkness_cooldown_runtime
 
 	if umbra.debug_darkness_logs:
