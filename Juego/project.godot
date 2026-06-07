@@ -40,7 +40,11 @@ project/assembly_name="Rise Of The Lost Colors"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_rl_agents/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/godot_rl_agents/plugin.cfg")
+
+[gdunit4]
+
+report/godot/push_error=true
 
 [gui]
 

@@ -29,5 +29,8 @@ func _on_retry_button_pressed() -> void:
 		SceneLoader.load_scene(AppConfig.main_menu_scene_path)
 
 func _on_main_menu_button_pressed() -> void:
+	print("[DeathScreen] Main menu button pressed")
+	close()
+	await get_tree().process_frame
 	get_tree().paused = false
 	SceneLoader.load_scene(AppConfig.main_menu_scene_path)

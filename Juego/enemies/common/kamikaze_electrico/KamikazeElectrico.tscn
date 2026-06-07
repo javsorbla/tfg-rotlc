@@ -346,6 +346,7 @@ radius = 19.0263
 radius = 19.0263
 
 [node name="KamikazeElectrico" type="CharacterBody2D"]
+z_index = 1
 collision_layer = 16
 script = ExtResource("1_mmsu7")
 
