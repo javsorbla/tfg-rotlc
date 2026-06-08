@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dfhw536u7so0g"
-path="res://.godot/imported/d193a8d3-a14c-403a-bf71-7923fb49bc47.png-6fb0890791e64bfc6dd1612846087aac.ctex"
+uid="uid://cppb7ud7i7qew"
+path="res://.godot/imported/breathing_idle_sheet.png-2b274b11ade7f71146fc5d436d45bc42.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/gdUnit4/tmp-update/d193a8d3-a14c-403a-bf71-7923fb49bc47.png"
-dest_files=["res://.godot/imported/d193a8d3-a14c-403a-bf71-7923fb49bc47.png-6fb0890791e64bfc6dd1612846087aac.ctex"]
+source_file="res://assets/enemies/bosses/umbra/breathing_idle_sheet.png"
+dest_files=["res://.godot/imported/breathing_idle_sheet.png-2b274b11ade7f71146fc5d436d45bc42.ctex"]
 
 [params]
 

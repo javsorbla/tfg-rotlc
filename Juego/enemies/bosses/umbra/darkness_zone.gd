@@ -53,6 +53,7 @@ func _setup_visual() -> void:
 	_ring.color = Color(0.12, 0.04, 0.2, 0.42)
 	_ring.z_as_relative = false
 	_ring.z_index = 100
+	_ring.visible = false
 	add_child(_ring)
 
 

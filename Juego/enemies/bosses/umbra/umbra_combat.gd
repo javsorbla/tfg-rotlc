@@ -110,6 +110,7 @@ func _try_cast_darkness_zone() -> void:
 
 	var spawn_pos := player.global_position + Vector2(umbra.darkness_spawn_offset_x, umbra.darkness_spawn_offset_y)
 	_spawn_darkness_zone(spawn_pos)
+	umbra.play_spawn_dark_zone()
 	umbra._darkness_cooldown_timer = umbra._darkness_cooldown_runtime
 
 	if umbra.debug_darkness_logs:
@@ -143,7 +144,9 @@ func _spawn_darkness_zone(spawn_pos: Vector2) -> void:
 	var circle := CircleShape2D.new()
 	circle.radius = umbra.darkness_zone_radius
 	shape.shape = circle
+	shape.visible = false
 	zone.add_child(shape)
+	zone.add_to_group("darkness_zone")
 
 	if zone.has_method("configure"):
 		zone.configure(

@@ -15,7 +15,7 @@ signal opened
 		if update_content and is_inside_tree():
 			description_label.text = text
 
-@export var close_button_text : String = "Close" :
+@export var close_button_text : String = "Cerrar" :
 	set(value):
 		close_button_text = value
 		if update_content and is_inside_tree():

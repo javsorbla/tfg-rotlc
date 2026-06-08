@@ -38,7 +38,7 @@ func _ready() -> void:
 	if label != null:
 		_default_offset = Vector2(label.offset_left, label.offset_top)
 		_celestial_material = label.material
-		label.material = null  # <- fix
+		label.material = null
 		label.modulate.a = 0.0
 		label.visible = true
 	if backdrop != null:
@@ -52,6 +52,10 @@ func _ready() -> void:
 	if particles != null:
 		particles.emitting = false
 		particles.visible = false
+
+
+func _exit_tree() -> void:
+	_skip_intro()
 
 func show_message(text: String, duration: float = -1.0, wait_for_input: bool = false) -> void:
 	_queue.append({

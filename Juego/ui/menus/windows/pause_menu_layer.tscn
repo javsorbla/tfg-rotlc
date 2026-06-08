@@ -104,7 +104,7 @@ title = "Confirmar Salida"
 title_visible = true
 
 [connection signal="hidden" from="PauseMenu" to="." method="_on_pause_menu_hidden"]
-[connection signal="pressed" from="PauseMenu/ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/CloseButton" to="PauseMenu" method="_on_close_button_pressed"]
+
 [connection signal="pressed" from="PauseMenu/ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/RestartButton" to="PauseMenu" method="_on_restart_button_pressed"]
 [connection signal="pressed" from="PauseMenu/ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/SaveGameButton" to="PauseMenu" method="_on_save_game_button_pressed"]
 [connection signal="pressed" from="PauseMenu/ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons/LoadGameButton" to="PauseMenu" method="_on_load_game_button_pressed"]

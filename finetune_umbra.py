@@ -28,7 +28,7 @@ class PolicyWrapper(torch.nn.Module):
             return self.policy.action_net(latent_pi)
 
 
-def export_onnx(model: PPO, output_onnx: str, obs_dim: int = 19) -> None:
+def export_onnx(model: PPO, output_onnx: str, obs_dim: int = 23) -> None:
     os.makedirs(os.path.dirname(output_onnx), exist_ok=True)
 
     wrapper = PolicyWrapper(model.policy)

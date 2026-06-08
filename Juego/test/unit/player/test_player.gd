@@ -24,3 +24,6 @@ func test_movement_constants() -> void:
 	assert_float(player.JUMP_VELOCITY).is_equal(-300.0)
 	assert_float(player.DASH_SPEED).is_equal(300.0)
 	assert_float(player.DASH_DURATION).is_equal(0.25)
+	assert_float(player.DASH_COOLDOWN).is_equal(0.5)
+	assert_float(player.ACCELERATION).is_equal(1000.0)
+	assert_float(player.FRICTION).is_equal(700.0)
