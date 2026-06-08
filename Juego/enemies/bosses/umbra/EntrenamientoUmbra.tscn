@@ -194,7 +194,6 @@ tile_set = SubResource("TileSet_xthih")
 position = Vector2(473, -20)
 collision_layer = 16
 max_health = 6
-despawn_on_death = true
 disable_player_profile_adaptation = true
 
 [node name="Player" parent="." instance=ExtResource("4_n1die")]

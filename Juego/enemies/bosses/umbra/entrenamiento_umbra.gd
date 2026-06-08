@@ -392,6 +392,8 @@ func _finish_episode(umbra_won: bool) -> void:
 		_print_learning_summary()
 		return
 
+	if umbra and umbra.ai_controller:
+		umbra.ai_controller.done = true
 	_pending_reset = true
 	_reset_timer = auto_reset_delay
 	_episode_index += 1

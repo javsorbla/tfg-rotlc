@@ -869,6 +869,8 @@ func _spawn_prism_core_drop() -> void:
 
 func activate():
 	is_active = true
+	_is_dying = false
+	sprite.play("idle")
 	var player := _resolve_player_target()
 	if player != null:
 		ai_controller.init(player)
@@ -1183,7 +1185,8 @@ func play_spawn_dark_zone() -> void:
 
 func _finish_death_sequence() -> void:
 	_spawn_prism_core_drop()
-	queue_free()
+	if despawn_on_death:
+		queue_free()
 
 
 func _report_encounter(umbra_won: bool) -> void:

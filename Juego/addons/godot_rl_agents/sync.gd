@@ -627,13 +627,11 @@ func connect_to_server():
 	print("trying to connect to server")
 	stream = StreamPeerTCP.new()
 
-	# "localhost" was not working on windows VM, had to use the IP
 	var ip = "127.0.0.1"
 	var port = _get_port()
 	var connect = stream.connect_to_host(ip, port)
-	stream.set_no_delay(true)  # TODO check if this improves performance or not
+	stream.set_no_delay(true)
 	stream.poll()
-	# Fetch the status until it is either connected (2) or failed to connect (3)
 	while stream.get_status() < 2:
 		stream.poll()
 	return stream.get_status() == 2
@@ -752,6 +750,8 @@ func _get_obs_from_agents(agents: Array = all_agents):
 func _get_reward_from_agents(agents: Array = agents_training):
 	var rewards = []
 	for agent in agents:
+		if not is_instance_valid(agent):
+			continue
 		rewards.append(agent.get_reward())
 		agent.zero_reward()
 	return rewards
@@ -760,6 +760,8 @@ func _get_reward_from_agents(agents: Array = agents_training):
 func _get_done_from_agents(agents: Array = agents_training):
 	var dones = []
 	for agent in agents:
+		if not is_instance_valid(agent):
+			continue
 		var done = agent.get_done()
 		if done:
 			agent.set_done_false()
