@@ -8,6 +8,7 @@ const VIENTO_SOUND := preload("res://music/scenes/campos_zafiro/viento.ogg")
 
 const WIND_ZONE_X_MIN: float = 9700
 const WIND_ZONE_X_MAX: float = 12800.0
+const WIND_AMBIENT_VOLUME: float = -12.0
 
 var wind_player: AudioStreamPlayer
 var _wind_tween: Tween
@@ -103,29 +104,24 @@ func _process(_delta: float) -> void:
 	if player == null:
 		return
 	var in_zone := player.global_position.x >= WIND_ZONE_X_MIN and player.global_position.x <= WIND_ZONE_X_MAX
-	if in_zone and not wind_player.playing:
-		_fade_wind_in()
-	elif not in_zone and wind_player.playing:
-		_fade_wind_out()
+	if in_zone:
+		_fade_wind_to(4.0)
+	else:
+		_fade_wind_to(WIND_AMBIENT_VOLUME)
 
 func _setup_wind_player() -> void:
 	wind_player = AudioStreamPlayer.new()
 	wind_player.name = "WindPlayer"
 	wind_player.stream = VIENTO_SOUND
 	wind_player.bus = &"EFX"
-	wind_player.volume_db = -80.0
+	wind_player.volume_db = WIND_AMBIENT_VOLUME
 	add_child(wind_player)
-
-func _fade_wind_in() -> void:
-	if _wind_tween and _wind_tween.is_valid():
-		_wind_tween.kill()
 	wind_player.play()
-	_wind_tween = create_tween()
-	_wind_tween.tween_property(wind_player, "volume_db", 0.0, 1.5)
 
-func _fade_wind_out() -> void:
+func _fade_wind_to(target_db: float) -> void:
 	if _wind_tween and _wind_tween.is_valid():
 		_wind_tween.kill()
+	if absf(wind_player.volume_db - target_db) < 0.5:
+		return
 	_wind_tween = create_tween()
-	_wind_tween.tween_property(wind_player, "volume_db", -80.0, 1.5)
-	_wind_tween.tween_callback(wind_player.stop)
+	_wind_tween.tween_property(wind_player, "volume_db", target_db, 1.5)
