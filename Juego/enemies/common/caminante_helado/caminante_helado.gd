@@ -22,6 +22,13 @@ const DEAD_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/dead
 const IDLE_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/idle_sheet_4.png")
 const PUNCH_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/punch_sheet_4.png")
 
+const PUÑO_CAMINANTE := preload("res://music/enemies/common/caminante_helado/puño_caminante.ogg")
+const STUN_CAMINANTE := preload("res://music/enemies/common/caminante_helado/stun_caminante.ogg")
+const MUERTE_CAMINANTE := preload("res://music/enemies/common/caminante_helado/muerte_caminante.ogg")
+const RUGIDO_CAMINANTE := preload("res://music/enemies/common/caminante_helado/rugido_caminante.ogg")
+
+const SFX_MAX_DISTANCE: float = 280.0
+
 
 # --- ESTADOS ---
 enum State { IDLE, PATROL, CHASE, STUNNED, DEAD, ATTACK_PAUSE }
@@ -39,6 +46,7 @@ var idle_timer: float = 0.0
 var patrol_timer: float = 0.0
 var flip_cooldown: float = 0.0 
 var death_token: int = 0
+var rugido_timer: float = 0.0
 
 var _base_sprite_frames: SpriteFrames = null
 var _level3_sprite_frames: SpriteFrames = null
@@ -69,6 +77,7 @@ func _ready() -> void:
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	vision.target_position = Vector2(20 * facing_dir, 40) 
+	rugido_timer = randf_range(7.0, 10.0)
 	_enter_state(State.IDLE)
 
 func _physics_process(delta: float) -> void:
@@ -94,6 +103,23 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_update_animations()
+	
+	if current_state != State.DEAD:
+		rugido_timer -= delta
+		if rugido_timer <= 0.0:
+			_play_sfx(RUGIDO_CAMINANTE)
+			rugido_timer = randf_range(7.0, 10.0)
+
+func _play_sfx(stream: AudioStream, vol: float = 0.0) -> void:
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	player.max_distance = SFX_MAX_DISTANCE
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
 
 func _on_level_reset():
 	death_token += 1
@@ -207,7 +233,7 @@ func _enter_state(new_state: State) -> void:
 	match new_state:
 		State.IDLE:
 			velocity.x = 0
-			idle_timer = randf_range(1.0, 2.5) 
+			idle_timer = randf_range(1.0, 2.5)
 			
 		State.PATROL:
 			patrol_timer = randf_range(2.0, 4.0) 
@@ -219,15 +245,18 @@ func _enter_state(new_state: State) -> void:
 			sprite.play("punch") 
 			sprite.flip_h = (facing_dir > 0)
 			velocity.x = 0
+			_play_sfx(PUÑO_CAMINANTE)
 			
 		State.STUNNED:
 			sprite.play("dazed") 
 			sprite.flip_h = (facing_dir > 0) 
-			velocity.x = 0 
+			velocity.x = 0
+			_play_sfx(STUN_CAMINANTE)
 			
 		State.DEAD:
 			sprite.play("dead") 
-			sprite.flip_h = (facing_dir > 0) 
+			sprite.flip_h = (facing_dir > 0)
+			_play_sfx(MUERTE_CAMINANTE)
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)
 				$EnemyHitbox.set_deferred("monitorable", false)

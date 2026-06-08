@@ -62,6 +62,7 @@ var _level4_sprite_frames: SpriteFrames = null
 var _aleteo_player: AudioStreamPlayer2D = null
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var luz: PointLight2D = $PointLight2D
 
 
 func _ready() -> void:
@@ -81,6 +82,7 @@ func _ready() -> void:
 
 	patrol_origin = global_position
 	_setup_aleteo()
+	_setup_light()
 	_enter_state(State.IDLE)
 
 
@@ -92,6 +94,33 @@ func _setup_aleteo() -> void:
 	_aleteo_player.max_distance = 450.0
 	_aleteo_player.pitch_scale = 1.35
 	add_child(_aleteo_player)
+
+
+func _setup_light() -> void:
+	if GameState.current_level == 1 or GameState.current_level == 4:
+		luz.enabled = false
+		return
+
+	luz.enabled = true
+	var imagen: Image = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx: float = (x - 32.0) / 32.0
+			var dy: float = (y - 32.0) / 32.0
+			var dist: float = sqrt(dx * dx + dy * dy)
+			var alpha: float = clamp(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.5)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+
+	if GameState.current_level == 2:
+		luz.color = Color(1.0, 0.5, 0.0)
+		luz.energy = 2.0
+	elif GameState.current_level == 3:
+		luz.color = Color(1.0, 0.8, 0.0)
+		luz.energy = 3.0
+	luz.texture_scale = 1.0
 
 
 func _play_sfx(stream: AudioStream, vol: float = -8.0) -> void:
@@ -137,6 +166,7 @@ func _on_level_reset():
 	death_grounded_timer = -1.0
 	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
 	call_deferred("_apply_level_visuals")
+	_setup_light()
 	_enter_state(State.IDLE)
 
 
@@ -258,6 +288,9 @@ func _enter_state(new_state: State) -> void:
 		State.DEAD:
 			if _aleteo_player:
 				_aleteo_player.stop()
+			if luz and luz.enabled:
+				var tween: Tween = create_tween()
+				tween.tween_property(luz, "energy", 0.0, 0.8)
 			var death_sfx := AudioStreamPlayer.new()
 			death_sfx.stream = MUERTE_ACECHADOR
 			death_sfx.bus = &"EFX"
