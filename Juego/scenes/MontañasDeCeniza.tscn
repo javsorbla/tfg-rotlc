@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=4 uid="uid://bu3kl4nm1dulx"]
+[gd_scene load_steps=47 format=4 uid="uid://bu3kl4nm1dulx"]
 
 [ext_resource type="Script" path="res://scenes/montañas_de_ceniza.gd" id="1_fhvl8"]
 [ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_wxf8w"]
@@ -18,6 +18,7 @@
 [ext_resource type="PackedScene" uid="uid://bc5ofvx4hpsen" path="res://scenes/enviroment/Antorcha.tscn" id="12_8y1mn"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="12_k6ew8"]
 [ext_resource type="PackedScene" uid="uid://j3iq0wr4lk5y" path="res://enemies/bosses/coloso_ceniza/ColosoCeniza.tscn" id="14_38xxh"]
+[ext_resource type="PackedScene" uid="uid://bf18w08n218xn" path="res://objects/OrbeDeLuz.tscn" id="15_cfgcy"]
 [ext_resource type="Script" path="res://scenes/piedra_lava_manager.gd" id="19_yvfdf"]
 [ext_resource type="Script" path="res://scenes/lava_manager.gd" id="20_45kqd"]
 [ext_resource type="AudioStream" uid="uid://wsfeuwhanufd" path="res://music/scenes/montanas_ceniza/montanas_ceniza.ogg" id="21_music_montanas"]
@@ -767,6 +768,15 @@ position = Vector2(12048, 2015)
 [node name="PointLight2D" parent="Entorno/Antorcha37" index="1"]
 energy = 2.1
 texture_scale = 0.8
+
+[node name="OrbeDeLuz" parent="Entorno" instance=ExtResource("15_cfgcy")]
+position = Vector2(5248, 463)
+
+[node name="OrbeDeLuz2" parent="Entorno" instance=ExtResource("15_cfgcy")]
+position = Vector2(6832, 981)
+
+[node name="OrbeDeLuz3" parent="Entorno" instance=ExtResource("15_cfgcy")]
+position = Vector2(9875, 1656)
 
 [node name="ColosoCeniza" parent="." instance=ExtResource("14_38xxh")]
 z_index = 1
