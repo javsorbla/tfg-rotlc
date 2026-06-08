@@ -107,7 +107,7 @@ func _physics_process(delta: float) -> void:
 	if current_state != State.DEAD:
 		rugido_timer -= delta
 		if rugido_timer <= 0.0:
-			_play_sfx(RUGIDO_CAMINANTE)
+			_play_sfx(RUGIDO_CAMINANTE, 8.0)
 			rugido_timer = randf_range(7.0, 10.0)
 
 func _play_sfx(stream: AudioStream, vol: float = 0.0) -> void:
@@ -245,18 +245,18 @@ func _enter_state(new_state: State) -> void:
 			sprite.play("punch") 
 			sprite.flip_h = (facing_dir > 0)
 			velocity.x = 0
-			_play_sfx(PUÑO_CAMINANTE)
+			_play_sfx(PUÑO_CAMINANTE, 6.0)
 			
 		State.STUNNED:
 			sprite.play("dazed") 
 			sprite.flip_h = (facing_dir > 0) 
 			velocity.x = 0
-			_play_sfx(STUN_CAMINANTE)
+			_play_sfx(STUN_CAMINANTE, 6.0)
 			
 		State.DEAD:
 			sprite.play("dead") 
 			sprite.flip_h = (facing_dir > 0)
-			_play_sfx(MUERTE_CAMINANTE)
+			_play_sfx(MUERTE_CAMINANTE, 8.0)
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)
 				$EnemyHitbox.set_deferred("monitorable", false)

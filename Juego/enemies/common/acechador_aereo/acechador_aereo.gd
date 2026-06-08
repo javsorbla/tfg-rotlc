@@ -90,7 +90,7 @@ func _setup_aleteo() -> void:
 	_aleteo_player = AudioStreamPlayer2D.new()
 	_aleteo_player.stream = ALETEO_ACECHADOR
 	_aleteo_player.bus = &"EFX"
-	_aleteo_player.volume_db = 0.0
+	_aleteo_player.volume_db = 4.0
 	_aleteo_player.max_distance = 450.0
 	_aleteo_player.pitch_scale = 1.35
 	add_child(_aleteo_player)
@@ -271,12 +271,12 @@ func _enter_state(new_state: State) -> void:
 				velocity = dive_direction * DIVE_SPEED
 				has_hit_player = false
 				dive_started_pos = global_position
-			_play_sfx(ATAQUE_ACECHADOR, -2.0)
+			_play_sfx(ATAQUE_ACECHADOR, 4.0)
 
 		State.STUNNED:
 			if _aleteo_player and _aleteo_player.playing:
 				_aleteo_player.stop()
-			_play_sfx(STUN_ACECHADOR, -2.0)
+			_play_sfx(STUN_ACECHADOR, 4.0)
 
 		State.RETURNING:
 			velocity = Vector2.ZERO
@@ -294,7 +294,7 @@ func _enter_state(new_state: State) -> void:
 			var death_sfx := AudioStreamPlayer.new()
 			death_sfx.stream = MUERTE_ACECHADOR
 			death_sfx.bus = &"EFX"
-			death_sfx.volume_db = 0.0
+			death_sfx.volume_db = 6.0
 			get_tree().root.add_child(death_sfx)
 			death_sfx.play()
 			death_sfx.finished.connect(death_sfx.queue_free)
