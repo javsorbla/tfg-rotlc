@@ -43,4 +43,4 @@ func test_umbra_progress_default_metrics() -> void:
 	assert_bool(result.has("close_range_ratio")).is_true()
 	assert_bool(result.has("low_health_ratio")).is_true()
 	assert_bool(result.has("power_usage_frequency")).is_true()
-	assert_int(result.keys().size()).is_equal(9)
+	assert_int(result.keys().size()).is_equal(15)

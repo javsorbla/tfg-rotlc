@@ -65,3 +65,153 @@ func test_player_color_manager_initial_state() -> void:
 	assert_object(cm.yellow_state).is_not_null()
 	assert_bool(cm.power_active).is_false()
 	assert_str(cm.active_power).is_empty()
+
+
+func _make_damage_source(damage: int, group: String) -> Area2D:
+	var script := GDScript.new()
+	script.source_code = "extends Node2D\nvar DAMAGE = " + str(damage)
+	script.reload()
+	var source := Node2D.new()
+	source.set_script(script)
+	add_child(auto_free(source))
+	var area := Area2D.new()
+	area.add_to_group(group)
+	source.add_child(area)
+	return area
+
+
+func test_enemy_hitbox_damages_player() -> void:
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+	await_idle_frame()
+
+	var fake_area = _make_damage_source(1, "enemy_hitbox")
+	player.health._on_hurtbox_area_entered(fake_area)
+
+	assert_int(player.health.current_health).is_equal(player.health.MAX_HEALTH - 1)
+
+
+func test_player_shield_blocks_enemy_damage() -> void:
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+	await_idle_frame()
+
+	player.is_shielding = true
+	var fake_area = _make_damage_source(1, "enemy_hitbox")
+	player.health._on_hurtbox_area_entered(fake_area)
+
+	assert_int(player.health.current_health).is_equal(player.health.MAX_HEALTH)
+
+
+func test_boss_hitbox_damages_player() -> void:
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+	await_idle_frame()
+
+	var fake_area = _make_damage_source(2, "boss_hitbox")
+	player.health._on_hurtbox_area_entered(fake_area)
+
+	assert_int(player.health.current_health).is_equal(player.health.MAX_HEALTH - 2)
+
+
+func test_spikes_damage_player() -> void:
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+	await_idle_frame()
+
+	var fake_body = auto_free(Node2D.new())
+	fake_body.add_to_group("spikes")
+	add_child(fake_body)
+
+	player.health._on_hurtbox_body_entered(fake_body)
+
+	assert_int(player.health.current_health).is_equal(player.health.MAX_HEALTH - 1)
+
+
+func test_inquisidor_takes_damage_from_player_hitbox() -> void:
+	var enemy = auto_free(load("res://enemies/common/inquisidor_tenebroso/InquisidorTenebroso.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+	enemy.current_state = enemy.State.IDLE
+
+	var fake_area := Area2D.new()
+	fake_area.add_to_group("player_hitbox")
+	add_child(fake_area)
+
+	enemy._on_enemy_hurtbox_area_entered(fake_area)
+
+	assert_int(enemy.current_health).is_equal(2)
+	assert_int(enemy.current_state).is_equal(enemy.State.STUNNED)
+
+
+func test_kamikaze_dies_from_player_hitbox() -> void:
+	var enemy = auto_free(load("res://enemies/common/kamikaze_electrico/KamikazeElectrico.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+	enemy.current_state = enemy.State.SLEEP
+
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+
+	var fake_area := Area2D.new()
+	fake_area.add_to_group("player_hitbox")
+	add_child(fake_area)
+
+	enemy._on_enemy_hurtbox_area_entered(fake_area)
+
+	assert_int(enemy.current_health).is_equal(0)
+	assert_int(enemy.current_state).is_equal(enemy.State.DEAD)
+
+
+func test_corredor_magma_takes_damage_from_player_hitbox() -> void:
+	var enemy = auto_free(load("res://enemies/common/corredor_magma/CorredorMagma.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+	enemy.current_state = enemy.State.IDLE
+
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+
+	var fake_area := Area2D.new()
+	fake_area.add_to_group("player_hitbox")
+	add_child(fake_area)
+
+	enemy._on_enemy_hurtbox_area_entered(fake_area)
+
+	assert_int(enemy.current_health).is_equal(2)
+
+
+func test_nucleo_inestable_needs_red_power_to_take_damage() -> void:
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+
+	var enemy = auto_free(load("res://enemies/common/nucleo_inestable/NucleoInestable.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+	enemy.current_state = enemy.State.SLEEP
+
+	var fake_area := Area2D.new()
+	fake_area.add_to_group("player_hitbox")
+	add_child(fake_area)
+
+	enemy._on_enemy_hurtbox_area_entered(fake_area)
+
+	assert_int(enemy.current_health).is_equal(enemy.MAX_HEALTH)
+	assert_int(enemy.current_state).is_equal(enemy.State.STUNNED)
+
+
+func test_nucleo_inestable_takes_damage_with_red_power() -> void:
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+	player.color_manager.unlock_power("red")
+	player.color_manager.change_state(player.color_manager.red_state)
+
+	var enemy = auto_free(load("res://enemies/common/nucleo_inestable/NucleoInestable.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+	enemy.current_state = enemy.State.SLEEP
+
+	enemy.take_damage(1)
+
+	assert_int(enemy.current_health).is_equal(0)
+	assert_int(enemy.current_state).is_equal(enemy.State.DEAD)
