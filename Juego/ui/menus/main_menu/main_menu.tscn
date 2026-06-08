@@ -1,10 +1,11 @@
-[gd_scene load_steps=13 format=3 uid="uid://byvydukidk6i2"]
+[gd_scene load_steps=14 format=3 uid="uid://byvydukidk6i2"]
 
 [ext_resource type="Script" path="res://ui/menus/main_menu/main_menu.gd" id="2_lk0wa"]
 [ext_resource type="PackedScene" uid="uid://xvu2k02xdqi6" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="3_qhsni"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/autoloads/ui_sound_controller/ui_sound_controller.gd" id="4_egdge"]
 [ext_resource type="PackedScene" uid="uid://c5pfkjxskjc60" path="res://ui/menus/windows/main_menu_credits_window.tscn" id="4_qhsni"]
 [ext_resource type="PackedScene" uid="uid://bkcsjsk2ciff" path="res://addons/maaacks_menus_template/base/nodes/music_players/background_music_player.tscn" id="5_1s4l0"]
+[ext_resource type="AudioStream" path="res://music/menus/main_menu.mp3" id="5_8a1xq"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/labels/config_name_label.gd" id="6_7b6ws"]
 [ext_resource type="Texture2D" uid="uid://pls0s6t2vmxl" path="res://themes/titulo_upscaled.png" id="6_cwkwh"]
 [ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/utilities/capture_focus.gd" id="7_alags"]
@@ -28,7 +29,9 @@ credits_packed_scene = ExtResource("4_qhsni")
 script = ExtResource("4_egdge")
 
 [node name="BackgroundMusicPlayer" parent="." instance=ExtResource("5_1s4l0")]
-bus = &"Master"
+bus = &"Música"
+volume_db = -10.0
+stream = ExtResource("5_8a1xq")
 
 [node name="BackgroundTextureRect" type="TextureRect" parent="."]
 z_index = -3
