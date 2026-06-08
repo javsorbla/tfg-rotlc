@@ -41,7 +41,7 @@ python -m venv .venv
 .venv\Scripts\activate
 
 # Instalar dependencias
-pip install godot-rl stable-baselines3 onnx onnxruntime
+pip install -r requirements.txt
 ```
 
 ---
@@ -94,7 +94,6 @@ tfg-rotlc/
 │   └── addons/                   # Plugins (godot_rl_agents, nakama, etc.)
 ├── stable_baselines3_example.py  # Lanzador de entrenamiento PPO
 ├── umbra_checkpoint_gate.py      # Validador de checkpoints + export ONNX
-├── finetune_umbra.py             # Fine-tuning (experimental)
 └── Documentacion/                # Docs adicionales
 ```
 
@@ -120,4 +119,4 @@ Durante el entrenamiento, Nakama solo hace autenticación (1 HTTP POST). **No es
 
 ## Tests
 
-El proyecto usa **GdUnit4**. Los tests están en `res://test/`. Ejecutarlos desde el panel GdUnit4 del editor de Godot.
+El proyecto usa **GdUnit4**. Los tests están en `res://test/`. Ejecutarlos desde el panel GdUnit4 del editor de Godot, al que se puede acceder seleccionandolo desde la parte superior izquierda (Al lado de panel de "Escena" y panel "Importar"). Para que aparezcan es necesario pulsar el botón `Run discover tests`. Al principio, por el funcionamiento del plugin, puede que esté deshabilitado, por lo que puede ser necesario pulsar antes el botón `Rerun unit tests` normal o el del modo debug.
