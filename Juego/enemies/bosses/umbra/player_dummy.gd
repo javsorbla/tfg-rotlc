@@ -119,6 +119,10 @@ func reset_for_training(spawn_pos: Vector2) -> void:
 
 
 func _human_control(_delta: float) -> void:
+	if color_manager.power_active and color_manager.active_power == "yellow":
+		_desired_dir = 0.0
+		return
+
 	_desired_dir = Input.get_axis("move_left", "move_right")
 
 	if Input.is_action_just_pressed("jump") and is_on_floor():
@@ -132,6 +136,10 @@ func _human_control(_delta: float) -> void:
 
 
 func _smart_bot_control(_delta: float) -> void:
+	if color_manager.power_active and color_manager.active_power == "yellow":
+		_desired_dir = 0.0
+		return
+
 	var umbra = get_tree().get_first_node_in_group("enemies")
 	if umbra == null:
 		_desired_dir = 0.0
@@ -210,6 +218,8 @@ func _handle_bot_powers(delta: float) -> void:
 
 
 func _start_dash(dir: float) -> void:
+	if color_manager.power_active and color_manager.active_power == "yellow":
+		return
 	if dir == 0:
 		dir = float(last_direction)
 	is_dashing = true
@@ -236,6 +246,8 @@ func _handle_dash(delta: float) -> void:
 
 
 func _trigger_attack() -> void:
+	if color_manager.power_active and color_manager.active_power == "yellow":
+		return
 	is_attacking = true
 	attack_timer = ATTACK_DURATION
 	attack_cooldown_timer = ATTACK_COOLDOWN

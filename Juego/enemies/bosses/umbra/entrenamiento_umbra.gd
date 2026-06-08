@@ -305,8 +305,6 @@ func _set_training_mode(is_human: bool) -> void:
 			_human_player = HUMAN_PLAYER_SCENE.instantiate()
 			_human_player.name = "TrainingHumanPlayer"
 			add_child(_human_player)
-			_human_player.input_enabled = true
-			_human_player.can_attack = true
 			var cm := _human_player.get_node_or_null("ColorManager")
 			if cm and cm.has_method("apply_unlocked_powers"):
 				cm.apply_unlocked_powers({"cyan": true, "red": true, "yellow": true})
@@ -364,7 +362,7 @@ func _on_umbra_defeated(umbra_won: bool) -> void:
 	_finish_episode(umbra_won)
 
 
-func _on_player_defeated() -> void:
+func _on_player_defeated(_arg = null) -> void:
 	if umbra.has_method("report_player_defeated"):
 		umbra.report_player_defeated()
 	else:

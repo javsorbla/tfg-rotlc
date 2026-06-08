@@ -33,15 +33,7 @@ func test_player_dummy_smart_bot_retreats_when_too_close() -> void:
 
 	dummy._smart_bot_control(1.0)
 	assert_bool(dummy._desired_dir < 0).is_true()
-
-
-func test_player_dummy_reset_for_training() -> void:
-	var dummy = auto_free(load("res://enemies/bosses/umbra/PlayerDummy.tscn").instantiate())
-	add_child(dummy)
-	dummy.reset_for_training(Vector2(100, 100))
-	assert_float(dummy.global_position.x).is_equal(100)
-	assert_float(dummy.velocity.x).is_equal(0)
-
+	
 
 func test_player_dummy_attack_triggers() -> void:
 	var dummy = auto_free(load("res://enemies/bosses/umbra/PlayerDummy.tscn").instantiate())

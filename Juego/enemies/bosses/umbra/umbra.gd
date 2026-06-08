@@ -140,6 +140,7 @@ const PRISM_CORE_SCENE := preload("res://objects/NucleoDePrisma.tscn")
 @export var invert_move_decode := false
 @export_range(5, 120, 1) var move_mapping_probe_samples := 25
 @export_range(0.5, 1.0, 0.01) var move_mapping_flip_threshold := 0.7
+@export var disable_player_profile_adaptation := false
 
 # Umbrales de adaptación conductual (6 nuevos sesgos sobre player metrics)
 @export var bd_dodge_pursuit := 0.30
@@ -379,7 +380,6 @@ func _assign_power():
 func _physics_process(delta):
 	if not is_active and not _is_dying:
 		return
-
 	if _is_dying:
 		_update_animation()
 		return
@@ -388,7 +388,6 @@ func _physics_process(delta):
 		if not _ensure_onnx_model_ready():
 			_has_received_valid_action = false
 			_last_action_received_time = Time.get_ticks_msec() / 1000.0
-			return
 
 	if force_heuristic_only or _should_use_heuristic():
 		_use_heuristic()
@@ -462,6 +461,8 @@ func _apply_persistent_difficulty() -> void:
 
 
 func _apply_player_profile_adaptation() -> void:
+	if disable_player_profile_adaptation:
+		return
 	var metrics := GameState.get_umbra_player_metrics()
 	if metrics.is_empty():
 		return
@@ -484,6 +485,8 @@ func _apply_player_profile_adaptation() -> void:
 	_apply_behavioral_adaptation()
 
 func _apply_behavioral_adaptation() -> void:
+	if disable_player_profile_adaptation:
+		return
 	var metrics := GameState.get_umbra_player_metrics()
 	if metrics.is_empty():
 		return

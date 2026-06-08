@@ -84,11 +84,13 @@ func _ready():
 
 func _physics_process(delta):
 	super._physics_process(delta)
+	if not is_instance_valid(_umbra):
+		return
 	_collect_player_metrics()
 
 
 func _collect_player_metrics() -> void:
-	if not _player or not _umbra:
+	if not _player or not _umbra or not is_instance_valid(_umbra):
 		return
 
 	var distance := _umbra.global_position.distance_to(_player.global_position)
@@ -130,6 +132,8 @@ func _collect_player_metrics() -> void:
 
 func get_obs() -> Dictionary:
 	var obs = []
+	if not is_instance_valid(_umbra):
+		return {"obs": [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]}
 	_resolve_player_if_missing()
 	
 	if not _player:
@@ -219,6 +223,8 @@ func get_action_space() -> Dictionary:
 
 func get_reward() -> float:
 	var r = 0.0
+	if not is_instance_valid(_umbra):
+		return r
 	const DIRECTION_DEADZONE_PX := 12.0
 	
 	if not _player:
@@ -355,6 +361,8 @@ func set_action(action) -> void:
 		if t != _last_action_printed_type:
 			print("Accion recibida (tipo=", t, "): ", action)
 			_last_action_printed_type = t
+	if not is_instance_valid(_umbra):
+		return
 	_umbra.set_ai_action(action)
 
 

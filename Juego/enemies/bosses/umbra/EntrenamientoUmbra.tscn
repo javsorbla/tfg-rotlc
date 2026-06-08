@@ -176,7 +176,7 @@ size = Vector2(1687, 36)
 
 [node name="PruebaUmbra" type="Node"]
 script = ExtResource("1_xhvoh")
-training_preset = 3
+training_preset = 2
 auto_switch_mode_with_preset = false
 auto_stop_on_target = true
 min_episodes_before_stop = 200
@@ -195,6 +195,7 @@ position = Vector2(473, -20)
 collision_layer = 16
 max_health = 6
 despawn_on_death = true
+disable_player_profile_adaptation = true
 
 [node name="Player" parent="." instance=ExtResource("4_n1die")]
 position = Vector2(367, -14)

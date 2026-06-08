@@ -90,11 +90,12 @@ def evaluate_checkpoint(path: Path, move_head_index: Optional[int], batch_size: 
     entropy = float((-(probs * np.log(np.clip(probs, 1e-8, 1.0))).sum(axis=1)).mean())
 
     grid = np.linspace(-1, 1, 41, dtype=np.float32)
-    g = np.zeros((len(grid), 19), dtype=np.float32)
+    g = np.zeros((len(grid), 23), dtype=np.float32)
     g[:, 0] = grid
     g[:, 4] = 1.0
     g[:, 7] = 0.7
     g[:, 8] = 0.7
+    g[:, 19] = 1.0 
     gt, _ = model.policy.obs_to_tensor({"obs": g})
     gp = model.policy.get_distribution(gt).distribution[move_idx].probs.detach().cpu().numpy().argmax(axis=1)
 

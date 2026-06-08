@@ -67,10 +67,21 @@ El modelo se guarda como `.zip` en `logs/sb3/` y los checkpoints en `logs/sb3/*_
 
 ```powershell
 # Validar checkpoints y exportar el más sano
-.venv\Scripts\python.exe umbra_checkpoint_gate.py `
-  --checkpoint_dir=logs/sb3/umbra_v2_allpowers_checkpoints `
-  --max-dominant=0.85 --min-lr-acc=0.55 --lr-deadzone=0.07 `
-  --export-onnx=Juego/umbra.onnx
+./run_umbra_autogate.ps1 `
+  -ExperimentName umbra_v2_allpowers `
+  -TotalSteps 150000 `
+  -BlockSteps 5000 `
+  -LearningRate 1e-4 `
+  -EntCoef 0.08 `
+  -NSteps 1024 `
+  -BatchSize 256 `
+  -NEpochs 10 `
+  -TargetKl 0.015 `
+  -GateMaxDominant 0.85 `
+  -GateMinLrAcc 0.55 `
+  -GateLrDeadzone 0.07 `
+  -CheckpointDir "logs/sb3/umbra_v2_allpowers_checkpoints" `
+  -OnnxOut "Juego/umbra.onnx"
 
 # O exportar un .zip concreto directamente
 .venv\Scripts\python.exe stable_baselines3_example.py `

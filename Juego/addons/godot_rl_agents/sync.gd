@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 # --fixed-fps 2000 --disable-render-loop
 
@@ -801,5 +801,3 @@ func _notification(what):
 		file.store_line(json_string)
 		var error = file.get_error()
 		assert(not error, "There was an error after trying to write to the file: %d" % error)
-
-
