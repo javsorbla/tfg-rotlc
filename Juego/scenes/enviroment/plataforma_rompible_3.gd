@@ -3,6 +3,7 @@ extends Node2D
 const SHAKE_DURATION = 1.0
 const BREAK_DELAY = 0.3
 const RESPAWN_TIME = 3.0
+const PLATAFORMA_ROMPIBLE_SOUND := preload("res://music/scenes/campos_zafiro/plataforma_rompible.ogg")
 
 var is_shaking = false
 var shake_timer = 0.0
@@ -40,8 +41,13 @@ func _respawn():
 
 func _on_detector_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player") and not is_shaking:
-		# Verificar que el jugador viene desde arriba
 		if body.global_position.y < global_position.y:
+			var sfx := AudioStreamPlayer.new()
+			sfx.stream = PLATAFORMA_ROMPIBLE_SOUND
+			sfx.bus = &"EFX"
+			add_child(sfx)
+			sfx.play()
+			sfx.finished.connect(sfx.queue_free)
 			is_shaking = true
 			shake_timer = SHAKE_DURATION
 			tilemap.position.x = 0

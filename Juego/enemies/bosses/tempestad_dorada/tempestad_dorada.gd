@@ -749,6 +749,9 @@ func _update_flip(flipped: bool):
 		
 func activate():
 	_reset_for_encounter(true)
+	if sfx_rugido:
+		sfx_rugido.volume_db = 0.0
+		sfx_rugido.play()
 
 func _on_level_reset() -> void:
 	_reset_for_encounter(false)

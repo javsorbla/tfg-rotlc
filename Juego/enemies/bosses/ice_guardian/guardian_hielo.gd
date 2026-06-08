@@ -70,6 +70,9 @@ var core_hurtbox_base_x := 0.0
 var damage_flash_tween: Tween = null
 var fury_blink_tween: Tween = null
 var has_summoned_fury_walkers = false
+var _proyectil_sfx: AudioStreamPlayer = null
+var _active_projectiles: int = 0
+var _roar_timer: float = 0.0
 
 var room_left_limit = 0.0
 var room_right_limit = 0.0
@@ -88,6 +91,11 @@ var room_suelo_y = 0.0
 @onready var caminante_helado_scene = preload("res://enemies/common/caminante_helado/CaminanteHelado.tscn")
 
 const CRYSTAL_SCENE: PackedScene = preload("res://objects/Cristal.tscn")
+const PLACAJE_GUARDIAN: AudioStreamOggVorbis = preload("res://music/enemies/bosses/guardian_hielo/placaje_guardian.ogg")
+const PROYECTIL_GUARDIAN: AudioStreamOggVorbis = preload("res://music/enemies/bosses/guardian_hielo/proyectil_guardian.ogg")
+const INVOCACION_GUARDIAN: AudioStreamOggVorbis = preload("res://music/enemies/bosses/guardian_hielo/invocacion.ogg")
+const PUNO_GUARDIAN: AudioStreamOggVorbis = preload("res://music/enemies/bosses/guardian_hielo/puño_guardian.ogg")
+const RUGIDO_GUARDIAN: AudioStreamOggVorbis = preload("res://music/enemies/bosses/guardian_hielo/rugido_guardian.ogg")
 
 func _spawn_final_boss_crystal(variant_idx: int = 0, offset := Vector2(0, -34)) -> void:
 	if CRYSTAL_SCENE == null:
@@ -159,6 +167,10 @@ func _physics_process(delta):
 	_check_phase()
 	_handle_state(delta)
 	_update_timers(delta)
+	_roar_timer -= delta
+	if _roar_timer <= 0.0:
+		_roar_timer = randf_range(7.0, 10.0)
+		_play_sfx(RUGIDO_GUARDIAN, 0.0)
 
 func _check_phase():
 	if current_phase == Phase.ONE and current_health <= MAX_HEALTH * PHASE_TWO_THRESHOLD:
@@ -187,6 +199,8 @@ func _start_fury_transition_async():
 	move_tween.tween_property(self, "global_position", target_pos, FURY_CENTER_MOVE_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await move_tween.finished
 	_play_animation("summon")
+	_play_sfx(INVOCACION_GUARDIAN)
+	_play_sfx(RUGIDO_GUARDIAN, 4.0)
 	_summon_fury_walkers_async()
 	await sprite.animation_finished
 	_play_animation("idle")
@@ -267,6 +281,7 @@ func _start_charge():
 		charge_direction = Vector2.LEFT if sprite.flip_h else Vector2.RIGHT
 
 	_play_animation("charge")
+	_play_sfx(PLACAJE_GUARDIAN)
 
 func _charge_state(delta):
 	action_timer -= delta
@@ -301,6 +316,8 @@ func _start_projectile():
 	projectile_timer = PROJECTILE_COOLDOWN if current_phase == Phase.ONE else PROJECTILE_COOLDOWN_P2
 	projectile_fired = false
 	_play_animation("shoot")
+	if _proyectil_sfx == null:
+		_proyectil_sfx = _play_sfx(PROYECTIL_GUARDIAN)
 
 func _projectile_state(delta):
 	action_timer -= delta
@@ -335,6 +352,17 @@ func _spawn_projectile_with_direction(dir: Vector2, spawn_position: Vector2):
 	get_parent().add_child(projectile)
 	projectile.global_position = spawn_position
 	projectile.init(dir)
+	_active_projectiles += 1
+	projectile.tree_exited.connect(_on_projectile_destroyed)
+
+
+func _on_projectile_destroyed():
+	_active_projectiles -= 1
+	if _active_projectiles <= 0 and _proyectil_sfx:
+		_proyectil_sfx.stop()
+		_proyectil_sfx.queue_free()
+		_proyectil_sfx = null
+
 
 func _start_jump():
 	current_state = State.JUMP
@@ -451,6 +479,8 @@ func _land_shockwave(ground_y: float):
 	if not shockwave_scene:
 		return
 
+	_play_sfx(PUNO_GUARDIAN)
+
 	# Onda hacia la izquierda
 	var shockwave_left = shockwave_scene.instantiate()
 	get_parent().add_child(shockwave_left)
@@ -505,8 +535,21 @@ func _play_animation(animation_name: String) -> void:
 	sprite.play(animation_name)
 	sprite.frame = 0
 
+func _play_sfx(stream: AudioStreamOggVorbis, volume_db: float = -8.0) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.bus = "EFX"
+	player.volume_db = volume_db
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+	return player
+
+
 func activate():
 	_reset_for_encounter(true)
+	_roar_timer = randf_range(7.0, 10.0)
+	_play_sfx(RUGIDO_GUARDIAN, 0.0)
 
 
 func _on_level_reset() -> void:
@@ -537,6 +580,12 @@ func _reset_for_encounter(make_active: bool) -> void:
 	jump_descent_hold_active = false
 	post_land_timer = 0.0
 	has_summoned_fury_walkers = false
+	_roar_timer = 0.0
+	if _proyectil_sfx:
+		_proyectil_sfx.stop()
+		_proyectil_sfx.queue_free()
+		_proyectil_sfx = null
+	_active_projectiles = 0
 	attack_hitbox.set_deferred("monitoring", false)
 	attack_hitbox.set_deferred("monitorable", false)
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -654,6 +703,13 @@ func die():
 		fury_blink_tween.kill()
 		fury_blink_tween = null
 	sprite.modulate = Color.WHITE
+	var death_roar := AudioStreamPlayer.new()
+	death_roar.stream = RUGIDO_GUARDIAN
+	death_roar.bus = "EFX"
+	death_roar.volume_db = 8.0
+	get_tree().root.add_child(death_roar)
+	death_roar.play()
+	death_roar.finished.connect(death_roar.queue_free)
 	_play_animation("death")
 	await sprite.animation_finished
 	var boss_room = get_tree().get_first_node_in_group("boss_room")

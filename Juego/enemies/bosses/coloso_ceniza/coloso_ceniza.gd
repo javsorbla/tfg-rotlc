@@ -644,6 +644,7 @@ func _update_flip(should_face_left: bool):
 
 func activate():
 	_reset_for_encounter(true)
+	_play_one_shot(RUGIDO_PINCHOS, 12.0)
 	if luz:
 		luz.energy = 4.0
 	sprite.play(_anim("walk"))

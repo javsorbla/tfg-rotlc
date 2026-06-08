@@ -598,7 +598,7 @@ script = ExtResource("1_7r6jr")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_7kxj6")
-animation = &"death"
+animation = &"shoot"
 
 [node name="NormalHurtbox" type="Area2D" parent="."]
 collision_layer = 16
