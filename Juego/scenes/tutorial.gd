@@ -3,12 +3,15 @@ extends Node2D
 const CAMPOS_SCENE := "res://scenes/CamposDeZafiro.tscn"
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
+const TUTORIAL_MUSIC: AudioStreamOggVorbis = preload("res://music/scenes/tutorial/tutorial.ogg")
 
 @onready var message_manager: Node = get_node_or_null("TutorialMessageManager")
 
-func _ready() -> void:
+func _enter_tree() -> void:
 	GameState.current_level = 0
 	GameState.current_level_path = "res://scenes/Tutorial.tscn"
+
+func _ready() -> void:
 
 	if GameState.has_method("auto_unlock_power_for_level"):
 		GameState.auto_unlock_power_for_level()
@@ -20,6 +23,11 @@ func _ready() -> void:
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
 	call_deferred("_start_intro_sequence")
+	call_deferred("_start_level_music")
+
+func _start_level_music() -> void:
+	ProjectMusicController.play_stream(TUTORIAL_MUSIC)
+
 
 func _start_intro_sequence() -> void:
 	var player = get_tree().get_first_node_in_group("player")

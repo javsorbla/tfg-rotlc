@@ -206,7 +206,7 @@ size = Vector2(347.5, 20)
 size = Vector2(462, 491)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_w1h6r"]
-size = Vector2(2270, 444)
+size = Vector2(2270, 504)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1xv7q"]
 size = Vector2(45, 279)
@@ -317,7 +317,7 @@ position = Vector2(3990, -2533)
 position = Vector2(3515, -2308)
 
 [node name="CaminanteHelado2" parent="Enemigos" instance=ExtResource("9_a1l6b")]
-position = Vector2(2151, -1522)
+position = Vector2(2151, -1520)
 
 [node name="CaminanteHelado3" parent="Enemigos" instance=ExtResource("9_a1l6b")]
 position = Vector2(999, -120)
@@ -325,10 +325,13 @@ position = Vector2(999, -120)
 [node name="Checkpoints" type="Node2D" parent="."]
 
 [node name="Checkpoint" parent="Checkpoints" instance=ExtResource("12_wryeu")]
-position = Vector2(1967, -1516)
+position = Vector2(1967, -1515)
 
 [node name="Checkpoint2" parent="Checkpoints" instance=ExtResource("12_wryeu")]
-position = Vector2(4386, -3372)
+position = Vector2(4386, -3371)
+
+[node name="Checkpoint3" parent="Checkpoints" instance=ExtResource("12_wryeu")]
+position = Vector2(68, -27)
 
 [node name="Entorno" type="Node2D" parent="."]
 
@@ -494,7 +497,7 @@ script = ExtResource("18_2c7of")
 color_zona = Color(0.562116, 0.787787, 0.960816, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Entorno/ZonaFinal"]
-position = Vector2(863, -203)
+position = Vector2(863, -173)
 shape = SubResource("RectangleShape2D_w1h6r")
 
 [node name="OrbeDeLuz" parent="Entorno" instance=ExtResource("12_e47pw")]
@@ -518,7 +521,7 @@ separacion_pinchos = 12.0
 zoom = Vector2(1, 1)
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("15_4xeyx")]
-position = Vector2(39, -31)
+position = Vector2(31, -31)
 collision_mask = 5
 
 [node name="Sync" type="Node" parent="."]
@@ -529,6 +532,7 @@ onnx_model_path = "res://umbra.onnx"
 
 [node name="ZonaJefe" parent="." groups=["boss_room"] instance=ExtResource("18_vsa3d")]
 position = Vector2(5115, -3936)
+skip_music_on_defeat = true
 
 [node name="Trigger" parent="ZonaJefe" index="0"]
 position = Vector2(56, 37)
@@ -662,91 +666,91 @@ color_default = Color(0.594418, 0.534013, 0.854205, 1)
 [node name="Luces" type="Node2D" parent="."]
 
 [node name="AntorchaSuelo" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(94, -32)
+position = Vector2(173, -31)
 
 [node name="AntorchaSuelo2" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(288, -32)
+position = Vector2(374, -31)
 
 [node name="AntorchaSuelo3" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(554, -112)
+position = Vector2(554, -111)
 
 [node name="AntorchaSuelo4" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(813, -112)
+position = Vector2(813, -111)
 
 [node name="AntorchaSuelo5" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(1063, -112)
+position = Vector2(1063, -111)
 
 [node name="AntorchaSuelo6" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(832, -560)
+position = Vector2(832, -559)
 
 [node name="AntorchaSuelo7" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(944, -672)
+position = Vector2(944, -671)
 
 [node name="AntorchaSuelo8" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(1874, -720)
+position = Vector2(1874, -719)
 
 [node name="AntorchaSuelo9" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(1608, -928)
+position = Vector2(1608, -927)
 
 [node name="AntorchaSuelo10" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(1832, -992)
+position = Vector2(1832, -991)
 
 [node name="AntorchaSuelo11" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(1607, -1184)
+position = Vector2(1607, -1183)
 
 [node name="AntorchaSuelo12" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(1831, -1376)
+position = Vector2(1832, -1375)
 
 [node name="AntorchaSuelo13" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(1608, -1440)
+position = Vector2(1608, -1439)
 
 [node name="AntorchaSuelo14" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(2411, -1696)
+position = Vector2(2411, -1695)
 
 [node name="AntorchaSuelo15" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(1888, -1869)
+position = Vector2(1912, -1872)
 
 [node name="AntorchaSuelo16" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(2733, -1984)
+position = Vector2(2733, -1983)
 
 [node name="AntorchaSuelo17" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(2999, -2304)
+position = Vector2(2999, -2303)
 
 [node name="AntorchaSuelo18" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(3423, -2304)
+position = Vector2(3423, -2303)
 
 [node name="AntorchaSuelo19" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(3751, -2304)
+position = Vector2(3751, -2303)
 
 [node name="AntorchaSuelo20" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(4039, -2304)
+position = Vector2(4039, -2303)
 
 [node name="AntorchaSuelo21" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(3719, -2560)
+position = Vector2(3719, -2559)
 
 [node name="AntorchaSuelo22" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(3143, -2656)
+position = Vector2(3143, -2655)
 
 [node name="AntorchaSuelo23" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(3720, -3056)
+position = Vector2(3720, -3055)
 
 [node name="AntorchaSuelo24" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(4023, -3296)
+position = Vector2(4023, -3295)
 
 [node name="AntorchaSuelo25" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(4279, -3376)
+position = Vector2(4279, -3374)
 
 [node name="AntorchaSuelo26" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(4471, -3376)
+position = Vector2(4471, -3375)
 
 [node name="AntorchaSuelo27" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(4454, -3904)
+position = Vector2(4454, -3903)
 
 [node name="AntorchaSuelo28" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(4815, -3904)
+position = Vector2(4815, -3903)
 
 [node name="AntorchaSuelo29" parent="Luces" instance=ExtResource("26_51j7u")]
-position = Vector2(2437, -1984)
+position = Vector2(2437, -1983)
 
 [connection signal="body_entered" from="Entorno/ZonaReinicio" to="Entorno/ZonaReinicio" method="_on_body_entered"]
 [connection signal="body_entered" from="Entorno/ZonaCamaraPinchos" to="Entorno/ZonaCamaraPinchos" method="_on_body_entered"]

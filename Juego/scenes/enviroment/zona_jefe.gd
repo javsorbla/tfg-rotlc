@@ -6,6 +6,7 @@ extends Node2D
 
 @export var boss_music: AudioStream
 @export var level_music: AudioStream
+@export var skip_music_on_defeat: bool = false
 
 var _room_key: String = ""
 var _active_boss: Node
@@ -126,7 +127,7 @@ func on_boss_defeated():
 
 	GameState.mark_boss_room_cleared(_room_key)
 
-	if _music_was_changed:
+	if _music_was_changed and not skip_music_on_defeat:
 		if level_music != null:
 			ProjectMusicController.fade_out_duration = 1.5
 			ProjectMusicController.fade_in_duration = 1.5

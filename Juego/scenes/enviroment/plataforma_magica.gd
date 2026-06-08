@@ -1,24 +1,37 @@
 extends StaticBody2D
 
-# Al exportar estas variables, podremos arrastrar otras plataformas desde el Inspector
 @export var plataforma_siguiente: StaticBody2D
 @export var plataforma_anterior: StaticBody2D
 @export var activa_al_inicio: bool = false
 
+var sfx_player: AudioStreamPlayer2D
+
 func _ready():
-	# Cuando arranca el nivel, decidimos si este bloque se ve o es invisible
+	sfx_player = AudioStreamPlayer2D.new()
+	sfx_player.name = "PlataformaMagicaSfx"
+	sfx_player.stream = load("res://music/scenes/torre_vacio/plataforma_magica.ogg")
+	sfx_player.bus = &"EFX"
+	sfx_player.volume_db = 4.0
+	sfx_player.max_distance = 800.0
+	add_child(sfx_player)
+
+	call_deferred("_inicializar")
+
+func _inicializar():
 	if activa_al_inicio:
 		aparecer()
 	else:
 		desaparecer()
 
 func aparecer():
-	show() # Lo hace visible
-	process_mode = Node.PROCESS_MODE_INHERIT # Activa las colisiones
+	show()
+	process_mode = Node.PROCESS_MODE_INHERIT
+	sfx_player.stop()
+	sfx_player.play()
 
 func desaparecer():
-	hide() # Lo hace invisible
-	process_mode = Node.PROCESS_MODE_DISABLED # Desactiva las colisiones para que caigas
+	hide()
+	process_mode = Node.PROCESS_MODE_DISABLED
 
 # Conecta la señal 'body_entered' del nodo Area2D (Trigger) a esta función
 func _on_trigger_body_entered(body):

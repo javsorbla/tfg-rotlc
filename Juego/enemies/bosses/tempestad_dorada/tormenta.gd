@@ -3,6 +3,7 @@ extends Area2D
 const LIFETIME: float = 1.3
 const WARNING_TIME: float = 0.8
 const DAMAGE: int = 1
+const TORMENTA_SOUND := preload("res://music/enemies/bosses/tempestad_dorada/tormenta_tempestad.ogg")
 
 var active: bool = false
 var damage_done: bool = false
@@ -10,6 +11,7 @@ var damage_done: bool = false
 @onready var sprite = $AnimatedSprite2D
 @onready var collision = $CollisionShape2D
 var luz: PointLight2D
+var sfx_player: AudioStreamPlayer
 
 func _ready():
 	add_to_group("storm")
@@ -17,6 +19,13 @@ func _ready():
 	if collision:
 		collision.disabled = true
 	area_entered.connect(_on_area_entered)
+	
+	sfx_player = AudioStreamPlayer.new()
+	sfx_player.name = "TormentaSfx"
+	sfx_player.stream = TORMENTA_SOUND
+	sfx_player.bus = &"EFX"
+	sfx_player.volume_db = 0.0
+	add_child(sfx_player)
 	
 	luz = PointLight2D.new()
 	add_child(luz)
@@ -55,6 +64,7 @@ func _start_sequence():
 	sprite.play("tormenta")
 	if collision:
 		collision.disabled = false
+	sfx_player.play()
 	
 	luz.energy = 2.5
 	
@@ -63,6 +73,8 @@ func _start_sequence():
 	tween.tween_property(luz, "energy", 3.0, 0.1).set_trans(Tween.TRANS_SINE)
 	
 	await get_tree().create_timer(LIFETIME - WARNING_TIME).timeout
+	sfx_player.reparent(get_tree().current_scene)
+	sfx_player.finished.connect(sfx_player.queue_free)
 	queue_free()
 
 func _on_area_entered(area: Area2D):

@@ -105,6 +105,8 @@ func _enter_state(new_state: State) -> void:
 			$AnimatedSprite2D.play("stunned")
 
 		State.DEAD:
+			if $AnimatedSprite2D.animation_finished.is_connected(_on_attack_finished):
+				$AnimatedSprite2D.animation_finished.disconnect(_on_attack_finished)
 			$AnimatedSprite2D.play("dead")
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)

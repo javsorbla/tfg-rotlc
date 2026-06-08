@@ -331,6 +331,7 @@ size = Vector2(23, 34)
 size = Vector2(24, 34)
 
 [node name="CorredorMagma" type="CharacterBody2D"]
+z_index = 1
 collision_layer = 16
 script = ExtResource("1_3qis3")
 

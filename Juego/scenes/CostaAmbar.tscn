@@ -1,4 +1,4 @@
-[gd_scene load_steps=121 format=4 uid="uid://dv7tvh0rknvv6"]
+[gd_scene load_steps=122 format=4 uid="uid://dv7tvh0rknvv6"]
 
 [ext_resource type="Texture2D" uid="uid://ckrlk2kf8xtpa" path="res://assets/tilesets/costa_ambar/coast-tileset.png" id="1_c0y7m"]
 [ext_resource type="Script" path="res://scenes/costa_ambar.gd" id="1_db77e"]
@@ -34,6 +34,7 @@
 [ext_resource type="AudioStream" uid="uid://ic3tjaht44t2" path="res://music/enemies/bosses/tempestad_dorada/tempestad_dorada.ogg" id="29_music_tempestad"]
 [ext_resource type="AudioStream" uid="uid://8e53o74wn4m6" path="res://music/enemies/bosses/umbra/umbra.ogg" id="30_music_umbra"]
 [ext_resource type="AudioStream" uid="uid://ddk1wa8fltgch" path="res://music/scenes/costa_ambar/costa_ambar.ogg" id="32_music_costa_ambar"]
+[ext_resource type="PackedScene" uid="uid://xgvqki0gryl3" path="res://scenes/enviroment/Portal.tscn" id="35_vg0tu"]
 
 [sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_xpnhm"]
 polygon = PackedVector2Array(-8, -8, -8, -8, -8, 8, -8, 8)
@@ -2086,11 +2087,11 @@ shape = SubResource("RectangleShape2D_ql8vt")
 [node name="Camera2D" parent="." instance=ExtResource("1_mjbm5")]
 
 [node name="Player" parent="." groups=["player_hitbox", "player_hurtbox"] instance=ExtResource("2_8wpeh")]
-position = Vector2(-65, -14)
+position = Vector2(-64, -14)
 
 [node name="Umbra" parent="." groups=["boss"] instance=ExtResource("14_7tadn")]
 position = Vector2(5993, 1004)
-max_health = 1
+max_health = 20
 debug_model_indicator = false
 
 [node name="Sync" type="Node" parent="."]
@@ -2291,6 +2292,10 @@ rotation = 0.298551
 color = Color(0.857278, 0.356067, 0.122691, 1)
 energy = 0.5
 shadow_enabled = true
+
+[node name="Final" parent="." instance=ExtResource("35_vg0tu")]
+position = Vector2(13599, -1267)
+next_scene = "res://scenes/TorreDelVacio.tscn "
 
 [editable path="Entorno/ZonaLluvia"]
 [editable path="Entorno/ZonaLluvia2"]

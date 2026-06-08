@@ -273,6 +273,7 @@ animations = [{
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8t24t"]
 
 [node name="InquisidorTenebroso" type="CharacterBody2D"]
+z_index = 1
 collision_layer = 16
 script = ExtResource("1_d6t2e")
 
