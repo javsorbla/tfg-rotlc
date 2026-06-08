@@ -15,6 +15,11 @@ const RETURN_ARC_HEIGHT: float = 40.0
 const KNOCKBACK_FORCE: float = 10.0
 const DIVE_MAX_DISTANCE: float = 300.0  # distancia máxima antes de volver
 
+const ALETEO_ACECHADOR: AudioStreamOggVorbis = preload("res://music/enemies/common/acechador_aereo/aleteo_acechador.ogg")
+const ATAQUE_ACECHADOR: AudioStreamOggVorbis = preload("res://music/enemies/common/acechador_aereo/ataque_acechador.ogg")
+const STUN_ACECHADOR: AudioStreamOggVorbis = preload("res://music/enemies/common/acechador_aereo/stun_acechador.ogg")
+const MUERTE_ACECHADOR: AudioStreamOggVorbis = preload("res://music/enemies/common/acechador_aereo/muerte_acechador.ogg")
+
 const MOVE_SHEET_2 := preload("res://assets/enemies/common/acechador_aereo/move_sheet_2.png")
 const STUN_SHEET_2 := preload("res://assets/enemies/common/acechador_aereo/stun_sheet_2.png")
 const DEAD_SHEET_2 := preload("res://assets/enemies/common/acechador_aereo/dead_sheet_2.png")
@@ -54,6 +59,7 @@ var _base_sprite_frames: SpriteFrames = null
 var _level2_sprite_frames: SpriteFrames = null
 var _level3_sprite_frames: SpriteFrames = null
 var _level4_sprite_frames: SpriteFrames = null
+var _aleteo_player: AudioStreamPlayer2D = null
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -74,7 +80,28 @@ func _ready() -> void:
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	patrol_origin = global_position
+	_setup_aleteo()
 	_enter_state(State.IDLE)
+
+
+func _setup_aleteo() -> void:
+	_aleteo_player = AudioStreamPlayer2D.new()
+	_aleteo_player.stream = ALETEO_ACECHADOR
+	_aleteo_player.bus = &"EFX"
+	_aleteo_player.volume_db = 0.0
+	_aleteo_player.max_distance = 450.0
+	_aleteo_player.pitch_scale = 1.35
+	add_child(_aleteo_player)
+
+
+func _play_sfx(stream: AudioStream, vol: float = -8.0) -> void:
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
 
 
 func _physics_process(delta: float) -> void:
@@ -204,6 +231,8 @@ func _enter_state(new_state: State) -> void:
 			has_hit_player = false
 			$AnimatedSprite2D.flip_h = patrol_dir > 0
 			$AnimatedSprite2D.play("move")
+			if _aleteo_player and not _aleteo_player.playing:
+				_aleteo_player.play()
 
 		State.DIVING:
 			if player:
@@ -212,13 +241,30 @@ func _enter_state(new_state: State) -> void:
 				velocity = dive_direction * DIVE_SPEED
 				has_hit_player = false
 				dive_started_pos = global_position
+			_play_sfx(ATAQUE_ACECHADOR, -2.0)
+
+		State.STUNNED:
+			if _aleteo_player and _aleteo_player.playing:
+				_aleteo_player.stop()
+			_play_sfx(STUN_ACECHADOR, -2.0)
 
 		State.RETURNING:
 			velocity = Vector2.ZERO
 			return_start_pos = global_position
 			return_progress = 0.0
+			if _aleteo_player and not _aleteo_player.playing:
+				_aleteo_player.play()
 
 		State.DEAD:
+			if _aleteo_player:
+				_aleteo_player.stop()
+			var death_sfx := AudioStreamPlayer.new()
+			death_sfx.stream = MUERTE_ACECHADOR
+			death_sfx.bus = &"EFX"
+			death_sfx.volume_db = 0.0
+			get_tree().root.add_child(death_sfx)
+			death_sfx.play()
+			death_sfx.finished.connect(death_sfx.queue_free)
 			$AnimatedSprite2D.play("dead")
 
 			if $EnemyHitbox:
