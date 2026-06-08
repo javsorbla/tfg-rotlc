@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://byvydukidk6i2"]
+[gd_scene load_steps=15 format=3 uid="uid://byvydukidk6i2"]
 
 [ext_resource type="Script" path="res://ui/menus/main_menu/main_menu.gd" id="2_lk0wa"]
 [ext_resource type="PackedScene" uid="uid://xvu2k02xdqi6" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="3_qhsni"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://ui/menus/main_menu/main_menu_button.gd" id="9_ekh3p"]
 [ext_resource type="Texture2D" uid="uid://t783xna2ghd3" path="res://assets/ui/arrow.png" id="10_72cm0"]
 [ext_resource type="Theme" path="res://ui/menus/main_menu/main_menu_button_theme.tres" id="11_bq2et"]
+[ext_resource type="AudioStream" path="res://music/menus/menu-selection.mp3" id="12_m3nu"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -27,6 +28,8 @@ credits_packed_scene = ExtResource("4_qhsni")
 
 [node name="UISoundController" type="Node" parent="."]
 script = ExtResource("4_egdge")
+button_hovered = ExtResource("12_m3nu")
+button_focused = ExtResource("12_m3nu")
 
 [node name="BackgroundMusicPlayer" parent="." instance=ExtResource("5_1s4l0")]
 bus = &"Música"

@@ -11,6 +11,8 @@ const MAX_DEPTH = 16
 @export var root_path : NodePath = ^".."
 ## Audio bus for any audio streams created.
 @export var audio_bus : StringName = &"EFX"
+## Volume in dB for the created audio stream players.
+@export var volume_db : float = 0.0
 ## Continually check any new nodes added to the scene tree.
 @export var persistent : bool = true :
 	set(value):
@@ -96,6 +98,7 @@ func _build_stream_player(stream : AudioStream, stream_name : String = "") -> Au
 		stream_player = AudioStreamPlayer.new()
 		stream_player.stream = stream
 		stream_player.bus = audio_bus
+		stream_player.volume_db = volume_db
 		stream_player.name = stream_name + "AudioStreamPlayer"
 		add_child(stream_player)
 	return stream_player
@@ -176,12 +179,18 @@ func _connect_stream_player(node : Node, stream_player : AudioStreamPlayer, sign
 func connect_ui_sounds(node: Node) -> void:
 	if node is Button:
 		if node.name == "CloseButton":
+			_connect_stream_player(node, button_hovered_player, &"mouse_entered", _play_stream)
+			_connect_stream_player(node, button_focused_player, &"focus_entered", _play_stream)
 			_connect_stream_player(node, button_back_player, &"pressed", _play_stream)
 			return
 		_connect_stream_player(node, button_hovered_player, &"mouse_entered", _play_stream)
 		_connect_stream_player(node, button_focused_player, &"focus_entered", _play_stream)
 		_connect_stream_player(node, button_pressed_player, &"pressed", _play_stream)
 	elif node is TabBar:
+		_connect_stream_player(node, tab_hovered_player, &"tab_hovered", _tab_event_play_stream)
+		_connect_stream_player(node, tab_changed_player, &"tab_changed", _tab_event_play_stream)
+		_connect_stream_player(node, tab_selected_player, &"tab_selected", _tab_event_play_stream)
+	elif node is TabContainer:
 		_connect_stream_player(node, tab_hovered_player, &"tab_hovered", _tab_event_play_stream)
 		_connect_stream_player(node, tab_changed_player, &"tab_changed", _tab_event_play_stream)
 		_connect_stream_player(node, tab_selected_player, &"tab_selected", _tab_event_play_stream)

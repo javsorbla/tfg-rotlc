@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" path="res://ui/menus/windows/pause_menu_options_window.tscn" id="4_7wt2f"]
 [ext_resource type="PackedScene" path="res://ui/menus/windows/confirmation_overlaid_window_rotlc.tscn" id="5_7wt2f"]
 [ext_resource type="Theme" path="res://ui/menus/main_menu/main_menu_shell_theme.tres" id="6_shell"]
+[ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/autoloads/ui_sound_controller/ui_sound_controller.gd" id="7_3hge"]
+[ext_resource type="AudioStream" path="res://music/menus/menu-selection.mp3" id="8_fs3d"]
 
 [node name="PauseMenuLayer" type="CanvasLayer" unique_id=914002369]
 process_mode = 3
@@ -27,6 +29,12 @@ menu_container_node_path = NodePath("..")
 pauses_game = true
 update_content = true
 title = "Pausa"
+
+[node name="UISoundController" type="Node" parent="."]
+script = ExtResource("7_3hge")
+root_path = NodePath("../PauseMenu")
+button_hovered = ExtResource("8_fs3d")
+button_focused = ExtResource("8_fs3d")
 
 [node name="TitleLabel" parent="PauseMenu/ContentContainer/BoxContainer/TitleMargin/BoxContainer" parent_id_path=PackedInt32Array(6629802, 1788474031) index="0" unique_id=1049966061]
 theme_override_font_sizes/font_size = 20
