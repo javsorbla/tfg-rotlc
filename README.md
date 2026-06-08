@@ -87,11 +87,17 @@ Después de exportar, situar `umbra.onnx` en `Juego/umbra.onnx` (Sync node → `
 ```
 tfg-rotlc/
 ├── Juego/                        # Proyecto Godot
-│   ├── enemies/bosses/umbra/     # Boss Umbra + entrenamiento
-│   ├── player/                   # Scripts del jugador
-│   ├── leaderboard/              # NakamaManager
+│   ├── assets/                   # Assets del juego (Sprite sheets, backgrounds...)
+│   ├── music/                    # Archivos de audio del juego
+│   ├── objects/                  # Elementos recolectables por el jugador
+│   ├── player/                   # Lógica del jugador
+│   ├── enemies/                  # Lógica de los enemigos
+│   ├── leaderboard/              # Leaderboard con NakamaManager
 │   ├── scripts/                  # GameState y utilidades
-│   └── addons/                   # Plugins (godot_rl_agents, nakama, etc.)
+│   ├── addons/                   # Plugins (godot_rl_agents, nakama, etc.)
+│   ├── scenes/                   # Escenas relacionadas con los niveles del juego
+│   ├── ui/                       # Lógica de menús y HUD
+│   └── test/                     # Tests funcionales
 ├── stable_baselines3_example.py  # Lanzador de entrenamiento PPO
 ├── umbra_checkpoint_gate.py      # Validador de checkpoints + export ONNX
 └── Documentacion/                # Docs adicionales
