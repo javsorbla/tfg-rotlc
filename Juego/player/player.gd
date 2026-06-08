@@ -7,6 +7,8 @@ const DASH_DURATION = 0.25
 const DASH_COOLDOWN = 0.5
 const ACCELERATION = 1000.0
 const FRICTION = 700.0
+const FOOTSTEP_COOLDOWN := 0.38
+const FOOTSTEP_SOUND := preload("res://music/player/footstep.ogg")
 
 var can_jump = true
 var can_double_jump = false
@@ -40,14 +42,21 @@ var _shield_anim_playing = false
 var _shield_anim_in_progress = false
 var _prev_is_shielding = false
 var input_enabled = true
+var _footstep_timer := 0.0
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
 @onready var health = $Health
 @onready var combat = $Combat
 @onready var color_manager = $ColorManager
+var _footstep_player: AudioStreamPlayer
 
 func _ready():
+	_footstep_player = AudioStreamPlayer.new()
+	_footstep_player.stream = FOOTSTEP_SOUND
+	_footstep_player.bus = &"EFX"
+	add_child(_footstep_player)
+
 	if GameState.has_method("get_unlocked_powers") and color_manager.has_method("apply_unlocked_powers"):
 		color_manager.apply_unlocked_powers(GameState.get_unlocked_powers())
 	var camera = get_tree().get_first_node_in_group("camera")
@@ -183,6 +192,11 @@ func _physics_process(delta: float) -> void:
 	combat.process(delta)
 	color_manager.process(delta)
 	_update_animation(delta)
+
+	_footstep_timer -= delta
+	if _footstep_timer <= 0.0 and is_on_floor() and abs(velocity.x) > 0.1:
+		_footstep_player.play()
+		_footstep_timer = FOOTSTEP_COOLDOWN
 
 	# Actualizar estado previo de ataque para detección de flanco ascendente
 	_prev_combat_attacking = combat.is_attacking
