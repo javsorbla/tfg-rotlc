@@ -5,11 +5,15 @@ extends Area2D
 @export var auto_change_scene: bool = false 
 signal activated(body)
 
+const PORTAL_AMBIENT: AudioStreamOggVorbis = preload("res://music/scenes/tutorial/portal.ogg")
+const TELEPORT_SOUND: AudioStreamOggVorbis = preload("res://music/scenes/tutorial/teleport.ogg")
+
 @onready var anim: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D")
 @onready var light2d: PointLight2D = get_node_or_null("PointLight2D")
 @onready var sfx: AudioStreamPlayer2D = get_node_or_null("AudioStreamPlayer2D")
 var is_transitioning: bool = false
 var _entered_body: Node = null
+var _portal_ambient: AudioStreamPlayer2D = null
 
 func _ready() -> void:
 	add_to_group("portal")
@@ -26,6 +30,17 @@ func _ready() -> void:
 			anim.stop()
 
 	_apply_portal_light()
+	_setup_proximity_sound()
+
+
+func _setup_proximity_sound() -> void:
+	_portal_ambient = AudioStreamPlayer2D.new()
+	_portal_ambient.stream = PORTAL_AMBIENT
+	_portal_ambient.bus = &"EFX"
+	_portal_ambient.volume_db = 0.0
+	_portal_ambient.max_distance = 250.0
+	add_child(_portal_ambient)
+	_portal_ambient.play()
 
 
 func _get_portal_animation_name() -> String:
@@ -91,8 +106,14 @@ func _on_body_entered(body: Node) -> void:
 
 	is_transitioning = true
 	_entered_body = player_body
-	if sfx:
-		sfx.play()
+	if _portal_ambient:
+		_portal_ambient.stop()
+	var teleport_player := AudioStreamPlayer2D.new()
+	teleport_player.stream = TELEPORT_SOUND
+	teleport_player.bus = &"EFX"
+	add_child(teleport_player)
+	teleport_player.play()
+	teleport_player.finished.connect(teleport_player.queue_free)
 	emit_signal("activated", _entered_body)
 	if anim and anim.sprite_frames and anim.sprite_frames.has_animation("enter"):
 		anim.sprite_frames.set_animation_loop("enter", false)

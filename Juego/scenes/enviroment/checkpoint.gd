@@ -1,5 +1,7 @@
 extends Area2D
 
+const CHECKPOINT_SOUND: AudioStreamOggVorbis = preload("res://music/scenes/tutorial/checkpoint.ogg")
+
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 var activated: bool = false
 @onready var light2d: Node = $PointLight2D
@@ -31,7 +33,13 @@ func _on_body_entered(body: Node) -> void:
 	if not body or not body.is_in_group("player"):
 		return
 	activated = true
-	# Activate checkpoint in GameState
+	var sfx := AudioStreamPlayer.new()
+	sfx.stream = CHECKPOINT_SOUND
+	sfx.bus = &"EFX"
+	sfx.volume_db = -4.0
+	add_child(sfx)
+	sfx.play()
+	sfx.finished.connect(sfx.queue_free)
 	if Engine.has_singleton("GameState"):
 		# GameState is an autoload; call its method
 		GameState.activate_checkpoint(global_position)
