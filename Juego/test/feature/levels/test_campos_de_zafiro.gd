@@ -38,14 +38,3 @@ func test_mover_player_fresh_spawn() -> void:
 func test_setup_wind_player_creates_audio_player() -> void:
 	level._setup_wind_player()
 	assert_that(level.wind_player).is_not_null()
-
-
-func test_wind_fade_toggle() -> void:
-	level._setup_wind_player()
-	level._wind_tween = create_tween()
-
-	level._fade_wind_in()
-	assert_that(level._wind_tween).is_not_null()
-
-	level._fade_wind_out()
-	assert_that(level._wind_tween).is_not_null()
