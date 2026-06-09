@@ -71,10 +71,12 @@ func _ready():
 	_jump_player.stream = JUMP_SOUND
 	_jump_player.bus = &"EFX"
 	_jump_player.volume_db = 3.0
+	_jump_player.pitch_scale = 1.35
 	add_child(_jump_player)
 	_landing_player = AudioStreamPlayer.new()
 	_landing_player.stream = LANDING_SOUND
 	_landing_player.bus = &"EFX"
+	_landing_player.volume_db = -10.0
 	add_child(_landing_player)
 
 	if GameState.has_method("get_unlocked_powers") and color_manager.has_method("apply_unlocked_powers"):
