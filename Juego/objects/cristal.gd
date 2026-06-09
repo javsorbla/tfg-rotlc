@@ -2,6 +2,8 @@ extends Area2D
 
 signal collected(level_id: int, variant: int, collector: Node)
 
+const COLLECT_SOUND := preload("res://music/player/healing.mp3")
+
 @export var visual_variant: int = 0
 @export var variants: Array[Texture2D] = []
 @export var level_id: int = -1
@@ -27,9 +29,15 @@ var _glow_pulse_dir: int = 1
 var _initial_collision_layer: int = 0
 var _initial_collision_mask: int = 0
 
+var _collect_player: AudioStreamPlayer
+
 func _ready() -> void:
 	_initial_collision_layer = collision_layer
 	_initial_collision_mask = collision_mask
+	_collect_player = AudioStreamPlayer.new()
+	_collect_player.stream = COLLECT_SOUND
+	_collect_player.bus = &"EFX"
+	add_child(_collect_player)
 
 	# Seleccionar animación según variante
 	if anim != null:
@@ -157,5 +165,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if player_node.has_method("play_obtain_animation") and color_name != "yellow":
 		player_node.call_deferred("play_obtain_animation")
 
+	if _collect_player != null:
+		_collect_player.play()
 	emit_signal("collected", resolved_level, visual_variant, player_node)
 	queue_free()
