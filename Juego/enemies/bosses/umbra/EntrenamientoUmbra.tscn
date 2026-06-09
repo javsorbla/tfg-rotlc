@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=4 uid="uid://di7adgdg5ymcq"]
+[gd_scene load_steps=11 format=4 uid="uid://di7adgdg5ymcq"]
 
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="1_2ac4d"]
 [ext_resource type="Script" path="res://enemies/bosses/umbra/entrenamiento_umbra.gd" id="1_xhvoh"]
@@ -172,14 +172,20 @@ physics_layer_0/collision_layer = 1
 sources/0 = SubResource("TileSetAtlasSource_i546j")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dm5ie"]
-size = Vector2(1687, 36)
+size = Vector2(2223, 424)
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_yopwh"]
+vertices = PackedVector2Array(839.938, 3.00781, 24.9375, 3.97656, 24.0469, -165.023, 839.047, -166.969)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(15, 14, 850, 13, 849, -177, 14, -175)])
 
 [node name="PruebaUmbra" type="Node"]
 script = ExtResource("1_xhvoh")
-training_preset = 2
+training_preset = 3
 auto_switch_mode_with_preset = false
 auto_stop_on_target = true
 min_episodes_before_stop = 200
+platform_spawn_markers = Array[NodePath]([NodePath("Marker2D"), NodePath("Marker2D2"), NodePath("Marker2D3")])
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("1_2ac4d")
@@ -205,7 +211,7 @@ collision_mask = 20
 script = ExtResource("6_2hfra")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Killzone"]
-position = Vector2(465.5, 33)
+position = Vector2(468.5, 214)
 shape = SubResource("RectangleShape2D_dm5ie")
 
 [node name="SpawnPlayer" type="Marker2D" parent="."]
@@ -214,10 +220,86 @@ position = Vector2(367, -15)
 [node name="SpawnUmbra" type="Marker2D" parent="."]
 position = Vector2(465, -26)
 
+[node name="Marker2D" type="Marker2D" parent="."]
+position = Vector2(456, -90)
+
+[node name="Marker2D2" type="Marker2D" parent="."]
+position = Vector2(320, -88)
+
+[node name="Marker2D3" type="Marker2D" parent="."]
+position = Vector2(641, -90)
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(422, -120)
 zoom = Vector2(1.5, 1.5)
 position_smoothing_enabled = true
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_yopwh")
+
+[node name="NavigationLink2D" type="NavigationLink2D" parent="."]
+start_position = Vector2(334, -79)
+end_position = Vector2(417, -79)
+
+[node name="NavigationLink2D2" type="NavigationLink2D" parent="."]
+position = Vector2(160, 0)
+start_position = Vector2(334, -79)
+end_position = Vector2(417, -79)
+
+[node name="NavigationLink2D3" type="NavigationLink2D" parent="."]
+position = Vector2(65, -63)
+start_position = Vector2(332, -80)
+end_position = Vector2(449, -80)
+
+[node name="NavigationLink2D4" type="NavigationLink2D" parent="."]
+position = Vector2(130, -126)
+start_position = Vector2(364, 47)
+end_position = Vector2(384, 125)
+
+[node name="NavigationLink2D5" type="NavigationLink2D" parent="."]
+position = Vector2(325, -315)
+start_position = Vector2(238, 317)
+end_position = Vector2(252, 236)
+
+[node name="NavigationLink2D6" type="NavigationLink2D" parent="."]
+position = Vector2(195, -189)
+start_position = Vector2(204, 188)
+end_position = Vector2(222, 110)
+
+[node name="NavigationLink2D7" type="NavigationLink2D" parent="."]
+position = Vector2(291, -125)
+start_position = Vector2(363, 46)
+end_position = Vector2(384, 125)
+
+[node name="NavigationLink2D8" type="NavigationLink2D" parent="."]
+position = Vector2(-30, -126)
+start_position = Vector2(364, 47)
+end_position = Vector2(384, 125)
+
+[node name="NavigationLink2D9" type="NavigationLink2D" parent="."]
+position = Vector2(36, -188)
+start_position = Vector2(204, 188)
+end_position = Vector2(222, 110)
+
+[node name="NavigationLink2D10" type="NavigationLink2D" parent="."]
+position = Vector2(195, -183)
+start_position = Vector2(362, 40)
+end_position = Vector2(384, 104)
+
+[node name="NavigationLink2D11" type="NavigationLink2D" parent="."]
+position = Vector2(35, -183)
+start_position = Vector2(362, 40)
+end_position = Vector2(384, 104)
+
+[node name="NavigationLink2D12" type="NavigationLink2D" parent="."]
+position = Vector2(125, -167)
+start_position = Vector2(389, 24)
+end_position = Vector2(366, 87)
+
+[node name="NavigationLink2D13" type="NavigationLink2D" parent="."]
+position = Vector2(-35, -167)
+start_position = Vector2(389, 24)
+end_position = Vector2(366, 87)
 
 [editable path="Umbra"]
 [editable path="Player"]

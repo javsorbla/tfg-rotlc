@@ -827,11 +827,6 @@ func die():
 	if closest_boss_room:
 		closest_boss_room.on_boss_defeated()
 
-	if despawn_on_death:
-		_spawn_prism_core_drop()
-		queue_free()
-		return
-
 	velocity = Vector2.ZERO
 	is_attacking = false
 	is_dashing = false
@@ -940,6 +935,8 @@ func set_ai_action(action):
 					_power_active = false
 					_power_cooldown_timer = _get_cooldown_for_power(current_power)
 				current_power = desired
+				_power_active = true
+				_power_timer = color_manager._get_power_duration(desired)
 			ai_should_use_power = true
 
 
@@ -1069,7 +1066,7 @@ func _normalize_indexed_ai_action(v0: int, v1: int, v2: int, v3: int, v4: int) -
 			"jump": clampi(v1, 0, 1),
 			"attack": clampi(v2, 0, 1),
 			"dash": clampi(v3, 0, 1),
-			"power": clampi(v4, 0, 1)
+			"power": clampi(v4, 0, 3)
 		}
 
 	return {
@@ -1077,7 +1074,7 @@ func _normalize_indexed_ai_action(v0: int, v1: int, v2: int, v3: int, v4: int) -
 		"dash": clampi(v1, 0, 1),
 		"jump": clampi(v2, 0, 1),
 		"move": clampi(v3, 0, 2),
-		"power": clampi(v4, 0, 1)
+		"power": clampi(v4, 0, 3)
 	}
 
 

@@ -83,6 +83,10 @@ func _physics_process(delta):
 		velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
 	
 	move_and_slide()
+
+	if is_on_floor():
+		can_double_jump = true
+
 	health.process(delta)
 	color_manager.process(delta)
 
@@ -96,6 +100,10 @@ func set_control_mode(new_mode: int) -> void:
 func reset_for_training(spawn_pos: Vector2) -> void:
 	global_position = spawn_pos
 	velocity = Vector2.ZERO
+	if collision_layer > 0:
+		var snap := move_and_collide(Vector2(0, 200))
+		if snap and debug_bot_logs:
+			print("Dummy snapped to platform")
 	is_dashing = false
 	dash_timer = 0.0
 	dash_cooldown_timer = 0.0
@@ -125,8 +133,13 @@ func _human_control(_delta: float) -> void:
 
 	_desired_dir = Input.get_axis("move_left", "move_right")
 
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
+	if Input.is_action_just_pressed("jump") and can_jump:
+		if is_on_floor():
+			velocity.y = JUMP_VELOCITY
+			can_double_jump = true
+		elif can_double_jump:
+			velocity.y = JUMP_VELOCITY
+			can_double_jump = false
 
 	if Input.is_action_just_pressed("dash") and dash_cooldown_timer <= 0.0:
 		_start_dash(_desired_dir)
@@ -154,16 +167,28 @@ func _smart_bot_control(_delta: float) -> void:
 		if randf() < 0.10:
 			_strafe_sign *= -1.0
 
-	if abs_x > bot_dash_range:
-		_desired_dir = sign(rel.x)
-	elif abs_x < bot_strafe_distance * 0.55:
-		_desired_dir = -sign(rel.x)
-	else:
-		_desired_dir = _strafe_sign
+	var wants_platform := false
+	if rel.y < -80.0:
+		wants_platform = true
+		if abs_x > bot_dash_range:
+			_desired_dir = sign(rel.x)
+		elif abs_x > bot_strafe_distance:
+			_desired_dir = sign(rel.x)
+	if not wants_platform:
+		if abs_x > bot_dash_range:
+			_desired_dir = sign(rel.x)
+		elif abs_x < bot_strafe_distance * 0.55:
+			_desired_dir = -sign(rel.x)
+		else:
+			_desired_dir = _strafe_sign
 
 	if is_on_floor():
 		var wants_jump := false
-		if not umbra.is_on_floor():
+		if rel.y > 60.0 and abs_x < bot_strafe_distance * 1.5:
+			wants_jump = false
+		elif wants_platform:
+			wants_jump = true
+		elif not umbra.is_on_floor():
 			wants_jump = true
 		elif rel.y < -48.0 and randf() < bot_jump_chance:
 			wants_jump = true

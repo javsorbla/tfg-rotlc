@@ -1,7 +1,5 @@
 extends Node
 
-const HUMAN_PLAYER_SCENE := preload("res://player/Player.tscn")
-
 enum TrainingPreset {
 	MANUAL,
 	QUICK,
@@ -24,6 +22,8 @@ enum TrainingPreset {
 @export var spawn_jitter_x := 24.0
 @export var training_power_mode := "cycle"
 @export var human_player_spawn_max_health := 5
+@export var platform_spawn_probability := 0.3
+@export var platform_spawn_markers: Array[NodePath] = []
 
 @onready var umbra = $Umbra
 @onready var player_dummy = $Player
@@ -42,7 +42,6 @@ var _training_finished := false
 var _preset_human_ratio := 0.3
 var _preset_block_size := 10
 var _manual_mode_override := false
-var _human_player: CharacterBody2D
 var _active_player: CharacterBody2D
 var _overlay_layer: CanvasLayer
 var _overlay_panel: Panel
@@ -300,28 +299,16 @@ func _apply_training_power() -> void:
 
 func _set_training_mode(is_human: bool) -> void:
 	if is_human:
-		_set_dummy_enabled(false)
-		if _human_player == null:
-			_human_player = HUMAN_PLAYER_SCENE.instantiate()
-			_human_player.name = "TrainingHumanPlayer"
-			add_child(_human_player)
-			var cm := _human_player.get_node_or_null("ColorManager")
-			if cm and cm.has_method("apply_unlocked_powers"):
-				cm.apply_unlocked_powers({"cyan": true, "red": true, "yellow": true})
-			var hp := _human_player.get_node_or_null("Health")
-			if hp and hp.has_method("_sync_max_health_from_progress"):
-				hp.MAX_HEALTH = human_player_spawn_max_health
-				hp.current_health = human_player_spawn_max_health
-		_active_player = _human_player
+		player_dummy.set_control_mode(player_dummy.ControlMode.HUMAN)
+		player_dummy.color_manager.apply_unlocked_powers({"cyan": true, "red": true, "yellow": true})
+		player_dummy.health.MAX_HEALTH = human_player_spawn_max_health
+		player_dummy.health.current_health = human_player_spawn_max_health
+		_active_player = player_dummy
 		_wire_player_death_callback(_active_player)
 	else:
-		if _human_player != null:
-			_human_player.queue_free()
-			_human_player = null
+		player_dummy.set_control_mode(player_dummy.ControlMode.SMART_BOT)
 		_set_dummy_enabled(true)
 		_active_player = player_dummy
-		if player_dummy.has_method("set_control_mode"):
-			player_dummy.set_control_mode(0)
 		_wire_player_death_callback(_active_player)
 
 	if umbra.ai_controller and _active_player != null:
@@ -428,13 +415,29 @@ func _reset():
 	if umbra.ai_controller and umbra.ai_controller.has_method("reset"):
 		umbra.ai_controller.reset()
 
-	if human_training_mode and _human_player != null:
-		_reset_human_player(player_spawn_pos)
+	if human_training_mode:
+		player_dummy.reset_for_training(player_spawn_pos)
+	elif platform_spawn_markers.size() > 0 and randf() < platform_spawn_probability:
+		var spawn := _get_random_platform_spawn()
+		if spawn != null:
+			player_dummy.reset_for_training(spawn.global_position)
+		else:
+			player_dummy.reset_for_training(player_spawn_pos)
 	elif player_dummy.has_method("reset_for_training"):
 		player_dummy.reset_for_training(player_spawn_pos)
 	else:
 		player_dummy.global_position = player_spawn_pos
 		player_dummy.get_node("Health").current_health = player_dummy.get_node("Health").MAX_HEALTH
+
+
+func _get_random_platform_spawn() -> Marker2D:
+	if platform_spawn_markers.size() == 0:
+		return null
+	var path := platform_spawn_markers[randi() % platform_spawn_markers.size()]
+	var node := get_node_or_null(path)
+	if node is Marker2D:
+		return node
+	return null
 
 
 func _check_target_reached() -> bool:
@@ -448,21 +451,6 @@ func _check_target_reached() -> bool:
 
 	var win_rate := float(summary.get("win_rate", 0.0))
 	return win_rate >= target_win_rate_low and win_rate <= target_win_rate_high
-
-
-func _reset_human_player(spawn_pos: Vector2) -> void:
-	if _human_player == null:
-		return
-	_human_player.global_position = spawn_pos
-	_human_player.velocity = Vector2.ZERO
-	var health = _human_player.get_node_or_null("Health")
-	if health:
-		health.current_health = health.MAX_HEALTH
-		health.is_invincible = false
-		health.invincibility_timer = 0.0
-	var hurtbox = _human_player.get_node_or_null("Hurtbox")
-	if hurtbox:
-		hurtbox.set_deferred("monitorable", true)
 
 
 func _get_active_player_health() -> int:

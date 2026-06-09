@@ -248,6 +248,16 @@ func get_reward() -> float:
 	# Recompensa por sobrevivir
 	r += 0.001
 
+	# Recompensa por usar poderes (explorar mecanicas de cyan/red/yellow)
+	if _umbra._power_active and _umbra.current_power != "none":
+		r += 0.02
+
+	# Recompensa/penalizacion por rango de distancia absoluta
+	if distance < 80.0:
+		r += 0.03
+	elif distance > 200.0:
+		r -= 0.04
+
 	# Recompensa por reducir la distancia horizontal al jugador.
 	if _prev_distance >= 0.0:
 		var horizontal_progress := absf(_prev_rel_x) - absf(rel_x)
