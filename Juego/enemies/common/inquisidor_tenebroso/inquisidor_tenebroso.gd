@@ -1,5 +1,9 @@
 extends CharacterBody2D
 
+const ATAQUE_INQUISIDOR = preload("res://music/enemies/common/inquisidor_tenebroso/ataque_inquisidor.ogg")
+const TELEPORT_INQUISIDOR = preload("res://music/enemies/common/inquisidor_tenebroso/teleport_inquisidor.ogg")
+const MUERTE_INQUISIDOR = preload("res://music/enemies/common/inquisidor_tenebroso/muerte_inquisidor.ogg")
+
 const MAX_HEALTH: int = 3
 const DAMAGE: int = 1
 
@@ -33,6 +37,7 @@ var spawn_position = Vector2.ZERO
 var _combat_reset_state: Dictionary = {}
 
 @onready var attack_scene = preload("res://enemies/common/inquisidor_tenebroso/AtaqueInquisidor.tscn")
+@onready var luz: PointLight2D = $PointLight2D
 
 
 func _ready() -> void:
@@ -47,7 +52,26 @@ func _ready() -> void:
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
+	_setup_light()
 	_enter_state(State.IDLE)
+
+
+func _setup_light() -> void:
+	var imagen: Image = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx: float = (x - 32.0) / 32.0
+			var dy: float = (y - 32.0) / 32.0
+			var dist: float = sqrt(dx * dx + dy * dy)
+			var alpha: float = clampf(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.5)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+	luz.color = Color(0.4, 0.0, 0.8)
+	luz.texture_scale = 1.2
+	luz.energy = 3.5
+	luz.enabled = true
 
 
 func _physics_process(delta: float) -> void:
@@ -107,6 +131,10 @@ func _enter_state(new_state: State) -> void:
 		State.DEAD:
 			if $AnimatedSprite2D.animation_finished.is_connected(_on_attack_finished):
 				$AnimatedSprite2D.animation_finished.disconnect(_on_attack_finished)
+			_play_sfx(MUERTE_INQUISIDOR, 3.0)
+			if luz and luz.enabled:
+				var tween: Tween = create_tween()
+				tween.tween_property(luz, "energy", 0.0, 1.5)
 			$AnimatedSprite2D.play("dead")
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)
@@ -176,6 +204,7 @@ func _on_attack_frame_changed() -> void:
 		get_tree().current_scene.add_child(attack)
 		attack.global_position = global_position
 		attack.direction = global_position.direction_to(player.global_position)
+		_play_sfx(ATAQUE_INQUISIDOR, 3.0)
 
 
 func _on_attack_finished() -> void:
@@ -207,7 +236,18 @@ func _raycast(space_state: PhysicsDirectSpaceState2D, from: Vector2, to: Vector2
 	return space_state.intersect_ray(ray)
 
 
+func _play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	var player = AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = "EFX"
+	player.volume_db = volume_db
+	add_child(player)
+	player.finished.connect(player.queue_free, CONNECT_ONE_SHOT)
+	player.play()
+
+
 func _teleport_away() -> void:
+	_play_sfx(TELEPORT_INQUISIDOR, 6.0)
 	var space_state = get_world_2d().direct_space_state
 
 	for i in TELEPORT_ATTEMPTS:

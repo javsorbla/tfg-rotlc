@@ -16,6 +16,14 @@ const TURN_DELAY: float = 1.0
 const KNOCKBACK_PLAYER: float = 250.0
 const REVIVE_DURATION: float = 6.0
 
+const ESCUDO := preload("res://music/enemies/common/centinela_marfil/escudo.ogg")
+const ROMPER_ESCUDO := preload("res://music/enemies/common/centinela_marfil/romper_escudo.ogg")
+const STUN_CENTINELA := preload("res://music/enemies/common/centinela_marfil/stun_centinela.ogg")
+const CAIDA_CENTINELA := preload("res://music/enemies/common/centinela_marfil/caida_centinela.ogg")
+const RUGIDO_CENTINELA := preload("res://music/enemies/common/centinela_marfil/rugido_centinela.ogg")
+
+const SFX_MAX_DISTANCE: float = 350.0
+
 const BREAK_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/break_sheet_4.png")
 const DAMAGED_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/damaged_sheet_4.png")
 const DAMAGED_IDLE_SHEET_4 := preload("res://assets/enemies/common/centinela_marfil/damaged_idle_sheet_4.png")
@@ -44,6 +52,8 @@ var patrol_origin: Vector2 = Vector2.ZERO
 var hit_wall: bool = false
 var breaking_shield: bool = false
 var spawn_position = Vector2.ZERO
+
+var rugido_timer: float = 0.0
 
 var _base_sprite_frames: SpriteFrames = null
 var _level4_sprite_frames: SpriteFrames = null
@@ -82,8 +92,26 @@ func _physics_process(delta: float) -> void:
 		State.FAINTED:
 			_state_fainted(delta)
 
+	if current_state != State.FAINTED:
+		rugido_timer -= delta
+		if rugido_timer <= 0.0:
+			_play_sfx(RUGIDO_CENTINELA, 10.0)
+			rugido_timer = randf_range(7.0, 10.0)
+
 	$AnimatedSprite2D.flip_h = is_facing_right
 	move_and_slide()
+
+func _play_sfx(stream: AudioStream, vol: float = 0.0, pitch: float = 1.0) -> void:
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	player.max_distance = SFX_MAX_DISTANCE
+	player.pitch_scale = pitch
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
 
 func _on_level_reset():
 	current_health = MAX_HEALTH
@@ -168,12 +196,14 @@ func _enter_state(new_state: State) -> void:
 		State.STUNNED:
 			velocity = Vector2.ZERO
 			$AnimatedSprite2D.play("shield_stun" if shield_active else "damaged_stun")
+			_play_sfx(STUN_CENTINELA, 6.0)
 			
 		State.FAINTED:
 			velocity = Vector2.ZERO
 			revive_timer = REVIVE_DURATION
 			$AnimatedSprite2D.play("fainted")
 			$EnemyHitbox.remove_from_group("enemy_hitbox")
+			_play_sfx(CAIDA_CENTINELA, 8.0)
 
 
 func _state_patrol() -> void:
@@ -320,8 +350,10 @@ func take_damage(amount: int) -> void:
 			breaking_shield = true
 			$AnimatedSprite2D.play("break_shield")
 			$AnimatedSprite2D.animation_finished.connect(_on_break_shield_finished, CONNECT_ONE_SHOT)
+			_play_sfx(ROMPER_ESCUDO, 15.0)
 			return
 		if not from_behind:
+			_play_sfx(ESCUDO, 10.0)
 			if player and player is CharacterBody2D:
 				var dir = sign(player.global_position.x - global_position.x)
 				player.velocity.x = dir * KNOCKBACK_PLAYER
