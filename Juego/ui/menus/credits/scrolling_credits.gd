@@ -104,9 +104,9 @@ func _get_main_menu_scene_path() -> String:
 
 
 func _trigger_close_request() -> void:
-	if ProjectMusicController.has_method("stop"):
-		ProjectMusicController.stop()
 	if get_signal_connection_list("request_close").is_empty():
+		if ProjectMusicController.has_method("stop"):
+			ProjectMusicController.stop()
 		var menu_path := _get_main_menu_scene_path()
 		if not menu_path.is_empty():
 			SceneLoader.load_scene(menu_path)
