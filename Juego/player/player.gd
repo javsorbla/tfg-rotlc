@@ -9,6 +9,9 @@ const ACCELERATION = 1000.0
 const FRICTION = 700.0
 const FOOTSTEP_COOLDOWN := 0.38
 const FOOTSTEP_SOUND := preload("res://music/player/footstep.ogg")
+const DASH_SOUND := preload("res://music/player/dash.mp3")
+const JUMP_SOUND := preload("res://music/player/jump2.mp3")
+const LANDING_SOUND := preload("res://music/player/landing2.mp3")
 
 var can_jump = true
 var can_double_jump = false
@@ -50,12 +53,29 @@ var _footstep_timer := 0.0
 @onready var combat = $Combat
 @onready var color_manager = $ColorManager
 var _footstep_player: AudioStreamPlayer
+var _dash_player: AudioStreamPlayer
+var _jump_player: AudioStreamPlayer
+var _landing_player: AudioStreamPlayer
 
 func _ready():
 	_footstep_player = AudioStreamPlayer.new()
 	_footstep_player.stream = FOOTSTEP_SOUND
 	_footstep_player.bus = &"EFX"
+	_footstep_player.volume_db = -8.0
 	add_child(_footstep_player)
+	_dash_player = AudioStreamPlayer.new()
+	_dash_player.stream = DASH_SOUND
+	_dash_player.bus = &"EFX"
+	add_child(_dash_player)
+	_jump_player = AudioStreamPlayer.new()
+	_jump_player.stream = JUMP_SOUND
+	_jump_player.bus = &"EFX"
+	_jump_player.volume_db = 3.0
+	add_child(_jump_player)
+	_landing_player = AudioStreamPlayer.new()
+	_landing_player.stream = LANDING_SOUND
+	_landing_player.bus = &"EFX"
+	add_child(_landing_player)
 
 	if GameState.has_method("get_unlocked_powers") and color_manager.has_method("apply_unlocked_powers"):
 		color_manager.apply_unlocked_powers(GameState.get_unlocked_powers())
@@ -133,15 +153,18 @@ func _physics_process(delta: float) -> void:
 		if is_on_floor():
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = true
+			_jump_player.play()
 		elif can_double_jump:
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = false
+			_jump_player.play()
 
 	if was_on_floor and not is_on_floor() and velocity.y >= 0:
 		can_double_jump = true
 
 	if Input.is_action_just_pressed("dash") and can_dash:
 		is_dashing = true
+		_dash_player.play()
 		dash_started_on_floor = is_on_floor() and abs(velocity.x) <= 0.1
 		dash_frame_stage = 0
 		hurtbox.monitorable = false
@@ -374,6 +397,7 @@ func _update_animation(delta: float):
 
 	# Detectar aterrizaje: justo cuando toca el suelo viniendo del aire
 	if is_on_floor() and not was_on_floor:
+		_landing_player.play()
 		landing_should_run = abs(velocity.x) > 0.1 or abs(Input.get_axis("move_left", "move_right")) > 0.1
 		is_landing = true
 		sprite.play("jump")
