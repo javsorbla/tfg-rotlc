@@ -20,6 +20,7 @@ func _ready():
 	_punch_player = AudioStreamPlayer.new()
 	_punch_player.stream = PUNCH_SOUND
 	_punch_player.bus = &"EFX"
+	_punch_player.volume_db = -6.0
 	add_child(_punch_player)
 	hitbox.monitoring = false
 	hitbox.monitorable = false
