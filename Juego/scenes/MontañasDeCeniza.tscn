@@ -859,7 +859,7 @@ shape = SubResource("RectangleShape2D_2f4qr")
 
 [node name="Umbra" parent="." groups=["boss"] instance=ExtResource("10_6ltyf")]
 position = Vector2(8340, 981)
-max_health = 13
+max_health = 10
 despawn_on_death = true
 debug_model_indicator = false
 

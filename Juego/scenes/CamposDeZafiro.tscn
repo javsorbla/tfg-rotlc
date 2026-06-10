@@ -843,7 +843,7 @@ position = Vector2(13635, -1838)
 
 [node name="Umbra" parent="." groups=["boss"] instance=ExtResource("14_3sfkm")]
 position = Vector2(7659, -759)
-max_health = 13
+max_health = 8
 despawn_on_death = true
 debug_darkness_logs = false
 apply_level_balance = false

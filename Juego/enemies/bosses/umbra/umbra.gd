@@ -133,7 +133,6 @@ const PRISM_CORE_SCENE := preload("res://objects/NucleoDePrisma.tscn")
 @export_enum("auto", "cyan", "red", "yellow") var forced_power := "auto"
 @export var apply_level_balance := true
 @export var debug_model_indicator := true
-@export var use_runtime_finetuned_model := false
 @export var debug_policy_trace := false
 @export_range(1, 120, 1) var debug_policy_trace_every_frames := 12
 @export var auto_fix_move_mapping := false
@@ -397,6 +396,8 @@ func _physics_process(delta):
 		return
 	if _is_dying:
 		_update_animation()
+		_handle_gravity(delta)
+		move_and_slide()
 		return
 
 	if ai_controller != null and ai_controller.control_mode == ai_controller.ControlModes.ONNX_INFERENCE:
@@ -842,8 +843,6 @@ func die():
 
 	NakamaManager.add_enemy_kill()
 	_report_encounter(false)
-	if use_runtime_finetuned_model:
-		GameState.start_finetuning(2000)
 	emit_signal("defeated", false)
 	is_active = false
 
@@ -903,10 +902,6 @@ func activate():
 		ai_controller.init(player)
 	if ai_controller != null and ai_controller.control_mode == ai_controller.ControlModes.ONNX_INFERENCE:
 		_ensure_onnx_model_ready()
-	if use_runtime_finetuned_model and GameState.check_finetuning_done():
-		var runtime_model_path := GameState.get_umbra_runtime_model_path()
-		if runtime_model_path != "":
-			ai_controller.onnx_model_path = runtime_model_path
 	var sync_node = get_tree().get_first_node_in_group("sync_node")
 	if sync_node != null and sync_node.has_method("bind_onnx_model_for_agent"):
 		sync_node.bind_onnx_model_for_agent(ai_controller)
