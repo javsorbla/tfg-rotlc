@@ -1,4 +1,4 @@
-[gd_scene load_steps=47 format=4 uid="uid://bu3kl4nm1dulx"]
+[gd_scene load_steps=48 format=4 uid="uid://bu3kl4nm1dulx"]
 
 [ext_resource type="Script" path="res://scenes/montañas_de_ceniza.gd" id="1_fhvl8"]
 [ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_wxf8w"]
@@ -24,6 +24,7 @@
 [ext_resource type="AudioStream" uid="uid://wsfeuwhanufd" path="res://music/scenes/montanas_ceniza/montanas_ceniza.ogg" id="21_music_montanas"]
 [ext_resource type="AudioStream" uid="uid://8e53o74wn4m6" path="res://music/enemies/bosses/umbra/umbra.ogg" id="22_music_umbra"]
 [ext_resource type="AudioStream" uid="uid://dr2itp2f8rbvq" path="res://music/enemies/bosses/coloso_ceniza/coloso_ceniza.ogg" id="23_music_coloso"]
+[ext_resource type="PackedScene" uid="uid://c7jqdoiuj0wp4" path="res://enemies/bosses/umbra/UmbraNavigation.tscn" id="25_cd3hf"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lom2h"]
 texture = ExtResource("1_wxf8w")
@@ -865,6 +866,61 @@ debug_model_indicator = false
 [node name="AIController2D" parent="Umbra" index="0"]
 onnx_model_path = "res://umbra.onnx"
 
+[node name="UmbraNavigation" parent="." instance=ExtResource("25_cd3hf")]
+position = Vector2(7634, 1004)
+
+[node name="NavigationLink2D" parent="UmbraNavigation" index="1"]
+start_position = Vector2(236, -75)
+end_position = Vector2(368, -75)
+
+[node name="NavigationLink2D2" parent="UmbraNavigation" index="2"]
+start_position = Vector2(267, -75)
+end_position = Vector2(433, -76)
+
+[node name="NavigationLink2D3" parent="UmbraNavigation" index="3"]
+start_position = Vector2(247, -126)
+end_position = Vector2(440, -126)
+
+[node name="NavigationLink2D4" parent="UmbraNavigation" index="4"]
+start_position = Vector2(326, 130)
+end_position = Vector2(297, 51)
+
+[node name="NavigationLink2D5" parent="UmbraNavigation" index="5"]
+start_position = Vector2(240, 320)
+end_position = Vector2(268, 239)
+
+[node name="NavigationLink2D6" parent="UmbraNavigation" index="6"]
+start_position = Vector2(153, 191)
+end_position = Vector2(173, 114)
+
+[node name="NavigationLink2D7" parent="UmbraNavigation" index="7"]
+start_position = Vector2(382, 129)
+end_position = Vector2(361, 51)
+
+[node name="NavigationLink2D8" parent="UmbraNavigation" index="8"]
+start_position = Vector2(282, 130)
+end_position = Vector2(266, 51)
+
+[node name="NavigationLink2D9" parent="UmbraNavigation" index="9"]
+start_position = Vector2(107, 192)
+end_position = Vector2(124, 113)
+
+[node name="NavigationLink2D10" parent="UmbraNavigation" index="10"]
+start_position = Vector2(398, 107)
+end_position = Vector2(362, 12)
+
+[node name="NavigationLink2D11" parent="UmbraNavigation" index="11"]
+start_position = Vector2(281, 12)
+end_position = Vector2(333, 107)
+
+[node name="NavigationLink2D12" parent="UmbraNavigation" index="12"]
+start_position = Vector2(302, 92)
+end_position = Vector2(385, -2)
+
+[node name="NavigationLink2D13" parent="UmbraNavigation" index="13"]
+start_position = Vector2(271, 92)
+end_position = Vector2(306, -3)
+
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("12_k6ew8")
 control_mode = 2
@@ -946,3 +1002,4 @@ script = ExtResource("20_45kqd")
 [editable path="Killzones/ZonaMuerte7"]
 [editable path="Killzones/ZonaMuerte8"]
 [editable path="Umbra"]
+[editable path="UmbraNavigation"]

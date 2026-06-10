@@ -12,7 +12,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 class DummyUmbraEnv(gym.Env):
     metadata = {}
 
-    OBS_DIM = 23
+    OBS_DIM = 27
 
     def __init__(self, nvec: np.ndarray):
         self.observation_space = spaces.Dict(
@@ -28,7 +28,7 @@ class DummyUmbraEnv(gym.Env):
 
 
 def sample_obs(batch: int) -> np.ndarray:
-    x = np.zeros((batch, 23), dtype=np.float32)
+    x = np.zeros((batch, 27), dtype=np.float32)
     x[:, 0] = np.random.uniform(-1, 1, size=batch)  # rel_x
     x[:, 1] = np.random.uniform(-0.8, 0.8, size=batch)  # rel_y
 
@@ -56,6 +56,11 @@ def sample_obs(batch: int) -> np.ndarray:
     x[:, 20] = 0.0
     x[:, 21] = 0.0
     x[:, 22] = 0.0
+    # Nav features (neutralized)
+    x[:, 23] = 0.0
+    x[:, 24] = 0.0
+    x[:, 25] = 0.0
+    x[:, 26] = 0.0
     return x
 
 
@@ -90,7 +95,7 @@ def evaluate_checkpoint(path: Path, move_head_index: Optional[int], batch_size: 
     entropy = float((-(probs * np.log(np.clip(probs, 1e-8, 1.0))).sum(axis=1)).mean())
 
     grid = np.linspace(-1, 1, 41, dtype=np.float32)
-    g = np.zeros((len(grid), 23), dtype=np.float32)
+    g = np.zeros((len(grid), 27), dtype=np.float32)
     g[:, 0] = grid
     g[:, 4] = 1.0
     g[:, 7] = 0.7

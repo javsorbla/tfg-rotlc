@@ -411,6 +411,7 @@ func _reset():
 	umbra.global_position = umbra_spawn_pos
 	umbra.current_health = umbra.max_health
 	_apply_training_power()
+	umbra._force_no_nav = randf() < 0.2
 	umbra.activate()
 	if umbra.ai_controller and umbra.ai_controller.has_method("reset"):
 		umbra.ai_controller.reset()

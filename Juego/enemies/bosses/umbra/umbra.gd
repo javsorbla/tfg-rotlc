@@ -173,6 +173,11 @@ var _move_collapse_active := false
 var _move_dominant_raw := 1
 var _recent_raw_moves: Array[int] = []
 
+# Navegación
+var _nav_agent: NavigationAgent2D
+var _nav_target_update_timer := 0.0
+var _force_no_nav := false
+
 # Variables de animación
 var _casting_darkness := false
 var _attack_anim_playing := false
@@ -204,6 +209,16 @@ func _ready():
 	if not GameState.level_reset.is_connected(_on_level_reset):
 		GameState.level_reset.connect(_on_level_reset)
 
+	_nav_agent = get_node_or_null("NavigationAgent2D") as NavigationAgent2D
+	if _nav_agent == null:
+		_nav_agent = NavigationAgent2D.new()
+		_nav_agent.name = "NavigationAgent2D"
+		add_child(_nav_agent)
+
+	if ai_controller != null and ai_controller.control_mode == ai_controller.ControlModes.ONNX_INFERENCE:
+		if ai_controller.onnx_model == null:
+			_ensure_onnx_model_ready()
+
 
 func _ensure_attack_animations_no_loop() -> void:
 	if not sprite or not sprite.sprite_frames:
@@ -211,7 +226,7 @@ func _ensure_attack_animations_no_loop() -> void:
 	var attack_names := [
 		"attack", "attack_run", "attack_up", "attack_up_run", "attack_up_jump",
 		"attack_down", "attack_down_run", "attack_down_jump", "attack_jump",
-		"spawn_dark_zone", "defeat", "vanish"
+		"spawn_dark_zone", "defeat", "vanish", "use_shield"
 	]
 	for name in attack_names:
 		if sprite.sprite_frames.has_animation(name):
@@ -405,6 +420,13 @@ func _physics_process(delta):
 	_update_animation()
 	_update_power_visuals()
 	
+	_nav_target_update_timer -= delta
+	if _nav_target_update_timer <= 0.0 and _nav_agent != null and not _force_no_nav:
+		_nav_target_update_timer = 0.3
+		var player := _resolve_player_target()
+		if player != null:
+			_nav_agent.target_position = player.global_position
+
 	was_on_floor = is_on_floor()
 	move_and_slide()
 
@@ -543,7 +565,10 @@ func _handle_gravity(delta):
 		velocity += get_gravity() * delta
 
 func _handle_movement(delta):
-	if _casting_darkness or is_dashing or (current_power == "yellow" and _power_active):
+	if _casting_darkness or is_dashing:
+		return
+	if current_power == "yellow" and _power_active:
+		velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
 		return
 	if ai_move_direction != 0:
 		last_direction = ai_move_direction
@@ -636,6 +661,8 @@ func _handle_dash(delta, dash_requested: bool):
 		air_dash_used = false
 
 func _handle_attack(delta):
+	if current_power == "yellow" and _power_active and not is_attacking:
+		return
 	combat.process(delta)
 
 
@@ -674,6 +701,11 @@ func _update_animation():
 		if sprite.animation != "spawn_dark_zone":
 			sprite.play("spawn_dark_zone")
 			sprite.speed_scale = 1.0
+		return
+
+	if current_power == "yellow" and _power_active:
+		if sprite.animation != "use_shield":
+			sprite.play("use_shield")
 		return
 
 	if is_dashing:
@@ -930,14 +962,11 @@ func set_ai_action(action):
 		var power_names := ["", "cyan", "red", "yellow"]
 		if raw_power > 0 and raw_power < power_names.size():
 			var desired: String = power_names[raw_power]
-			if desired != current_power or not _power_active:
-				if _power_active:
-					_power_active = false
-					_power_cooldown_timer = _get_cooldown_for_power(current_power)
-				current_power = desired
-				_power_active = true
-				_power_timer = color_manager._get_power_duration(desired)
-			ai_should_use_power = true
+			if desired == current_power:
+				if not _power_active:
+					_power_active = true
+					_power_timer = color_manager._get_power_duration(desired)
+				ai_should_use_power = true
 
 
 func _debug_policy_trace_tick() -> void:
@@ -1204,6 +1233,38 @@ func report_player_defeated() -> void:
 		return
 	_report_encounter(true)
 	emit_signal("defeated", true)
+
+
+func _is_nav_valid() -> bool:
+	return _nav_agent != null and not _force_no_nav and not _nav_agent.is_navigation_finished()
+
+
+func get_nav_dir() -> float:
+	if not _is_nav_valid():
+		return 0.0
+	var wp := _nav_agent.get_next_path_position()
+	return sign(wp.x - global_position.x)
+
+
+func get_nav_dist() -> float:
+	if not _is_nav_valid():
+		return 0.0
+	var wp := _nav_agent.get_next_path_position()
+	return clamp(global_position.distance_to(wp) / 200.0, 0.0, 1.0)
+
+
+func get_nav_jump() -> float:
+	if not _is_nav_valid():
+		return 0.0
+	var wp := _nav_agent.get_next_path_position()
+	return 1.0 if wp.y < global_position.y - 48.0 else 0.0
+
+
+func get_nav_dash() -> float:
+	if not _is_nav_valid():
+		return 0.0
+	var wp := _nav_agent.get_next_path_position()
+	return 1.0 if absf(wp.x - global_position.x) > 100.0 else 0.0
 
 
 func _exit_tree() -> void:

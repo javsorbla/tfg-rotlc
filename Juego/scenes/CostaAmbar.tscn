@@ -1,4 +1,4 @@
-[gd_scene load_steps=122 format=4 uid="uid://dv7tvh0rknvv6"]
+[gd_scene load_steps=123 format=4 uid="uid://dv7tvh0rknvv6"]
 
 [ext_resource type="Texture2D" uid="uid://ckrlk2kf8xtpa" path="res://assets/tilesets/costa_ambar/coast-tileset.png" id="1_c0y7m"]
 [ext_resource type="Script" path="res://scenes/costa_ambar.gd" id="1_db77e"]
@@ -35,6 +35,7 @@
 [ext_resource type="AudioStream" uid="uid://8e53o74wn4m6" path="res://music/enemies/bosses/umbra/umbra.ogg" id="30_music_umbra"]
 [ext_resource type="AudioStream" uid="uid://ddk1wa8fltgch" path="res://music/scenes/costa_ambar/costa_ambar.ogg" id="32_music_costa_ambar"]
 [ext_resource type="PackedScene" uid="uid://xgvqki0gryl3" path="res://scenes/enviroment/Portal.tscn" id="35_vg0tu"]
+[ext_resource type="PackedScene" uid="uid://c7jqdoiuj0wp4" path="res://enemies/bosses/umbra/UmbraNavigation.tscn" id="36_ld6a2"]
 
 [sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_xpnhm"]
 polygon = PackedVector2Array(-8, -8, -8, -8, -8, 8, -8, 8)
@@ -2298,6 +2299,62 @@ shadow_enabled = true
 position = Vector2(13599, -1267)
 next_scene = "res://scenes/TorreDelVacio.tscn "
 
+[node name="UmbraNavigation" parent="." instance=ExtResource("36_ld6a2")]
+position = Vector2(5216, 1015)
+
+[node name="NavigationLink2D" parent="UmbraNavigation" index="1"]
+start_position = Vector2(365, -70)
+end_position = Vector2(516, -70)
+
+[node name="NavigationLink2D2" parent="UmbraNavigation" index="2"]
+position = Vector2(89, 35)
+start_position = Vector2(181, -185)
+end_position = Vector2(288, -259)
+
+[node name="NavigationLink2D3" parent="UmbraNavigation" index="3"]
+start_position = Vector2(436, -183)
+end_position = Vector2(540, -107)
+
+[node name="NavigationLink2D4" parent="UmbraNavigation" index="4"]
+start_position = Vector2(364, 136)
+end_position = Vector2(386, 56)
+
+[node name="NavigationLink2D5" parent="UmbraNavigation" index="5"]
+start_position = Vector2(514, 293)
+end_position = Vector2(525, 245)
+
+[node name="NavigationLink2D6" parent="UmbraNavigation" index="6"]
+start_position = Vector2(192, 198)
+end_position = Vector2(170, 119)
+
+[node name="NavigationLink2D7" parent="UmbraNavigation" index="7"]
+start_position = Vector2(299, 53)
+end_position = Vector2(319, -25)
+
+[node name="NavigationLink2D8" parent="UmbraNavigation" index="8"]
+start_position = Vector2(315, 55)
+end_position = Vector2(300, -24)
+
+[node name="NavigationLink2D9" parent="UmbraNavigation" index="9"]
+start_position = Vector2(205, 195)
+end_position = Vector2(223, 118)
+
+[node name="NavigationLink2D10" parent="UmbraNavigation" index="10"]
+start_position = Vector2(448, 191)
+end_position = Vector2(427, 113)
+
+[node name="NavigationLink2D11" parent="UmbraNavigation" index="11"]
+start_position = Vector2(12, 129)
+end_position = Vector2(22, 162)
+
+[node name="NavigationLink2D12" parent="UmbraNavigation" index="12"]
+start_position = Vector2(689, 178)
+end_position = Vector2(711, 146)
+
+[node name="NavigationLink2D13" parent="UmbraNavigation" index="13"]
+start_position = Vector2(110, 177)
+end_position = Vector2(96, 144)
+
 [editable path="Entorno/ZonaLluvia"]
 [editable path="Entorno/ZonaLluvia2"]
 [editable path="Entorno/ZonaLluvia3"]
@@ -2320,3 +2377,4 @@ next_scene = "res://scenes/TorreDelVacio.tscn "
 [editable path="Killzones/ZonaMuerte4"]
 [editable path="Killzones/ZonaMuerte5"]
 [editable path="Umbra"]
+[editable path="UmbraNavigation"]

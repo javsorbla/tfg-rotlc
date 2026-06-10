@@ -118,9 +118,11 @@ tfg-rotlc/
 
 ## Configuración Nakama
 
-El servidor de leaderboards apunta a `64.226.80.31:7350` (DigitalOcean).
+El servidor de leaderboards apunta a un servidor levantado en Digital Ocean.
 
-Para cambiarlo, editar `Juego/leaderboard/NakamaManager.gd` o crear `user://network_config.json`:
+También se incluye la infraestructura del servidor, que se puede levantar en local con Docker. Para usarlo, es necesario editar la IP a la que se apunta por 127.0.0.1 (local)
+
+Para cambiarla, editar `Juego/leaderboard/NakamaManager.gd` o crear `user://network_config.json`:
 
 ```json
 {
@@ -129,9 +131,6 @@ Para cambiarlo, editar `Juego/leaderboard/NakamaManager.gd` o crear `user://netw
   "port": 7350
 }
 ```
-
-Durante el entrenamiento, Nakama solo hace autenticación (1 HTTP POST). **No escribe leaderboards** — `complete_run()` solo se llama desde el portal del juego, no desde la escena de entrenamiento.
-
 ---
 
 ## Tests

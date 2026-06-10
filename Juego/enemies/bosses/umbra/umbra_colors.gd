@@ -4,7 +4,7 @@ const UMBRA_SHADER := preload("res://enemies/bosses/umbra/Umbra.gdshader")
 
 const TINT_CYAN_PRIMARY := Color(0.10, 0.37, 0.55, 1.0)
 const TINT_RED_PRIMARY := Color(0.55, 0.10, 0.25, 1.0)
-const TINT_YELLOW_PRIMARY := Color(0.55, 0.35, 0.10, 1.0)
+const TINT_YELLOW_PRIMARY := Color(0.70, 0.40, 0.30, 1.0)
 
 @onready var umbra = get_parent()
 @onready var sprite: AnimatedSprite2D = umbra.get_node("AnimatedSprite2D")
@@ -28,6 +28,8 @@ func handle_power() -> void:
 	if umbra.ai_should_use_power and not umbra._power_active and umbra._power_cooldown_timer <= 0.0:
 		umbra._power_active = true
 		umbra._power_timer = _get_power_duration(umbra.current_power)
+		if umbra.current_power == "yellow":
+			sprite.play("use_shield")
 
 	if umbra.current_power == "yellow" and _is_power_active():
 		umbra.is_invincible = true
