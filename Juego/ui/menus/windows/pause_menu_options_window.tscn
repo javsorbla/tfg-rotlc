@@ -4,6 +4,8 @@
 [ext_resource type="PackedScene" path="res://ui/menus/options_menu/master_options_menu_with_tabs.tscn" id="2_odnp0"]
 [ext_resource type="Texture2D" path="res://themes/titulo_upscaled.png" id="3_bgtex"]
 [ext_resource type="Theme" path="res://ui/menus/main_menu/main_menu_shell_theme.tres" id="4_shell"]
+[ext_resource type="Script" path="res://addons/maaacks_menus_template/base/nodes/autoloads/ui_sound_controller/ui_sound_controller.gd" id="5_3hge"]
+[ext_resource type="AudioStream" path="res://music/menus/menu-selection.mp3" id="6_fs3d"]
 
 [node name="PauseMenuOptionsOverlaidWindow" unique_id=701085877 instance=ExtResource("1_efreu")]
 anchors_preset = 15
@@ -19,6 +21,15 @@ packed_scene = ExtResource("2_odnp0")
 theme = ExtResource("4_shell")
 title_visible = false
 update_content = true
+
+[node name="UISoundController" type="Node" parent="."]
+script = ExtResource("5_3hge")
+root_path = NodePath("..")
+volume_db = 0.0
+button_hovered = ExtResource("6_fs3d")
+button_focused = ExtResource("6_fs3d")
+tab_hovered = ExtResource("6_fs3d")
+tab_changed = ExtResource("6_fs3d")
 
 [node name="BackgroundTextureRect" type="TextureRect" parent="."]
 z_index = -2

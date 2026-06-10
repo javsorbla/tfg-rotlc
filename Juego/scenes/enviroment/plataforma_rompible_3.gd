@@ -45,6 +45,7 @@ func _on_detector_body_entered(body: Node2D) -> void:
 			var sfx := AudioStreamPlayer.new()
 			sfx.stream = PLATAFORMA_ROMPIBLE_SOUND
 			sfx.bus = &"EFX"
+			sfx.volume_db = -8.0
 			add_child(sfx)
 			sfx.play()
 			sfx.finished.connect(sfx.queue_free)
