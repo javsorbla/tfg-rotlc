@@ -44,6 +44,7 @@ var attack_cooldown_timer = 0.0
 var _desired_dir := 0.0
 var _strafe_sign := 1.0
 var _react_timer := 0.0
+var _platform_stay_timer := 0.0
 
 var _bot_power_timer := 0.0
 var _bot_power_cooldown_timer := 0.0
@@ -67,7 +68,6 @@ func _physics_process(delta):
 		velocity += get_gravity() * delta
 
 	_handle_dash(delta)
-	_handle_attack(delta)
 	_handle_bot_powers(delta)
 
 	match control_mode:
@@ -76,6 +76,8 @@ func _physics_process(delta):
 		ControlMode.SMART_BOT:
 			_smart_bot_control(delta)
 
+	_handle_attack(delta)
+
 	if _desired_dir != 0:
 		last_direction = int(sign(_desired_dir))
 		velocity.x = move_toward(velocity.x, _desired_dir * SPEED * speed_multiplier, ACCELERATION * delta)
@@ -83,6 +85,14 @@ func _physics_process(delta):
 		velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
 	
 	move_and_slide()
+
+	if is_on_floor():
+		if not was_on_floor and global_position.y < -50.0:
+			_platform_stay_timer = 3.0
+		can_double_jump = true
+
+	was_on_floor = is_on_floor()
+
 	health.process(delta)
 	color_manager.process(delta)
 
@@ -96,6 +106,10 @@ func set_control_mode(new_mode: int) -> void:
 func reset_for_training(spawn_pos: Vector2) -> void:
 	global_position = spawn_pos
 	velocity = Vector2.ZERO
+	if collision_layer > 0:
+		var snap := move_and_collide(Vector2(0, 200))
+		if snap and debug_bot_logs:
+			print("Dummy snapped to platform")
 	is_dashing = false
 	dash_timer = 0.0
 	dash_cooldown_timer = 0.0
@@ -108,6 +122,8 @@ func reset_for_training(spawn_pos: Vector2) -> void:
 	health.is_invincible = false
 	health.invincibility_timer = 0.0
 	hurtbox.monitorable = true
+	_platform_stay_timer = 0.0
+	was_on_floor = false
 	_bot_power_timer = 0.0
 	_bot_power_cooldown_timer = 0.0
 	_bot_wants_power = ""
@@ -125,8 +141,13 @@ func _human_control(_delta: float) -> void:
 
 	_desired_dir = Input.get_axis("move_left", "move_right")
 
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
+	if Input.is_action_just_pressed("jump") and can_jump:
+		if is_on_floor():
+			velocity.y = JUMP_VELOCITY
+			can_double_jump = true
+		elif can_double_jump:
+			velocity.y = JUMP_VELOCITY
+			can_double_jump = false
 
 	if Input.is_action_just_pressed("dash") and dash_cooldown_timer <= 0.0:
 		_start_dash(_desired_dir)
@@ -148,22 +169,43 @@ func _smart_bot_control(_delta: float) -> void:
 	var rel: Vector2 = umbra.global_position - global_position
 	var abs_x := absf(rel.x)
 
+	if _platform_stay_timer > 0.0 and global_position.y < -50.0:
+		_platform_stay_timer -= _delta
+		_desired_dir = 0.0
+		if abs_x <= bot_attack_range and attack_cooldown_timer <= 0.0:
+			_trigger_attack()
+		if dash_cooldown_timer <= 0.0 and umbra.is_attacking and abs_x < bot_strafe_distance:
+			_start_dash(-sign(rel.x))
+		return
+
 	_react_timer -= _delta
 	if _react_timer <= 0.0:
 		_react_timer = bot_react_interval
 		if randf() < 0.10:
 			_strafe_sign *= -1.0
 
-	if abs_x > bot_dash_range:
-		_desired_dir = sign(rel.x)
-	elif abs_x < bot_strafe_distance * 0.55:
-		_desired_dir = -sign(rel.x)
-	else:
-		_desired_dir = _strafe_sign
+	var wants_platform := false
+	if rel.y < -80.0:
+		wants_platform = true
+		if abs_x > bot_dash_range:
+			_desired_dir = sign(rel.x)
+		elif abs_x > bot_strafe_distance:
+			_desired_dir = sign(rel.x)
+	if not wants_platform:
+		if abs_x > bot_dash_range:
+			_desired_dir = sign(rel.x)
+		elif abs_x < bot_strafe_distance * 0.55:
+			_desired_dir = -sign(rel.x)
+		else:
+			_desired_dir = _strafe_sign
 
 	if is_on_floor():
 		var wants_jump := false
-		if not umbra.is_on_floor():
+		if rel.y > 60.0 and abs_x < bot_strafe_distance * 1.5:
+			wants_jump = false
+		elif wants_platform:
+			wants_jump = true
+		elif not umbra.is_on_floor():
 			wants_jump = true
 		elif rel.y < -48.0 and randf() < bot_jump_chance:
 			wants_jump = true
@@ -268,6 +310,11 @@ func _handle_attack(delta: float) -> void:
 		is_attacking = false
 		attack_hitbox.monitoring = false
 		attack_hitbox.monitorable = false
+		return
+
+	# Polling directo: si area_entered no disparó (hitbox ya solapaba al activar), pillar aquí
+	for area in attack_hitbox.get_overlapping_areas():
+		_on_attack_hitbox_area_entered(area)
 
 
 func _on_attack_hitbox_area_entered(area: Area2D) -> void:

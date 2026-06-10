@@ -1,0 +1,75 @@
+[gd_scene load_steps=2 format=3 uid="uid://c7jqdoiuj0wp4"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_yopwh"]
+vertices = PackedVector2Array(839.938, 3.00781, 25.1016, 3.97656, 26.8906, -166.008, 839.047, -166.977)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(15, 14, 850, 13, 849, -177, 17, -176)])
+
+[node name="UmbraNavigation" type="Node2D"]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_yopwh")
+
+[node name="NavigationLink2D" type="NavigationLink2D" parent="."]
+start_position = Vector2(334, -79)
+end_position = Vector2(417, -79)
+
+[node name="NavigationLink2D2" type="NavigationLink2D" parent="."]
+position = Vector2(160, 0)
+start_position = Vector2(334, -79)
+end_position = Vector2(417, -79)
+
+[node name="NavigationLink2D3" type="NavigationLink2D" parent="."]
+position = Vector2(70, -43)
+start_position = Vector2(327, -101)
+end_position = Vector2(442, -100)
+
+[node name="NavigationLink2D4" type="NavigationLink2D" parent="."]
+position = Vector2(130, -126)
+start_position = Vector2(399, 125)
+end_position = Vector2(363, 47)
+
+[node name="NavigationLink2D5" type="NavigationLink2D" parent="."]
+position = Vector2(325, -315)
+start_position = Vector2(238, 317)
+end_position = Vector2(252, 236)
+
+[node name="NavigationLink2D6" type="NavigationLink2D" parent="."]
+position = Vector2(195, -189)
+start_position = Vector2(204, 188)
+end_position = Vector2(222, 110)
+
+[node name="NavigationLink2D7" type="NavigationLink2D" parent="."]
+position = Vector2(291, -125)
+start_position = Vector2(411, 125)
+end_position = Vector2(361, 47)
+
+[node name="NavigationLink2D8" type="NavigationLink2D" parent="."]
+position = Vector2(-30, -126)
+start_position = Vector2(391, 126)
+end_position = Vector2(363, 47)
+
+[node name="NavigationLink2D9" type="NavigationLink2D" parent="."]
+position = Vector2(36, -188)
+start_position = Vector2(204, 188)
+end_position = Vector2(222, 110)
+
+[node name="NavigationLink2D10" type="NavigationLink2D" parent="."]
+position = Vector2(195, -183)
+start_position = Vector2(387, 102)
+end_position = Vector2(363, 41)
+
+[node name="NavigationLink2D11" type="NavigationLink2D" parent="."]
+position = Vector2(35, -183)
+start_position = Vector2(362, 40)
+end_position = Vector2(384, 104)
+
+[node name="NavigationLink2D12" type="NavigationLink2D" parent="."]
+position = Vector2(125, -167)
+start_position = Vector2(368, 88)
+end_position = Vector2(388, 25)
+
+[node name="NavigationLink2D13" type="NavigationLink2D" parent="."]
+position = Vector2(-35, -167)
+start_position = Vector2(368, 88)
+end_position = Vector2(389, 24)

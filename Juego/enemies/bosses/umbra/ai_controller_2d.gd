@@ -133,7 +133,7 @@ func _collect_player_metrics() -> void:
 func get_obs() -> Dictionary:
 	var obs = []
 	if not is_instance_valid(_umbra):
-		return {"obs": [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]}
+		return {"obs": [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
 	_resolve_player_if_missing()
 	
 	if not _player:
@@ -157,7 +157,8 @@ func get_obs() -> Dictionary:
 				1.0,
 				1.0, 0.0,
 				0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-				1.0, 0.0, 0.0, 0.0
+				1.0, 0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0, 0.0
 			]
 		}
 	
@@ -208,6 +209,12 @@ func get_obs() -> Dictionary:
 	obs.append(1.0 if umbra_power == "red" else 0.0)
 	obs.append(1.0 if umbra_power == "yellow" else 0.0)
 	
+	# Navegación (NavigationAgent2D)
+	obs.append(_umbra.get_nav_dir())
+	obs.append(_umbra.get_nav_dist())
+	obs.append(_umbra.get_nav_jump())
+	obs.append(_umbra.get_nav_dash())
+	
 	return {"obs": obs}
 
 func get_action_space() -> Dictionary:
@@ -248,6 +255,16 @@ func get_reward() -> float:
 	# Recompensa por sobrevivir
 	r += 0.001
 
+	# Recompensa por usar poderes (explorar mecanicas de cyan/red/yellow)
+	if _umbra._power_active and _umbra.current_power != "none":
+		r += 0.02
+
+	# Recompensa/penalizacion por rango de distancia absoluta
+	if distance < 80.0:
+		r += 0.03
+	elif distance > 200.0:
+		r -= 0.04
+
 	# Recompensa por reducir la distancia horizontal al jugador.
 	if _prev_distance >= 0.0:
 		var horizontal_progress := absf(_prev_rel_x) - absf(rel_x)
@@ -283,7 +300,9 @@ func get_reward() -> float:
 	var rel_y := _player.global_position.y - _umbra.global_position.y
 	if absf(rel_y) < 20.0:
 		r += 0.003
-	elif rel_y < -80.0:
+	elif absf(rel_y) < 60.0:
+		r += 0.001
+	if rel_y < -80.0:
 		r -= 0.002
 	elif rel_y > 80.0:
 		r += 0.001
@@ -341,6 +360,15 @@ func get_reward() -> float:
 		r -= 0.0025
 	if bool(_umbra.ai_should_use_power) and distance > 140.0:
 		r -= 0.003
+	
+	# Recompensa auxiliar por acciones alineadas con navegación
+	if _umbra._is_nav_valid():
+		if _umbra.ai_move_direction * sign(_umbra.get_nav_dir()) > 0:
+			r += 0.005
+		if _umbra.get_nav_jump() > 0.0 and _umbra.ai_should_jump:
+			r += 0.01
+		if _umbra.get_nav_dash() > 0.0 and _umbra.ai_should_dash:
+			r += 0.005
 	
 	# Penalización por estar lejos del jugador
 	if distance > 300.0:
