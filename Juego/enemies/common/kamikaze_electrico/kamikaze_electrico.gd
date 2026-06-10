@@ -5,6 +5,11 @@ const DAMAGE: int = 10
 const ATTACK_SPEED: float = 320.0
 const SLEEP_DISTANCE: float = 250.0
 
+const ESTATICO_KAMIKAZE := preload("res://music/enemies/common/kamikaze_electrico/estatico_kamikaze.ogg")
+const GRITO_KAMIKAZE := preload("res://music/enemies/common/kamikaze_electrico/grito_kamikaze.ogg")
+const CARGA_KAMIKAZE := preload("res://music/enemies/common/kamikaze_electrico/carga_kamikaze.ogg")
+const EXPLOSION_KAMIKAZE := preload("res://music/enemies/common/kamikaze_electrico/explosion_kamikaze.ogg")
+
 const CHARGED_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/charged_sheet_4.png")
 const DEAD_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/dead_sheet_4.png")
 const DEAD_EXPLODE_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/dead_explode_sheet_4.png")
@@ -23,6 +28,11 @@ var dead_timer: float = 0.0
 var spawn_position = Vector2.ZERO
 var previous_state: State = State.SLEEP
 var _combat_reset_state: Dictionary = {}
+
+var _estatico_player: AudioStreamPlayer2D = null
+var _carga_player: AudioStreamPlayer2D = null
+
+const SFX_MAX_DISTANCE: float = 350.0
 
 var _base_sprite_frames: SpriteFrames = null
 var _level4_sprite_frames: SpriteFrames = null
@@ -45,6 +55,7 @@ func _ready() -> void:
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
+	_setup_audio_players()
 	_enter_state(State.SLEEP)
 	
 	var imagen = Image.create(64, 64, false, Image.FORMAT_RGBA8)
@@ -60,6 +71,33 @@ func _ready() -> void:
 	luz.blend_mode = Light2D.BLEND_MODE_ADD
 	
 	_actualizar_luz()
+
+func _setup_audio_players() -> void:
+	_estatico_player = AudioStreamPlayer2D.new()
+	_estatico_player.stream = ESTATICO_KAMIKAZE
+	_estatico_player.bus = &"EFX"
+	_estatico_player.volume_db = 0.0
+	_estatico_player.max_distance = SFX_MAX_DISTANCE
+	add_child(_estatico_player)
+
+	_carga_player = AudioStreamPlayer2D.new()
+	_carga_player.stream = CARGA_KAMIKAZE
+	_carga_player.bus = &"EFX"
+	_carga_player.volume_db = 10.0
+	_carga_player.max_distance = SFX_MAX_DISTANCE
+	add_child(_carga_player)
+
+
+func _play_sfx(stream: AudioStream, vol: float = 0.0, max_dist: float = SFX_MAX_DISTANCE) -> void:
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	player.max_distance = max_dist
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
 
 func _actualizar_luz():
 	var base_color := Color(0.0, 0.6, 1.0) if GameState.current_level != 4 else Color(0.4, 0.0, 0.8)
@@ -164,8 +202,18 @@ func _enter_state(new_state: State) -> void:
 	match new_state:
 		State.SLEEP:
 			velocity = Vector2.ZERO
+			if _carga_player and _carga_player.playing:
+				_carga_player.stop()
+			if _estatico_player and not _estatico_player.playing:
+				_estatico_player.play()
 
 		State.ATTACK:
+			if _estatico_player and _estatico_player.playing:
+				_estatico_player.stop()
+			_play_sfx(GRITO_KAMIKAZE, 4.0)
+			if _carga_player and not _carga_player.playing:
+				_carga_player.play()
+				_carga_player.volume_db = 10.0
 			$AnimatedSprite2D.play("charged")
 			if player:
 				var head_pos = player.global_position + Vector2(0, 10)
@@ -174,6 +222,9 @@ func _enter_state(new_state: State) -> void:
 				
 		State.EXPLODE:
 			velocity = Vector2.ZERO
+			if _carga_player and _carga_player.playing:
+				_carga_player.stop()
+			_play_sfx(EXPLOSION_KAMIKAZE, 12.0, 600.0)
 			if previous_state == State.DEAD:
 				$AnimatedSprite2D.play("dead_explode")
 			else:
@@ -195,6 +246,11 @@ func _enter_state(new_state: State) -> void:
 	
 		State.DEAD:
 			explode_from_death = false
+			if _estatico_player and _estatico_player.playing:
+				_estatico_player.stop()
+			if _carga_player and not _carga_player.playing:
+				_carga_player.play()
+			_carga_player.volume_db = -8.0
 			$AnimatedSprite2D.play("dead")
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)

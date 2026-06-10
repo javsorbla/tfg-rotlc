@@ -61,6 +61,8 @@ func close() -> void:
 	closed.emit()
 
 func _handle_cancel_input() -> void:
+	if has_node("/root/ProjectUISoundController") and ProjectUISoundController.has_method("play_back"):
+		ProjectUISoundController.play_back()
 	close()
 
 func _unhandled_input(event : InputEvent) -> void:

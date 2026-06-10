@@ -12,6 +12,13 @@ const STUN_DURATION: float = 0.4
 const DASH_SPEED: float = 300.0
 const DASH_RANGE: float = 150.0 
 
+const RUGIDO_CORREDOR := preload("res://music/enemies/common/corredor_magma/rugido_corredor.ogg")
+const ATAQUE_CORREDOR := preload("res://music/enemies/common/corredor_magma/ataque_corredor.ogg")
+const STUN_CORREDOR := preload("res://music/enemies/common/corredor_magma/stun_corredor.ogg")
+const MUERTE_CORREDOR := preload("res://music/enemies/common/corredor_magma/muerte_corredor.ogg")
+
+const SFX_MAX_DISTANCE: float = 350.0
+
 const WALK_SHEET_3 := preload("res://assets/enemies/common/corredor_magma/walk_sheet_3.png")
 const STUN_SHEET_3 := preload("res://assets/enemies/common/corredor_magma/stun_sheet_3.png")
 const DEAD_SHEET_3 := preload("res://assets/enemies/common/corredor_magma/dead_sheet_3.png")
@@ -46,6 +53,10 @@ var dash_cooldown: float = 0.0
 var dash_timer: float = 0.0
 var _combat_reset_state: Dictionary = {}
 
+var rugido_timer: float = 0.0
+var _ataque_player: AudioStreamPlayer2D = null
+var _muerte_player: AudioStreamPlayer2D = null
+
 var _base_sprite_frames: SpriteFrames = null
 var _level3_sprite_frames: SpriteFrames = null
 var _level4_sprite_frames: SpriteFrames = null
@@ -53,6 +64,7 @@ var _level4_sprite_frames: SpriteFrames = null
 # --- NODOS ---
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var vision: RayCast2D = $Vision
+@onready var luz: PointLight2D = $PointLight2D
 
 
 # --- CICLO PRINCIPAL ---
@@ -74,6 +86,8 @@ func _ready() -> void:
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	vision.target_position = Vector2(20, 40) 
+	rugido_timer = randf_range(7.0, 10.0)
+	_setup_light()
 	_enter_state(State.IDLE)
 
 
@@ -106,6 +120,14 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	# Rugido aleatorio
+	if current_state != State.DEAD:
+		rugido_timer -= delta
+		if rugido_timer <= 0.0:
+			if (_ataque_player == null or not _ataque_player.playing) and (_muerte_player == null or not _muerte_player.playing):
+				_play_sfx(RUGIDO_CORREDOR, 10.0)
+			rugido_timer = randf_range(7.0, 10.0)
+
 	# Control global de animación de salto
 	if not is_on_floor():
 		if current_state not in [State.STUNNED, State.DEAD, State.DASH, State.PREPARE_DASH]:
@@ -117,6 +139,45 @@ func _physics_process(delta: float) -> void:
 			elif current_state in [State.PATROL, State.CHASE]:
 				sprite.play("run")
 
+func _setup_light() -> void:
+	if GameState.current_level == 1:
+		luz.enabled = false
+		return
+
+	luz.enabled = true
+	var imagen: Image = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx: float = (x - 32.0) / 32.0
+			var dy: float = (y - 32.0) / 32.0
+			var dist: float = sqrt(dx * dx + dy * dy)
+			var alpha: float = clamp(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.5)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+
+	if GameState.current_level == 2:
+		luz.color = Color(1.0, 0.5, 0.0)
+	elif GameState.current_level == 3:
+		luz.color = Color(0.0, 0.6, 1.0)
+	elif GameState.current_level == 4:
+		luz.color = Color(0.4, 0.0, 0.8)
+	luz.texture_scale = 1.25
+	luz.energy = 3.5
+
+
+func _play_sfx(stream: AudioStream, vol: float = 0.0) -> void:
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	player.max_distance = SFX_MAX_DISTANCE
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
+
 func _on_level_reset():
 	set_physics_process(true)
 	visible = true
@@ -125,6 +186,7 @@ func _on_level_reset():
 	velocity = Vector2.ZERO
 	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
 	call_deferred("_apply_level_visuals")
+	_setup_light()
 	sprite.play("idle")
 	_enter_state(State.IDLE)
 
@@ -229,19 +291,44 @@ func _enter_state(new_state: State) -> void:
 					sprite.modulate = Color(0.7, 0.3, 1.0)
 				_:
 					sprite.modulate = Color(1.0, 0.4, 0.4)
-			dash_timer = 0.5 
+			dash_timer = 0.5
+			if _ataque_player == null:
+				_ataque_player = AudioStreamPlayer2D.new()
+				_ataque_player.bus = &"EFX"
+				_ataque_player.max_distance = SFX_MAX_DISTANCE
+				add_child(_ataque_player)
+			_ataque_player.stream = ATAQUE_CORREDOR
+			_ataque_player.volume_db = 10.0
+			_ataque_player.play()
 			
 		State.DASH:
 			sprite.play("run")
 			sprite.speed_scale = 2.0 
-			dash_timer = 0.4 
+			dash_timer = 0.4
 			
 		State.STUNNED:
+			for child in get_children():
+				if child is AudioStreamPlayer2D and child.playing:
+					child.stop()
+					if child != _ataque_player and child != _muerte_player:
+						child.queue_free()
 			sprite.play("stun") 
-			velocity.x = 0 
+			velocity.x = 0
+			_play_sfx(STUN_CORREDOR, 8.0)
 			
 		State.DEAD:
-			sprite.play("dead") 
+			sprite.play("dead")
+			if _muerte_player == null:
+				_muerte_player = AudioStreamPlayer2D.new()
+				_muerte_player.bus = &"EFX"
+				_muerte_player.max_distance = SFX_MAX_DISTANCE
+				add_child(_muerte_player)
+			_muerte_player.stream = MUERTE_CORREDOR
+			_muerte_player.volume_db = 12.0
+			_muerte_player.play()
+			if luz and luz.enabled:
+				var tween: Tween = create_tween()
+				tween.tween_property(luz, "energy", 0.0, 1.5)
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)
 				$EnemyHitbox.set_deferred("monitorable", false)

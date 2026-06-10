@@ -18,6 +18,7 @@ const BUTTON_LEVEL_NORMAL_COLORS := {
 }
 
 const NICKNAME_DIALOG_SCENE := preload("res://ui/menus/windows/nickname_dialog.tscn")
+const NEW_GAME_SOUND := preload("res://music/menus/new_game.ogg")
 
 @onready var background_texture_rect: TextureRect = $BackgroundTextureRect
 @onready var progression_overlay: ColorRect = $ProgressionOverlay
@@ -273,6 +274,16 @@ func _on_new_game_button_pressed() -> void:
 
 
 func _on_new_game_confirmation_confirmed() -> void:
+	if has_node("/root/ProjectUISoundController"):
+		var ui := get_node("/root/ProjectUISoundController")
+		if ui.button_pressed_player != null:
+			ui.button_pressed_player.stop()
+		var player := AudioStreamPlayer.new()
+		player.stream = NEW_GAME_SOUND
+		player.bus = &"EFX"
+		player.finished.connect(player.queue_free)
+		ui.add_child(player)
+		player.play()
 	var game_state := _get_game_state()
 	if game_state != null and game_state.has_method("reset_for_new_game"):
 		game_state.reset_for_new_game()
