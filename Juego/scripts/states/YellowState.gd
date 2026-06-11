@@ -17,7 +17,7 @@ func exit():
 	player.can_jump = true
 	player.can_dash = true
 	if "can_attack" in player:
-		player.can_attack = false
+		player.can_attack = true
 
 func process(delta):
 	pass
