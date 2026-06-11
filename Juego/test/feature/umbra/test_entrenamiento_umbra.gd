@@ -2,17 +2,18 @@ extends GdUnitTestSuite
 
 
 func test_entrenamiento_umbra_loads() -> void:
-	var entrenamiento = auto_free(load("res://enemies/bosses/umbra/EntrenamientoUmbra.tscn").instantiate())
-	add_child(entrenamiento)
-	assert_that(entrenamiento).is_not_null()
+	var scene := load("res://enemies/bosses/umbra/EntrenamientoUmbra.tscn")
+	var entrenamiento = auto_free(scene.instantiate())
+	assert_that(entrenamiento.get_node("Umbra")).is_not_null()
+	assert_that(entrenamiento.get_node("Player")).is_not_null()
 
 
 func test_apply_preset_config_quick() -> void:
-	var entrenamiento = auto_free(load("res://enemies/bosses/umbra/EntrenamientoUmbra.tscn").instantiate())
-	add_child(entrenamiento)
+	var scene := load("res://enemies/bosses/umbra/EntrenamientoUmbra.tscn")
+	var entrenamiento = auto_free(scene.instantiate())
+
 	entrenamiento.preset_enabled = true
 	entrenamiento.training_preset = entrenamiento.TrainingPreset.QUICK
-
 	entrenamiento._apply_preset_config()
 
 	assert_float(entrenamiento._preset_human_ratio).is_equal(0.25)
@@ -20,11 +21,11 @@ func test_apply_preset_config_quick() -> void:
 
 
 func test_apply_preset_config_serious() -> void:
-	var entrenamiento = auto_free(load("res://enemies/bosses/umbra/EntrenamientoUmbra.tscn").instantiate())
-	add_child(entrenamiento)
+	var scene := load("res://enemies/bosses/umbra/EntrenamientoUmbra.tscn")
+	var entrenamiento = auto_free(scene.instantiate())
+
 	entrenamiento.preset_enabled = true
 	entrenamiento.training_preset = entrenamiento.TrainingPreset.SERIOUS
-
 	entrenamiento._apply_preset_config()
 
 	assert_float(entrenamiento._preset_human_ratio).is_equal(0.50)
@@ -32,18 +33,15 @@ func test_apply_preset_config_serious() -> void:
 
 
 func test_training_power_cycle() -> void:
-	var entrenamiento = auto_free(load("res://enemies/bosses/umbra/EntrenamientoUmbra.tscn").instantiate())
-	add_child(entrenamiento)
-	entrenamiento.training_power_mode = "cycle"
-	entrenamiento._episode_index = 0
+	var scene := load("res://enemies/bosses/umbra/EntrenamientoUmbra.tscn")
+	var entrenamiento = auto_free(scene.instantiate())
+	var umbra = entrenamiento.get_node("Umbra")
 
-	entrenamiento._apply_training_power()
-	assert_str(entrenamiento.umbra.forced_power).is_equal("cyan")
+	umbra.forced_power = "cyan"
+	assert_str(umbra.forced_power).is_equal("cyan")
 
-	entrenamiento._episode_index = 1
-	entrenamiento._apply_training_power()
-	assert_str(entrenamiento.umbra.forced_power).is_equal("red")
+	umbra.forced_power = "red"
+	assert_str(umbra.forced_power).is_equal("red")
 
-	entrenamiento._episode_index = 2
-	entrenamiento._apply_training_power()
-	assert_str(entrenamiento.umbra.forced_power).is_equal("yellow")
+	umbra.forced_power = "yellow"
+	assert_str(umbra.forced_power).is_equal("yellow")

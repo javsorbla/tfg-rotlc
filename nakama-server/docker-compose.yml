@@ -6,25 +6,29 @@ services:
       - "/bin/sh"
       - "-ecx"
       - >
-        /nakama/nakama migrate up --database.address postgres:password@postgres:5432/nakama &&
-        exec /nakama/nakama --config /nakama/data/local.yml --database.address postgres:password@postgres:5432/nakama
+        /nakama/nakama migrate up --database.address ${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/nakama &&
+        exec /nakama/nakama --config /nakama/data/local.yml --database.address ${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/nakama
     restart: always
     ports:
       - "7350:7350"
       - "7351:7351"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ./data:/nakama/data
 
   postgres:
     image: postgres:15
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_DB: nakama
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - db_data:/var/lib/postgresql/data
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=4 uid="uid://bu3kl4nm1dulx"]
+[gd_scene load_steps=49 format=4 uid="uid://bu3kl4nm1dulx"]
 
 [ext_resource type="Script" path="res://scenes/montañas_de_ceniza.gd" id="1_fhvl8"]
 [ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_wxf8w"]
@@ -279,6 +279,11 @@ size = Vector2(587, 52.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2f4qr"]
 size = Vector2(39, 37)
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_83ux0"]
+vertices = PackedVector2Array(839.039, -220.008, 839.953, 3.00781, 25.1172, 3.97656, 27.8672, -220.977)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(15, 14, 850, 13, 849, -230, 18, -231)])
 
 [sub_resource type="Environment" id="Environment_brvtb"]
 background_mode = 3
@@ -868,6 +873,9 @@ onnx_model_path = "res://umbra.onnx"
 
 [node name="UmbraNavigation" parent="." instance=ExtResource("25_cd3hf")]
 position = Vector2(7634, 1004)
+
+[node name="NavigationRegion2D" parent="UmbraNavigation" index="0"]
+navigation_polygon = SubResource("NavigationPolygon_83ux0")
 
 [node name="NavigationLink2D" parent="UmbraNavigation" index="1"]
 start_position = Vector2(236, -75)

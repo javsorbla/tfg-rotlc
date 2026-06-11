@@ -5,7 +5,7 @@ logger:
 
 database:
   address: 
-    - postgres:password@postgres:5432/nakama
+    - postgres:cambiar_esta_contraseña@postgres:5432/nakama
 
 runtime:
   js_entrypoint: ""

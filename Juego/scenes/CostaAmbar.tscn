@@ -1,4 +1,4 @@
-[gd_scene load_steps=123 format=4 uid="uid://dv7tvh0rknvv6"]
+[gd_scene load_steps=124 format=4 uid="uid://dv7tvh0rknvv6"]
 
 [ext_resource type="Texture2D" uid="uid://ckrlk2kf8xtpa" path="res://assets/tilesets/costa_ambar/coast-tileset.png" id="1_c0y7m"]
 [ext_resource type="Script" path="res://scenes/costa_ambar.gd" id="1_db77e"]
@@ -1663,6 +1663,11 @@ size = Vector2(287, 50)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ql8vt"]
 size = Vector2(708, 61)
 
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_5apqj"]
+vertices = PackedVector2Array(862.898, 4, 25.0703, 4, 26.9297, -264.023, 860.102, -265.969)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(15, 14, 873, 14, 870, -276, 17, -274)])
+
 [sub_resource type="Environment" id="Environment_cl3jo"]
 background_mode = 3
 tonemap_mode = 1
@@ -2098,6 +2103,9 @@ debug_model_indicator = false
 
 [node name="UmbraNavigation" parent="." instance=ExtResource("36_ld6a2")]
 position = Vector2(5216, 1015)
+
+[node name="NavigationRegion2D" parent="UmbraNavigation" index="0"]
+navigation_polygon = SubResource("NavigationPolygon_5apqj")
 
 [node name="NavigationLink2D" parent="UmbraNavigation" index="1"]
 start_position = Vector2(365, -70)
