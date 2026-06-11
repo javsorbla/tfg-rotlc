@@ -535,7 +535,7 @@ func _play_animation(animation_name: String) -> void:
 	sprite.play(animation_name)
 	sprite.frame = 0
 
-func _play_sfx(stream: AudioStreamOggVorbis, volume_db: float = -8.0) -> AudioStreamPlayer:
+func _play_sfx(stream: AudioStreamOggVorbis, volume_db: float = -12.0) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
 	player.stream = stream
 	player.bus = "EFX"

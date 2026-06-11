@@ -12,21 +12,23 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 class DummyUmbraEnv(gym.Env):
     metadata = {}
 
+    OBS_DIM = 27
+
     def __init__(self, nvec: np.ndarray):
         self.observation_space = spaces.Dict(
-            {"obs": spaces.Box(low=-1.0, high=1.0, shape=(19,), dtype=np.float32)}
+            {"obs": spaces.Box(low=-1.0, high=1.0, shape=(self.OBS_DIM,), dtype=np.float32)}
         )
         self.action_space = spaces.MultiDiscrete(nvec.astype(np.int64))
 
     def reset(self, seed=None, options=None):
-        return {"obs": np.zeros((19,), dtype=np.float32)}, {}
+        return {"obs": np.zeros((self.OBS_DIM,), dtype=np.float32)}, {}
 
     def step(self, action):
-        return {"obs": np.zeros((19,), dtype=np.float32)}, 0.0, True, False, {}
+        return {"obs": np.zeros((self.OBS_DIM,), dtype=np.float32)}, 0.0, True, False, {}
 
 
 def sample_obs(batch: int) -> np.ndarray:
-    x = np.zeros((batch, 19), dtype=np.float32)
+    x = np.zeros((batch, 27), dtype=np.float32)
     x[:, 0] = np.random.uniform(-1, 1, size=batch)  # rel_x
     x[:, 1] = np.random.uniform(-0.8, 0.8, size=batch)  # rel_y
 
@@ -49,6 +51,16 @@ def sample_obs(batch: int) -> np.ndarray:
     x[:, 16] = np.random.uniform(0.0, 0.8, size=batch)
     x[:, 17] = np.random.uniform(0.0, 0.4, size=batch)
     x[:, 18] = np.random.uniform(0.0, 0.5, size=batch)
+    # Power one-hot: none (default)
+    x[:, 19] = 1.0
+    x[:, 20] = 0.0
+    x[:, 21] = 0.0
+    x[:, 22] = 0.0
+    # Nav features (neutralized)
+    x[:, 23] = 0.0
+    x[:, 24] = 0.0
+    x[:, 25] = 0.0
+    x[:, 26] = 0.0
     return x
 
 
@@ -83,11 +95,12 @@ def evaluate_checkpoint(path: Path, move_head_index: Optional[int], batch_size: 
     entropy = float((-(probs * np.log(np.clip(probs, 1e-8, 1.0))).sum(axis=1)).mean())
 
     grid = np.linspace(-1, 1, 41, dtype=np.float32)
-    g = np.zeros((len(grid), 19), dtype=np.float32)
+    g = np.zeros((len(grid), 27), dtype=np.float32)
     g[:, 0] = grid
     g[:, 4] = 1.0
     g[:, 7] = 0.7
     g[:, 8] = 0.7
+    g[:, 19] = 1.0 
     gt, _ = model.policy.obs_to_tensor({"obs": g})
     gp = model.policy.get_distribution(gt).distribution[move_idx].probs.detach().cpu().numpy().argmax(axis=1)
 

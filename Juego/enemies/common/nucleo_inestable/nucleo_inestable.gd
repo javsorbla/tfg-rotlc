@@ -11,6 +11,11 @@ const EDGE_CHECK_DISTANCE: float = 20.0
 const KNOCKBACK_ENEMY: float = 80.0
 const KNOCKBACK_PLAYER: float = 150.0
 
+const DORMIR_NUCLEO := preload("res://music/enemies/common/nucleo_inestable/dormir_nucleo.ogg")
+const MOVIMIENTO_NUCLEO := preload("res://music/enemies/common/nucleo_inestable/movimiento_nucleo.ogg")
+const STUN_NUCLEO := preload("res://music/enemies/common/nucleo_inestable/stun_nucleo.ogg")
+const MUERTE_NUCLEO := preload("res://music/enemies/common/nucleo_inestable/muerte_nucleo.ogg")
+
 const DEAD_SHEET_3 := preload("res://assets/enemies/common/nucleo_inestable/dead_sheet_3.png")
 const DEAD_STUN_SHEET_3 := preload("res://assets/enemies/common/nucleo_inestable/stun_dead_sheet_3.png")
 const IDLE_SHEET_3 := preload("res://assets/enemies/common/nucleo_inestable/idle_sheet_3.png")
@@ -44,8 +49,11 @@ var _combat_reset_state: Dictionary = {}
 var _base_sprite_frames: SpriteFrames = null
 var _level3_sprite_frames: SpriteFrames = null
 var _level4_sprite_frames: SpriteFrames = null
+var _movement_player: AudioStreamPlayer2D = null
+var _sleep_player: AudioStreamPlayer2D = null
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var luz: PointLight2D = $PointLight2D
 
 func _ready() -> void:
 	current_health = MAX_HEALTH
@@ -63,7 +71,68 @@ func _ready() -> void:
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 	
 	space_state = get_world_2d().direct_space_state
+	_setup_audio_players()
+	_setup_light()
 	_enter_state(State.SLEEP)
+
+
+const SFX_MAX_DISTANCE: float = 400.0
+
+
+func _play_sfx(stream: AudioStream, vol: float = 0.0, pitch: float = 1.0) -> void:
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	player.max_distance = SFX_MAX_DISTANCE
+	player.pitch_scale = pitch
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
+
+func _setup_audio_players() -> void:
+	_movement_player = AudioStreamPlayer2D.new()
+	_movement_player.stream = MOVIMIENTO_NUCLEO
+	_movement_player.bus = &"EFX"
+	_movement_player.volume_db = 20.0
+	_movement_player.max_distance = SFX_MAX_DISTANCE
+	add_child(_movement_player)
+
+	_sleep_player = AudioStreamPlayer2D.new()
+	_sleep_player.stream = DORMIR_NUCLEO
+	_sleep_player.bus = &"EFX"
+	_sleep_player.volume_db = 8.0
+	_sleep_player.max_distance = SFX_MAX_DISTANCE
+	add_child(_sleep_player)
+
+
+func _setup_light() -> void:
+	if GameState.current_level == 1:
+		luz.enabled = false
+		return
+
+	var imagen: Image = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx: float = (x - 32.0) / 32.0
+			var dy: float = (y - 32.0) / 32.0
+			var dist: float = sqrt(dx * dx + dy * dy)
+			var alpha: float = clamp(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.5)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+
+	if GameState.current_level == 2:
+		luz.color = Color(1.0, 0.5, 0.0)
+	elif GameState.current_level == 3:
+		luz.color = Color(0.0, 0.6, 1.0)
+	elif GameState.current_level == 4:
+		luz.color = Color(0.4, 0.0, 0.8)
+	luz.texture_scale = 1.5
+	luz.energy = 3.5
+	luz.enabled = false
 
 
 func _physics_process(delta: float) -> void:
@@ -97,6 +166,7 @@ func _on_level_reset():
 	death_timer = -1.0
 	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
 	call_deferred("_apply_level_visuals")
+	_setup_light()
 	_enter_state(State.SLEEP)
 
 func _apply_level_visuals() -> void:
@@ -181,9 +251,16 @@ func _enter_state(new_state: State) -> void:
 			$EnemyHitbox.set_deferred("monitorable", false)
 			if $AnimatedSprite2D.animation_finished.is_connected(_on_stunned_animation_finished):
 				$AnimatedSprite2D.animation_finished.disconnect(_on_stunned_animation_finished)
+			if _movement_player and _movement_player.playing:
+				_movement_player.stop()
+			if _sleep_player and not _sleep_player.playing:
+				_sleep_player.play()
+			luz.enabled = false
 
 
 		State.JUMP:
+			if _sleep_player and _sleep_player.playing:
+				_sleep_player.stop()
 			if player:
 				roll_direction = sign(player.global_position.x - global_position.x)
 			velocity.x = 0
@@ -191,11 +268,17 @@ func _enter_state(new_state: State) -> void:
 			$AnimatedSprite2D.flip_h = roll_direction > 0
 			$AnimatedSprite2D.play("idle")
 			$EnemyHitbox.set_deferred("monitorable", false)
+			luz.enabled = true
+			luz.energy = 3.5
 
 		State.ROLLING:
 			$AnimatedSprite2D.flip_h = roll_direction > 0
 			$AnimatedSprite2D.play("rolling")
 			$EnemyHitbox.set_deferred("monitorable", true)
+			if _movement_player and not _movement_player.playing:
+				_movement_player.play()
+			luz.enabled = true
+			luz.energy = 3.5
 
 		State.STUNNED:
 			velocity.x = 0
@@ -208,6 +291,13 @@ func _enter_state(new_state: State) -> void:
 				$AnimatedSprite2D.play("stunned_glow")
 			else:
 				$AnimatedSprite2D.play("stunned")
+			if _sleep_player and _sleep_player.playing:
+				_sleep_player.stop()
+			if _movement_player and _movement_player.playing:
+				_movement_player.stop()
+			_play_sfx(STUN_NUCLEO, -2.0)
+			luz.enabled = true
+			luz.energy = 1.5
 			
 		State.DEAD:
 			velocity = Vector2.ZERO
@@ -216,6 +306,14 @@ func _enter_state(new_state: State) -> void:
 				$AnimatedSprite2D.play("dead_stun")
 			else:
 				$AnimatedSprite2D.play("dead")
+			if _sleep_player and _sleep_player.playing:
+				_sleep_player.stop()
+			if _movement_player and _movement_player.playing:
+				_movement_player.stop()
+			_play_sfx(MUERTE_NUCLEO, 0.0, 0.85)
+			if luz and luz.enabled:
+				var tween: Tween = create_tween()
+				tween.tween_property(luz, "energy", 0.0, 1.5)
 			
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)

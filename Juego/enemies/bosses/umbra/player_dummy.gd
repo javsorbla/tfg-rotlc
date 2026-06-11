@@ -19,6 +19,7 @@ enum ControlMode {
 @export var bot_strafe_distance := 90.0
 @export var bot_react_interval := 0.12
 @export var bot_jump_chance := 0.12
+@export var bot_voluntary_jump_chance := 0.02
 @export var bot_attack_range := 70.0
 @export var bot_dash_range := 120.0
 @export var debug_bot_logs := false
@@ -43,6 +44,12 @@ var attack_cooldown_timer = 0.0
 var _desired_dir := 0.0
 var _strafe_sign := 1.0
 var _react_timer := 0.0
+var _platform_stay_timer := 0.0
+
+var _bot_power_timer := 0.0
+var _bot_power_cooldown_timer := 0.0
+var _bot_wants_power := ""
+var _bot_power_active := false
 
 @onready var sprite = $AnimatedSprite2D
 @onready var hurtbox = $Hurtbox
@@ -61,13 +68,15 @@ func _physics_process(delta):
 		velocity += get_gravity() * delta
 
 	_handle_dash(delta)
-	_handle_attack(delta)
+	_handle_bot_powers(delta)
 
 	match control_mode:
 		ControlMode.HUMAN:
 			_human_control(delta)
 		ControlMode.SMART_BOT:
 			_smart_bot_control(delta)
+
+	_handle_attack(delta)
 
 	if _desired_dir != 0:
 		last_direction = int(sign(_desired_dir))
@@ -76,6 +85,14 @@ func _physics_process(delta):
 		velocity.x = move_toward(velocity.x, 0, FRICTION * delta)
 	
 	move_and_slide()
+
+	if is_on_floor():
+		if not was_on_floor and global_position.y < -50.0:
+			_platform_stay_timer = 3.0
+		can_double_jump = true
+
+	was_on_floor = is_on_floor()
+
 	health.process(delta)
 	color_manager.process(delta)
 
@@ -89,6 +106,10 @@ func set_control_mode(new_mode: int) -> void:
 func reset_for_training(spawn_pos: Vector2) -> void:
 	global_position = spawn_pos
 	velocity = Vector2.ZERO
+	if collision_layer > 0:
+		var snap := move_and_collide(Vector2(0, 200))
+		if snap and debug_bot_logs:
+			print("Dummy snapped to platform")
 	is_dashing = false
 	dash_timer = 0.0
 	dash_cooldown_timer = 0.0
@@ -101,13 +122,32 @@ func reset_for_training(spawn_pos: Vector2) -> void:
 	health.is_invincible = false
 	health.invincibility_timer = 0.0
 	hurtbox.monitorable = true
+	_platform_stay_timer = 0.0
+	was_on_floor = false
+	_bot_power_timer = 0.0
+	_bot_power_cooldown_timer = 0.0
+	_bot_wants_power = ""
+	_bot_power_active = false
+	if color_manager:
+		color_manager.apply_unlocked_powers({"cyan": true, "red": true, "yellow": true})
+		if color_manager.power_active:
+			color_manager.change_state(color_manager.neutral_state)
 
 
 func _human_control(_delta: float) -> void:
+	if color_manager.power_active and color_manager.active_power == "yellow":
+		_desired_dir = 0.0
+		return
+
 	_desired_dir = Input.get_axis("move_left", "move_right")
 
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
+	if Input.is_action_just_pressed("jump") and can_jump:
+		if is_on_floor():
+			velocity.y = JUMP_VELOCITY
+			can_double_jump = true
+		elif can_double_jump:
+			velocity.y = JUMP_VELOCITY
+			can_double_jump = false
 
 	if Input.is_action_just_pressed("dash") and dash_cooldown_timer <= 0.0:
 		_start_dash(_desired_dir)
@@ -117,6 +157,10 @@ func _human_control(_delta: float) -> void:
 
 
 func _smart_bot_control(_delta: float) -> void:
+	if color_manager.power_active and color_manager.active_power == "yellow":
+		_desired_dir = 0.0
+		return
+
 	var umbra = get_tree().get_first_node_in_group("enemies")
 	if umbra == null:
 		_desired_dir = 0.0
@@ -125,21 +169,52 @@ func _smart_bot_control(_delta: float) -> void:
 	var rel: Vector2 = umbra.global_position - global_position
 	var abs_x := absf(rel.x)
 
+	if _platform_stay_timer > 0.0 and global_position.y < -50.0:
+		_platform_stay_timer -= _delta
+		_desired_dir = 0.0
+		if abs_x <= bot_attack_range and attack_cooldown_timer <= 0.0:
+			_trigger_attack()
+		if dash_cooldown_timer <= 0.0 and umbra.is_attacking and abs_x < bot_strafe_distance:
+			_start_dash(-sign(rel.x))
+		return
+
 	_react_timer -= _delta
 	if _react_timer <= 0.0:
 		_react_timer = bot_react_interval
 		if randf() < 0.10:
 			_strafe_sign *= -1.0
 
-	if abs_x > bot_dash_range:
-		_desired_dir = sign(rel.x)
-	elif abs_x < bot_strafe_distance * 0.55:
-		_desired_dir = -sign(rel.x)
-	else:
-		_desired_dir = _strafe_sign
+	var wants_platform := false
+	if rel.y < -80.0:
+		wants_platform = true
+		if abs_x > bot_dash_range:
+			_desired_dir = sign(rel.x)
+		elif abs_x > bot_strafe_distance:
+			_desired_dir = sign(rel.x)
+	if not wants_platform:
+		if abs_x > bot_dash_range:
+			_desired_dir = sign(rel.x)
+		elif abs_x < bot_strafe_distance * 0.55:
+			_desired_dir = -sign(rel.x)
+		else:
+			_desired_dir = _strafe_sign
 
-	if is_on_floor() and rel.y < -48.0 and randf() < bot_jump_chance:
-		velocity.y = JUMP_VELOCITY
+	if is_on_floor():
+		var wants_jump := false
+		if rel.y > 60.0 and abs_x < bot_strafe_distance * 1.5:
+			wants_jump = false
+		elif wants_platform:
+			wants_jump = true
+		elif not umbra.is_on_floor():
+			wants_jump = true
+		elif rel.y < -48.0 and randf() < bot_jump_chance:
+			wants_jump = true
+		elif randf() < bot_voluntary_jump_chance:
+			wants_jump = true
+		elif umbra.is_attacking and abs_x < bot_strafe_distance and randf() < 0.15:
+			wants_jump = true
+		if wants_jump:
+			velocity.y = JUMP_VELOCITY
 
 	if is_on_floor() and umbra.is_attacking and abs_x < bot_strafe_distance and dash_cooldown_timer <= 0.0:
 		_start_dash(-sign(rel.x))
@@ -149,8 +224,44 @@ func _smart_bot_control(_delta: float) -> void:
 	if abs_x <= bot_attack_range and attack_cooldown_timer <= 0.0:
 		_trigger_attack()
 
+	if _bot_power_cooldown_timer <= 0.0 and not color_manager.power_active:
+		if health.current_health <= 2 or (umbra.is_attacking and abs_x < bot_strafe_distance):
+			_bot_wants_power = "yellow"
+		elif abs_x <= bot_attack_range * 1.2 and attack_cooldown_timer <= ATTACK_COOLDOWN * 0.5:
+			_bot_wants_power = "red"
+		elif abs_x > bot_dash_range * 0.8:
+			_bot_wants_power = "cyan"
+		else:
+			_bot_wants_power = ""
+
+	if _bot_wants_power != "" and _bot_wants_power != color_manager.active_power:
+		match _bot_wants_power:
+			"cyan":
+				if color_manager.unlocked["cyan"] and color_manager.cooldown_timers["cyan"] <= 0.0:
+					color_manager.change_state(color_manager.cyan_state)
+					_bot_power_active = true
+			"red":
+				if color_manager.unlocked["red"] and color_manager.cooldown_timers["red"] <= 0.0:
+					color_manager.change_state(color_manager.red_state)
+					_bot_power_active = true
+			"yellow":
+				if color_manager.unlocked["yellow"] and color_manager.cooldown_timers["yellow"] <= 0.0:
+					color_manager.change_state(color_manager.yellow_state)
+					_bot_power_active = true
+
+
+func _handle_bot_powers(delta: float) -> void:
+	if _bot_power_cooldown_timer > 0.0:
+		_bot_power_cooldown_timer -= delta
+
+	if _bot_power_active and not color_manager.power_active:
+		_bot_power_active = false
+		_bot_power_cooldown_timer = 2.0
+
 
 func _start_dash(dir: float) -> void:
+	if color_manager.power_active and color_manager.active_power == "yellow":
+		return
 	if dir == 0:
 		dir = float(last_direction)
 	is_dashing = true
@@ -177,6 +288,8 @@ func _handle_dash(delta: float) -> void:
 
 
 func _trigger_attack() -> void:
+	if color_manager.power_active and color_manager.active_power == "yellow":
+		return
 	is_attacking = true
 	attack_timer = ATTACK_DURATION
 	attack_cooldown_timer = ATTACK_COOLDOWN
@@ -197,6 +310,11 @@ func _handle_attack(delta: float) -> void:
 		is_attacking = false
 		attack_hitbox.monitoring = false
 		attack_hitbox.monitorable = false
+		return
+
+	# Polling directo: si area_entered no disparó (hitbox ya solapaba al activar), pillar aquí
+	for area in attack_hitbox.get_overlapping_areas():
+		_on_attack_hitbox_area_entered(area)
 
 
 func _on_attack_hitbox_area_entered(area: Area2D) -> void:

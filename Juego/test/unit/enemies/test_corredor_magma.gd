@@ -67,3 +67,66 @@ func test_hurtbox_and_hitbox_connected() -> void:
 
 	assert_object(enemy.get_node_or_null("EnemyHurtbox")).is_not_null()
 	assert_object(enemy.get_node_or_null("EnemyHitbox")).is_not_null()
+
+
+func test_idle_transitions_to_patrol() -> void:
+	var enemy = auto_free(load("res://enemies/common/corredor_magma/CorredorMagma.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	enemy.current_state = enemy.State.IDLE
+	enemy.idle_timer = 0.0
+	enemy._physics_process(0.016)
+
+	assert_int(enemy.current_state).is_equal(enemy.State.PATROL)
+
+
+func test_patrol_sets_velocity() -> void:
+	var enemy = auto_free(load("res://enemies/common/corredor_magma/CorredorMagma.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	enemy._enter_state(enemy.State.PATROL)
+	enemy._physics_process(0.016)
+
+	assert_float(abs(enemy.velocity.x)).is_equal(enemy.PATROL_SPEED)
+
+
+func test_chase_sets_chase_speed() -> void:
+	var enemy = auto_free(load("res://enemies/common/corredor_magma/CorredorMagma.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+	enemy.player = player
+	player.global_position = enemy.global_position + Vector2(100, 0)
+
+	enemy._enter_state(enemy.State.CHASE)
+	enemy._physics_process(0.016)
+
+	assert_float(abs(enemy.velocity.x)).is_equal(enemy.CHASE_SPEED)
+
+
+func test_stunned_transitions_to_idle() -> void:
+	var enemy = auto_free(load("res://enemies/common/corredor_magma/CorredorMagma.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	enemy._enter_state(enemy.State.STUNNED)
+	enemy.stun_timer = 0.0
+	enemy._physics_process(0.016)
+
+	assert_int(enemy.current_state).is_equal(enemy.State.IDLE)
+
+
+func test_prepare_dash_transitions_to_dash() -> void:
+	var enemy = auto_free(load("res://enemies/common/corredor_magma/CorredorMagma.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	enemy._enter_state(enemy.State.PREPARE_DASH)
+	enemy.dash_timer = 0.0
+	enemy._physics_process(0.016)
+
+	assert_int(enemy.current_state).is_equal(enemy.State.DASH)

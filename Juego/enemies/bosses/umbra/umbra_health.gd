@@ -10,6 +10,9 @@ const MAX_ACTIVE_ORBS := 4
 
 const ORBE_LUZ_SCENE := preload("res://objects/OrbeDeLuz.tscn")
 
+const DAMAGE_FLASH_TIME := 0.08
+var _damage_flash_tween: Tween = null
+
 
 func setup() -> void:
 	hurtbox.set_deferred("monitorable", true)
@@ -34,6 +37,7 @@ func take_damage(amount: int) -> void:
 		return
 
 	umbra.current_health -= amount
+	_play_damage_flash()
 	umbra.is_invincible = true
 	umbra.invincibility_timer = umbra.INVINCIBILITY_DURATION
 	hurtbox.set_deferred("monitorable", false)
@@ -48,26 +52,42 @@ func take_damage(amount: int) -> void:
 		umbra.die()
 
 
+func _play_damage_flash() -> void:
+	var sprite: AnimatedSprite2D = umbra.get_node("AnimatedSprite2D")
+	if sprite == null or sprite.material == null:
+		return
+	if _damage_flash_tween:
+		_damage_flash_tween.kill()
+	sprite.material.set_shader_parameter("flash_amount", 1.0)
+	_damage_flash_tween = create_tween()
+	_damage_flash_tween.tween_method(
+		func(v: float): sprite.material.set_shader_parameter("flash_amount", v),
+		1.0, 0.0, DAMAGE_FLASH_TIME
+	)
+
+
 func _spawn_healing_orb() -> void:
 	if ORBE_LUZ_SCENE == null:
 		return
 
-	# Limite de orbes simultaneos para evitar acumulacion excesiva.
+	const BOSS_ZONE_RADIUS := 900.0
 	var active_orbs := get_tree().get_nodes_in_group("light_orb")
-	if active_orbs.size() >= MAX_ACTIVE_ORBS:
+	var local_orb_count := 0
+	for orb in active_orbs:
+		if is_instance_valid(orb) and orb.global_position.distance_to(umbra.global_position) <= BOSS_ZONE_RADIUS:
+			local_orb_count += 1
+	if local_orb_count >= MAX_ACTIVE_ORBS:
 		return
-	
-	# Solo dropear orbes en niveles normales, no durante entrenamiento
+
+	# No dropear durante entrenamiento
 	var sync_node = get_tree().get_first_node_in_group("sync_node")
-	if sync_node != null:
-		# control_mode: 0=HUMAN, 1=TRAINING, 2=ONNX_INFERENCE
-		if sync_node.control_mode == 1:
-			return
-	
+	if sync_node != null and sync_node.control_mode == 1:
+		return
+
 	var scene_root = get_tree().root.get_child(0)
 	if scene_root == null:
 		return
-	
+
 	var orbe = ORBE_LUZ_SCENE.instantiate()
 	orbe.is_spawned = true
 	orbe.global_position = umbra.global_position + Vector2(randf_range(-40, 40), -40)

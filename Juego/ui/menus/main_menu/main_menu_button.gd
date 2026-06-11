@@ -113,14 +113,14 @@ func _animate_arrow(show: bool) -> void:
 	var hidden_position := _arrow_base_position + Vector2(-arrow_slide_distance, 0)
 
 	if show:
-		arrow.visible = true
+		arrow.visible = false # Mejor deshabilitamos para dejar solo la animación de las letras
 		arrow.position = hidden_position
 		arrow.modulate.a = 0.0
 		_arrow_tween.parallel().tween_property(arrow, "position", _arrow_base_position, arrow_duration)
 		_arrow_tween.parallel().tween_property(arrow, "modulate:a", 1.0, arrow_duration)
 		return
 
-	arrow.visible = true
+	arrow.visible = false
 	_arrow_tween.parallel().tween_property(arrow, "position", hidden_position, arrow_duration)
 	_arrow_tween.parallel().tween_property(arrow, "modulate:a", 0.0, arrow_duration)
 	_arrow_tween.finished.connect(_on_hide_tween_finished, CONNECT_ONE_SHOT)

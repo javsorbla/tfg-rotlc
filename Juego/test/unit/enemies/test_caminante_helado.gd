@@ -104,3 +104,109 @@ func test_stun_timer_expiry_returns_to_idle() -> void:
 	enemy._physics_process(0.002)
 
 	assert_int(enemy.current_state).is_equal(enemy.State.IDLE)
+
+
+func test_idle_transitions_to_patrol_after_timer() -> void:
+	var enemy = auto_free(load("res://enemies/common/caminante_helado/CaminanteHelado.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	enemy.current_state = enemy.State.IDLE
+	enemy.idle_timer = 0.001
+
+	enemy._physics_process(0.002)
+
+	assert_int(enemy.current_state).is_equal(enemy.State.PATROL)
+
+
+func test_idle_transitions_to_chase_when_player_detected() -> void:
+	var enemy = auto_free(load("res://enemies/common/caminante_helado/CaminanteHelado.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+	enemy.player = player
+	player.global_position = enemy.global_position + Vector2(100, 0)
+
+	enemy.facing_dir = 1.0
+	enemy.current_state = enemy.State.IDLE
+	enemy.idle_timer = 5.0
+
+	enemy._physics_process(0.016)
+
+	assert_int(enemy.current_state).is_equal(enemy.State.CHASE)
+
+
+func test_patrol_sets_velocity_in_facing_direction() -> void:
+	var enemy = auto_free(load("res://enemies/common/caminante_helado/CaminanteHelado.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	enemy.current_state = enemy.State.PATROL
+	enemy.facing_dir = 1.0
+	enemy.patrol_timer = 5.0
+
+	enemy._physics_process(0.016)
+
+	assert_float(enemy.velocity.x).is_equal(enemy.PATROL_SPEED)
+
+
+func test_patrol_reverses_direction_via_flip() -> void:
+	var enemy = auto_free(load("res://enemies/common/caminante_helado/CaminanteHelado.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	enemy.facing_dir = 1.0
+	enemy.flip_cooldown = 0.0
+
+	enemy._flip()
+
+	assert_float(enemy.facing_dir).is_equal(-1.0)
+
+
+func test_chase_moves_towards_player() -> void:
+	var enemy = auto_free(load("res://enemies/common/caminante_helado/CaminanteHelado.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+	enemy.player = player
+	player.global_position = enemy.global_position + Vector2(100, 0)
+
+	enemy.facing_dir = 1.0
+	enemy.current_state = enemy.State.CHASE
+
+	enemy._physics_process(0.016)
+
+	assert_float(enemy.velocity.x).is_greater(0.0)
+
+
+func test_chase_returns_to_idle_when_player_too_far() -> void:
+	var enemy = auto_free(load("res://enemies/common/caminante_helado/CaminanteHelado.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	var player = auto_free(load("res://player/player.tscn").instantiate())
+	add_child(player)
+	player.global_position = enemy.global_position + Vector2(500, 0)
+
+	enemy.current_state = enemy.State.CHASE
+
+	enemy._physics_process(0.016)
+
+	assert_int(enemy.current_state).is_equal(enemy.State.IDLE)
+
+
+func test_attack_pause_returns_to_chase_after_timer() -> void:
+	var enemy = auto_free(load("res://enemies/common/caminante_helado/CaminanteHelado.tscn").instantiate())
+	add_child(enemy)
+	await_idle_frame()
+
+	enemy.current_state = enemy.State.ATTACK_PAUSE
+	enemy.stun_timer = 0.001
+
+	enemy._physics_process(0.002)
+
+	assert_int(enemy.current_state).is_equal(enemy.State.CHASE)

@@ -304,5 +304,7 @@ debug_color = Color(0, 1, 0, 0.419608)
 
 [node name="Vision" type="RayCast2D" parent="."]
 
+[node name="PointLight2D" type="PointLight2D" parent="."]
+
 [connection signal="area_entered" from="EnemyHitbox" to="." method="_on_enemy_hitbox_area_entered"]
 [connection signal="area_entered" from="EnemyHurtbox" to="." method="_on_enemy_hurtbox_area_entered"]

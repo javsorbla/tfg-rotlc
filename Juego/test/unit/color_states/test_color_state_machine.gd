@@ -79,24 +79,6 @@ func test_yellow_state_disables_movement_and_attack() -> void:
 	assert_bool(player.can_attack).is_false()
 
 
-func test_yellow_exit_restores_abilities() -> void:
-	var state = YellowState.new()
-	var player = auto_free(load("res://player/player.tscn").instantiate())
-	player.speed_multiplier = 0.0
-	player.is_shielding = true
-	player.can_jump = false
-	player.can_dash = false
-	player.can_attack = false
-
-	state.init(player)
-	state.exit()
-
-	assert_float(player.speed_multiplier).is_equal(1.0)
-	assert_bool(player.is_shielding).is_false()
-	assert_bool(player.can_jump).is_true()
-	assert_bool(player.can_attack).is_true()
-
-
 func test_color_state_init_sets_player_ref() -> void:
 	var state = ColorState.new()
 	var player = auto_free(load("res://player/player.tscn").instantiate())

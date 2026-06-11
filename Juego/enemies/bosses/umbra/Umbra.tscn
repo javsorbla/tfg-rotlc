@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://cpm34f5c602i5"]
+[gd_scene load_steps=12 format=3 uid="uid://cpm34f5c602i5"]
 
 [ext_resource type="Script" path="res://enemies/bosses/umbra/umbra.gd" id="1_quebn"]
 [ext_resource type="Script" path="res://enemies/bosses/umbra/ai_controller_2d.gd" id="2_u7ihi"]
@@ -8,15 +8,25 @@
 [ext_resource type="Script" path="res://enemies/bosses/umbra/umbra_colors.gd" id="6_6qn2i"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ifwve"]
-radius = 12.0
-height = 40.0
+height = 34.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3di5o"]
-size = Vector2(38, 47)
+size = Vector2(34, 48)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1digt"]
-radius = 12.0
+radius = 13.0
 height = 40.0
+
+[sub_resource type="Gradient" id="Gradient_qhkap"]
+offsets = PackedFloat32Array(0, 0.675325)
+colors = PackedColorArray(0.543605, 0.186512, 0.785935, 1, 0.965, 0.965, 0.965, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_anjjd"]
+gradient = SubResource("Gradient_qhkap")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.495413, 0.477064)
 
 [node name="Umbra" type="CharacterBody2D"]
 script = ExtResource("1_quebn")
@@ -42,17 +52,16 @@ script = ExtResource("6_6qn2i")
 shape = SubResource("CapsuleShape2D_ifwve")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(-1, -18)
+position = Vector2(-5.96046e-08, -2)
 scale = Vector2(0.684615, 0.746154)
 sprite_frames = ExtResource("3_8gdcn")
-animation = &"attack"
+animation = &"defeat"
 
 [node name="AttackHitbox" type="Area2D" parent="." groups=["enemy_hitbox"]]
 collision_layer = 16
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
-position = Vector2(1, -0.5)
 shape = SubResource("RectangleShape2D_3di5o")
 debug_color = Color(0.905808, 0.272961, 0.350986, 0.42)
 
@@ -63,3 +72,8 @@ collision_mask = 6
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
 shape = SubResource("CapsuleShape2D_1digt")
 debug_color = Color(0.198362, 0.618767, 0.482553, 0.42)
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.703149, 0.856702, 0.983565, 1)
+energy = 0.7
+texture = SubResource("GradientTexture2D_anjjd")

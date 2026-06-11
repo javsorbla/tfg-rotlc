@@ -23,7 +23,7 @@ var _heal_player: AudioStreamPlayer
 @onready var hurtbox = get_parent().get_node("Hurtbox")
 @onready var sprite = get_parent().get_node("AnimatedSprite2D")
 @onready var camera = get_tree().get_first_node_in_group("camera")
-@onready var heal_particles = get_parent().get_node("HealParticles")
+@onready var heal_particles = get_parent().get_node_or_null("HealParticles")
 
 
 func _ready():

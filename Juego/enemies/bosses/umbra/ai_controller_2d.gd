@@ -84,11 +84,13 @@ func _ready():
 
 func _physics_process(delta):
 	super._physics_process(delta)
+	if not is_instance_valid(_umbra):
+		return
 	_collect_player_metrics()
 
 
 func _collect_player_metrics() -> void:
-	if not _player or not _umbra:
+	if not _player or not _umbra or not is_instance_valid(_umbra):
 		return
 
 	var distance := _umbra.global_position.distance_to(_player.global_position)
@@ -130,6 +132,8 @@ func _collect_player_metrics() -> void:
 
 func get_obs() -> Dictionary:
 	var obs = []
+	if not is_instance_valid(_umbra):
+		return {"obs": [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
 	_resolve_player_if_missing()
 	
 	if not _player:
@@ -152,7 +156,9 @@ func get_obs() -> Dictionary:
 				1.0, 0.0, 0.0,
 				1.0,
 				1.0, 0.0,
-				0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+				0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+				1.0, 0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0, 0.0
 			]
 		}
 	
@@ -196,6 +202,19 @@ func get_obs() -> Dictionary:
 	obs.append(clamp(player_metrics["low_health_ratio"], 0.0, 1.0))
 	obs.append(clamp(player_metrics["power_usage_frequency"], 0.0, 1.0))
 	
+	# Poder actual de Umbra (one-hot: none, cyan, red, yellow)
+	var umbra_power: String = _umbra.current_power
+	obs.append(1.0 if umbra_power == "none" else 0.0)
+	obs.append(1.0 if umbra_power == "cyan" else 0.0)
+	obs.append(1.0 if umbra_power == "red" else 0.0)
+	obs.append(1.0 if umbra_power == "yellow" else 0.0)
+	
+	# Navegación (NavigationAgent2D)
+	obs.append(_umbra.get_nav_dir())
+	obs.append(_umbra.get_nav_dist())
+	obs.append(_umbra.get_nav_jump())
+	obs.append(_umbra.get_nav_dash())
+	
 	return {"obs": obs}
 
 func get_action_space() -> Dictionary:
@@ -206,11 +225,13 @@ func get_action_space() -> Dictionary:
 		"dash": {"size": 2, "action_type": "discrete"},
 		"jump": {"size": 2, "action_type": "discrete"},
 		"move": {"size": 3, "action_type": "discrete"},
-		"power": {"size": 2, "action_type": "discrete"},
+		"power": {"size": 4, "action_type": "discrete"},
 	}
 
 func get_reward() -> float:
 	var r = 0.0
+	if not is_instance_valid(_umbra):
+		return r
 	const DIRECTION_DEADZONE_PX := 12.0
 	
 	if not _player:
@@ -233,6 +254,16 @@ func get_reward() -> float:
 	
 	# Recompensa por sobrevivir
 	r += 0.001
+
+	# Recompensa por usar poderes (explorar mecanicas de cyan/red/yellow)
+	if _umbra._power_active and _umbra.current_power != "none":
+		r += 0.02
+
+	# Recompensa/penalizacion por rango de distancia absoluta
+	if distance < 80.0:
+		r += 0.03
+	elif distance > 200.0:
+		r -= 0.04
 
 	# Recompensa por reducir la distancia horizontal al jugador.
 	if _prev_distance >= 0.0:
@@ -264,6 +295,17 @@ func get_reward() -> float:
 		r -= 0.0035 * float(min(_direction_mismatch_streak - 10, 40))
 
 	_update_move_diagnostics(rel_x, move_dir, desired_move)
+
+	# Recompensa/recompensa vertical: incentivar a Umbra a alcanzar la altura del jugador.
+	var rel_y := _player.global_position.y - _umbra.global_position.y
+	if absf(rel_y) < 20.0:
+		r += 0.003
+	elif absf(rel_y) < 60.0:
+		r += 0.001
+	if rel_y < -80.0:
+		r -= 0.002
+	elif rel_y > 80.0:
+		r += 0.001
 
 	# Regularización anti-colapso: penaliza mantener la misma direccion demasiado tiempo
 	# cuando no hay mejora real de distancia.
@@ -319,6 +361,15 @@ func get_reward() -> float:
 	if bool(_umbra.ai_should_use_power) and distance > 140.0:
 		r -= 0.003
 	
+	# Recompensa auxiliar por acciones alineadas con navegación
+	if _umbra._is_nav_valid():
+		if _umbra.ai_move_direction * sign(_umbra.get_nav_dir()) > 0:
+			r += 0.005
+		if _umbra.get_nav_jump() > 0.0 and _umbra.ai_should_jump:
+			r += 0.01
+		if _umbra.get_nav_dash() > 0.0 and _umbra.ai_should_dash:
+			r += 0.005
+	
 	# Penalización por estar lejos del jugador
 	if distance > 300.0:
 		r -= 0.002
@@ -338,6 +389,8 @@ func set_action(action) -> void:
 		if t != _last_action_printed_type:
 			print("Accion recibida (tipo=", t, "): ", action)
 			_last_action_printed_type = t
+	if not is_instance_valid(_umbra):
+		return
 	_umbra.set_ai_action(action)
 
 

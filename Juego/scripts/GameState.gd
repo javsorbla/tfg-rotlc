@@ -12,13 +12,7 @@ var coming_from_transition: bool = false
 const UMBRA_SAVE_PATH := "user://umbra_progress.json"
 const PLAYER_PROGRESS_PATH := "user://player_progress.json"
 const UMBRA_TRAINING_LOG_PATH := "user://umbra_training_episodes.jsonl"
-const UMBRA_FINETUNE_METRICS_PATH := "user://umbra_metrics.json"
-const UMBRA_FINETUNE_ONNX_PATH := "user://models/umbra_finetuned.onnx"
-const UMBRA_FINETUNE_STATE_PATH := "user://umbra_finetune_state.json"
 const UMBRA_BASE_MODEL_ZIP_PATH := "user://models/umbra_final.zip"
-const UMBRA_FINETUNE_JOBS_LOG_PATH := "user://umbra_finetune_jobs.jsonl"
-const UMBRA_FINETUNE_MAX_DURATION_MSEC := 180000
-const UMBRA_HEADLESS_ENV_PATH := ""
 const EDITOR_DISABLE_PLAYER_PROGRESS_PERSISTENCE := false
 const SAVE_DATA_VERSION := 1
 const SAVE_PATH := "user://savegame.json"
@@ -35,7 +29,13 @@ const DEFAULT_UMBRA_PLAYER_METRICS := {
 	"air_time_ratio": 0.0,
 	"close_range_ratio": 0.0,
 	"low_health_ratio": 0.0,
-	"power_usage_frequency": 0.0
+	"power_usage_frequency": 0.0,
+	"dodge_ratio": 0.0,
+	"attack_from_above_ratio": 0.0,
+	"retreat_ratio": 0.0,
+	"power_cyan_ratio": 0.0,
+	"power_red_ratio": 0.0,
+	"power_yellow_ratio": 0.0
 }
 
 const BASE_PLAYER_MAX_HEALTH := 3
@@ -58,10 +58,6 @@ const LEVEL_DEFAULT_POWER := {
 	4: "yellow"
 }
 
-var _finetuning_process_id: int = -1
-var is_finetuning := false
-var _finetune_job_started_msec: int = 0
-var _finetune_last_completed_model_path := ""
 var _onnx_models: Dictionary = {}
 var _onnx_model_file_mtimes: Dictionary = {}
 
@@ -102,7 +98,6 @@ func _make_default_umbra_progress() -> Dictionary:
 func _ready() -> void:
 	_load_player_progress()
 	_load_umbra_progress()
-	_load_finetune_state()
 
 
 func _load_player_progress() -> void:
@@ -351,6 +346,7 @@ func _build_save_payload() -> Dictionary:
 			"y": spawn_position.y
 		},
 		"checkpoint_activated": checkpoint_activated,
+		"cleared_boss_rooms": cleared_boss_rooms.duplicate(true),
 		"player_progress": player_progress.duplicate(true),
 		"run_start_time": NakamaManager._current_run["start_time"],
 		"campaign_stats": NakamaManager._campaign_stats.duplicate(true)
@@ -469,6 +465,7 @@ func _apply_loaded_state(payload: Dictionary) -> void:
 	current_level = int(payload.get("current_level", current_level))
 	current_level_path = str(payload.get("current_level_path", current_level_path))
 	checkpoint_activated = bool(payload.get("checkpoint_activated", checkpoint_activated))
+	cleared_boss_rooms = payload.get("cleared_boss_rooms", {})
 	var spawn_var: Variant = payload.get("spawn_position", {})
 	if typeof(spawn_var) == TYPE_DICTIONARY:
 		var spawn: Dictionary = spawn_var
@@ -575,8 +572,6 @@ func set_umbra_latest_model_path(model_path: String) -> void:
 
 
 func get_umbra_runtime_model_path() -> String:
-	if _finetune_last_completed_model_path != "":
-		return _finetune_last_completed_model_path
 	return str(umbra_progress.get("latest_model_path", ""))
 
 
@@ -654,199 +649,6 @@ func _resolve_onnx_model_path(model_path: String) -> String:
 	return ""
 
 
-func save_metrics_for_finetuning() -> bool:
-	var metrics := get_umbra_player_metrics()
-	if metrics.is_empty():
-		return false
-
-	var file := FileAccess.open(UMBRA_FINETUNE_METRICS_PATH, FileAccess.WRITE)
-	if file == null:
-		push_warning("No se pudieron guardar metricas para fine-tuning")
-		return false
-
-	file.store_string(JSON.stringify(metrics))
-	file.close()
-	return true
-
-
-func start_finetuning(timesteps := 2000) -> bool:
-	if is_finetuning:
-		return false
-
-	if not save_metrics_for_finetuning():
-		return false
-
-	var script_abs := ProjectSettings.globalize_path("res://../finetune_umbra.py")
-	var metrics_abs := ProjectSettings.globalize_path(UMBRA_FINETUNE_METRICS_PATH)
-	var model_zip_abs := _resolve_base_model_zip_absolute()
-	if model_zip_abs.is_empty():
-		push_warning("No hay modelo base .zip disponible para fine-tuning")
-		_append_finetune_job_log({
-			"status": "failed",
-			"reason": "missing_base_model_zip"
-		})
-		return false
-	var onnx_abs := ProjectSettings.globalize_path(UMBRA_FINETUNE_ONNX_PATH)
-	var python_abs := ProjectSettings.globalize_path("res://../venv/Scripts/python.exe")
-	var headless_env_abs := _resolve_headless_env_absolute()
-
-	if not FileAccess.file_exists(script_abs):
-		push_warning("No existe finetune_umbra.py: %s" % script_abs)
-		return false
-
-	if not FileAccess.file_exists(python_abs):
-		push_warning("No existe Python del venv: %s" % python_abs)
-		return false
-
-	var output_dir_abs := onnx_abs.get_base_dir()
-	DirAccess.make_dir_recursive_absolute(output_dir_abs)
-
-	var args := [
-		script_abs,
-		metrics_abs,
-		model_zip_abs,
-		onnx_abs,
-		str(timesteps),
-		headless_env_abs
-	]
-
-	_finetuning_process_id = OS.create_process(python_abs, args)
-	if _finetuning_process_id <= 0:
-		push_warning("No se pudo iniciar fine-tuning en background")
-		_finetuning_process_id = -1
-		_append_finetune_job_log({
-			"status": "failed",
-			"reason": "create_process_failed"
-		})
-		return false
-
-	is_finetuning = true
-	_finetune_job_started_msec = Time.get_ticks_msec()
-	_append_finetune_job_log({
-		"status": "started",
-		"pid": _finetuning_process_id,
-		"timesteps": timesteps,
-		"model_zip": model_zip_abs,
-		"output_onnx": onnx_abs,
-		"headless_env": headless_env_abs
-	})
-	print("Fine-tuning iniciado (PID): ", _finetuning_process_id)
-	return true
-
-
-func check_finetuning_done() -> bool:
-	if not is_finetuning:
-		return true
-
-	if _finetuning_process_id <= 0:
-		is_finetuning = false
-		return true
-
-	if OS.is_process_running(_finetuning_process_id):
-		if (Time.get_ticks_msec() - _finetune_job_started_msec) > UMBRA_FINETUNE_MAX_DURATION_MSEC:
-			push_warning("Fine-tuning supero el tiempo maximo; se mantiene el modelo anterior")
-			_append_finetune_job_log({
-				"status": "timeout",
-				"pid": _finetuning_process_id,
-				"elapsed_msec": Time.get_ticks_msec() - _finetune_job_started_msec
-			})
-			is_finetuning = false
-			_finetuning_process_id = -1
-			return true
-		return false
-
-	is_finetuning = false
-	_finetuning_process_id = -1
-
-	var finetuned_onnx_abs := ProjectSettings.globalize_path(UMBRA_FINETUNE_ONNX_PATH)
-	if _is_valid_onnx_output(finetuned_onnx_abs):
-		_finetune_last_completed_model_path = UMBRA_FINETUNE_ONNX_PATH
-		set_umbra_latest_model_path(_finetune_last_completed_model_path)
-		_save_finetune_state()
-		_append_finetune_job_log({
-			"status": "completed",
-			"output_onnx": finetuned_onnx_abs,
-			"elapsed_msec": Time.get_ticks_msec() - _finetune_job_started_msec
-		})
-		print("Fine-tuning completado. ONNX listo en: ", _finetune_last_completed_model_path)
-	else:
-		_append_finetune_job_log({
-			"status": "failed",
-			"reason": "invalid_onnx_output",
-			"output_onnx": finetuned_onnx_abs
-		})
-		push_warning("Fine-tuning finalizado pero ONNX invalido/no generado. Se mantiene modelo anterior")
-
-	return true
-
-
-func _save_finetune_state() -> void:
-	var file := FileAccess.open(UMBRA_FINETUNE_STATE_PATH, FileAccess.WRITE)
-	if file == null:
-		return
-
-	var payload := {
-		"last_completed_model_path": _finetune_last_completed_model_path
-	}
-	file.store_string(JSON.stringify(payload, "\t"))
-	file.close()
-
-
-func _load_finetune_state() -> void:
-	if not FileAccess.file_exists(UMBRA_FINETUNE_STATE_PATH):
-		return
-
-	var file := FileAccess.open(UMBRA_FINETUNE_STATE_PATH, FileAccess.READ)
-	if file == null:
-		return
-
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	file.close()
-
-	if typeof(parsed) == TYPE_DICTIONARY:
-		_finetune_last_completed_model_path = str(parsed.get("last_completed_model_path", ""))
-
-
-func _is_valid_onnx_output(absolute_path: String) -> bool:
-	if absolute_path.is_empty():
-		return false
-	if not FileAccess.file_exists(absolute_path):
-		return false
-	if not absolute_path.to_lower().ends_with(".onnx"):
-		return false
-
-	var file := FileAccess.open(absolute_path, FileAccess.READ)
-	if file == null:
-		return false
-
-	var length := file.get_length()
-	file.close()
-	return length > 256
-
-
-func _resolve_base_model_zip_absolute() -> String:
-	var primary_abs := ProjectSettings.globalize_path(UMBRA_BASE_MODEL_ZIP_PATH)
-	if FileAccess.file_exists(primary_abs):
-		return primary_abs
-
-	var latest := str(umbra_progress.get("latest_model_path", ""))
-	if latest.ends_with(".zip"):
-		var latest_abs := ProjectSettings.globalize_path(latest)
-		if FileAccess.file_exists(latest_abs):
-			return latest_abs
-
-	return ""
-
-
-func _resolve_headless_env_absolute() -> String:
-	if UMBRA_HEADLESS_ENV_PATH.is_empty():
-		return ""
-
-	if UMBRA_HEADLESS_ENV_PATH.begins_with("res://") or UMBRA_HEADLESS_ENV_PATH.begins_with("user://"):
-		return ProjectSettings.globalize_path(UMBRA_HEADLESS_ENV_PATH)
-
-	return UMBRA_HEADLESS_ENV_PATH
-
 
 func get_next_level_scene() -> String:
 	# Return the scene path for the next level in LEVEL_ORDER based on current_level
@@ -854,17 +656,6 @@ func get_next_level_scene() -> String:
 	if next_index >= 0 and next_index < LEVEL_ORDER.size():
 		return LEVEL_ORDER[next_index]
 	return ""
-
-
-func _append_finetune_job_log(payload: Dictionary) -> void:
-	var file := FileAccess.open(UMBRA_FINETUNE_JOBS_LOG_PATH, FileAccess.WRITE_READ)
-	if file == null:
-		return
-
-	file.seek_end()
-	payload["timestamp_unix"] = Time.get_unix_time_from_system()
-	file.store_line(JSON.stringify(payload))
-	file.close()
 
 
 func request_level_change(next_scene: String) -> void:
@@ -935,7 +726,8 @@ func register_umbra_encounter(encounter_data: Dictionary) -> void:
 	var blended: Dictionary = previous_metrics.duplicate(true)
 
 	# Blend metrics to preserve long-term tendencies while adapting each encounter.
-	for metric_key in previous_metrics.keys():
+	var all_keys: Array = previous_metrics.keys() + incoming_metrics.keys()
+	for metric_key in all_keys:
 		var previous_value := float(previous_metrics.get(metric_key, 0.0))
 		var incoming_value := float(incoming_metrics.get(metric_key, previous_value))
 		blended[metric_key] = lerp(previous_value, incoming_value, 0.35)
