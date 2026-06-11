@@ -9,6 +9,10 @@ const DASH_SPEED = 280.0
 const DASH_DURATION = 0.20
 const ACCELERATION = 900.0
 const FRICTION = 650.0
+const FOOTSTEP_COOLDOWN := 0.45
+const FOOTSTEP_SOUND := preload("res://music/enemies/bosses/umbra/umbra_step.mp3")
+const DASH_SOUND := preload("res://music/enemies/bosses/umbra/umbra_dash.mp3")
+const JUMP_SOUND := preload("res://music/enemies/bosses/umbra/umbra_jump.mp3")
 
 # Constantes de combate
 const DAMAGE = 1
@@ -45,6 +49,8 @@ var ai_should_dash = false
 var ai_should_use_power = false
 var is_active = false
 
+var _footstep_timer := 0.0
+var _footstep_player: AudioStreamPlayer
 var _last_action_received_time := 0.0
 var _has_received_valid_action := false
 var _indexed_action_layout_warned := false
@@ -155,6 +161,10 @@ var _recent_raw_moves: Array[int] = []
 func _ready():
 	add_to_group("umbra_boss")
 	spawn_position = global_position
+	_footstep_player = AudioStreamPlayer.new()
+	_footstep_player.stream = FOOTSTEP_SOUND
+	_footstep_player.bus = &"EFX"
+	add_child(_footstep_player)
 	combat.setup()
 	health.setup()
 	color_manager.setup()
@@ -338,6 +348,7 @@ func _physics_process(delta):
 	_handle_jump(ai_should_jump)
 	_handle_dash(delta, ai_should_dash)
 	_handle_attack(delta)
+	_handle_footstep(delta)
 	_apply_pattern_overrides()
 	_handle_power()
 	_collect_runtime_player_metrics()
@@ -462,6 +473,7 @@ func _handle_jump(jump_requested: bool):
 		velocity.y = JUMP_VELOCITY
 		can_double_jump = true
 		_jump_cooldown_timer = _jump_cooldown_runtime
+		_play_jump_sound()
 		if debug_mobility_logs:
 			print("Umbra JUMP start")
 		return
@@ -470,6 +482,7 @@ func _handle_jump(jump_requested: bool):
 		velocity.y = JUMP_VELOCITY
 		can_double_jump = false
 		_double_jump_cooldown_timer = _double_jump_cooldown_runtime
+		_play_jump_sound()
 		if debug_mobility_logs:
 			print("Umbra DOUBLE JUMP start")
 
@@ -487,6 +500,12 @@ func _handle_dash(delta, dash_requested: bool):
 		if is_attacking:
 			_cancel_attack_state()
 		is_dashing = true
+		var dash_sfx := AudioStreamPlayer.new()
+		dash_sfx.stream = DASH_SOUND
+		dash_sfx.bus = &"EFX"
+		dash_sfx.finished.connect(dash_sfx.queue_free)
+		add_child(dash_sfx)
+		dash_sfx.play()
 		dash_timer = DASH_DURATION
 		dash_cooldown_timer = _dash_cooldown_runtime
 		if not is_on_floor():
@@ -508,6 +527,20 @@ func _handle_dash(delta, dash_requested: bool):
 
 	if is_on_floor():
 		air_dash_used = false
+
+func _play_jump_sound() -> void:
+	var sfx := AudioStreamPlayer.new()
+	sfx.stream = JUMP_SOUND
+	sfx.bus = &"EFX"
+	sfx.finished.connect(sfx.queue_free)
+	add_child(sfx)
+	sfx.play()
+
+func _handle_footstep(delta: float) -> void:
+	_footstep_timer -= delta
+	if _footstep_timer <= 0.0 and is_on_floor() and absf(velocity.x) > 0.1 and not is_dashing:
+		_footstep_player.play()
+		_footstep_timer = FOOTSTEP_COOLDOWN
 
 func _handle_attack(delta):
 	combat.process(delta)
