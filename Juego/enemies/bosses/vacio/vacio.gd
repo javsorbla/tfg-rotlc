@@ -580,6 +580,7 @@ func _start_ending_sequence() -> void:
 	_enter_state(State.DEAD)
 
 func _mostrar_texto_final() -> void:
+	NakamaManager.add_enemy_kill()
 	NakamaManager.complete_run(true)
 	var message_manager_scene = load("res://scenes/tutorial_message_manager.tscn")
 	if message_manager_scene == null:
@@ -656,6 +657,7 @@ func take_damage(amount: int) -> void:
 		return
 	if current_state in [State.VANISH, State.APPEAR, State.AOE] and not normal_hurtbox.monitoring:
 		return
+	NakamaManager.add_damage_dealt(amount)
 	current_health -= amount
 	hits_received += 1
 	if hits_received >= HITS_UNTIL_ORB:
