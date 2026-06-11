@@ -4,7 +4,7 @@ const UMBRA_SHADER := preload("res://enemies/bosses/umbra/Umbra.gdshader")
 
 const TINT_CYAN_PRIMARY := Color(0.10, 0.37, 0.55, 1.0)
 const TINT_RED_PRIMARY := Color(0.75, 0.08, 0.10, 1.0)
-const TINT_YELLOW_PRIMARY := Color(0.85, 0.60, 0.15, 1.0)
+const TINT_YELLOW_PRIMARY := Color(0.95, 0.85, 0.15, 1.0)
 
 @onready var umbra = get_parent()
 @onready var sprite: AnimatedSprite2D = umbra.get_node("AnimatedSprite2D")

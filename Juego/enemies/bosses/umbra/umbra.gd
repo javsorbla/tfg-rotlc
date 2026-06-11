@@ -124,10 +124,10 @@ const PRISM_CORE_SCENE := preload("res://objects/NucleoDePrisma.tscn")
 @export var debug_darkness_logs := false
 @export var power_duration_cyan := 3.8
 @export var power_duration_red := 3.2
-@export var power_duration_yellow := 2.4
+@export var power_duration_yellow := 1.2
 @export var power_cooldown_cyan := 4.2
 @export var power_cooldown_red := 5.5
-@export var power_cooldown_yellow := 7.5
+@export var power_cooldown_yellow := 12.0
 @export var darkness_requires_power := false
 @export var darkness_available_in_all_powers := true
 @export var darkness_try_interval := 0.25
@@ -991,7 +991,7 @@ func set_ai_action(action):
 		if raw_power > 0 and raw_power < power_names.size():
 			var desired: String = power_names[raw_power]
 			if desired == current_power:
-				if not _power_active:
+				if not _power_active and _power_cooldown_timer <= 0.0:
 					_power_active = true
 					_power_timer = color_manager._get_power_duration(desired)
 				ai_should_use_power = true

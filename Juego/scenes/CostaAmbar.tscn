@@ -2099,6 +2099,8 @@ position = Vector2(-64, -14)
 position = Vector2(5993, 1004)
 max_health = 15
 despawn_on_death = true
+power_duration_yellow = 1.5
+power_cooldown_yellow = 8.0
 debug_model_indicator = false
 
 [node name="UmbraNavigation" parent="." instance=ExtResource("36_ld6a2")]
