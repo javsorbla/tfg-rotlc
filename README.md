@@ -48,7 +48,7 @@ pip install -r requirements.txt
 
 ## Entrenar a Umbra (RL)
 
-El entrenamiento se hace **desde el editor de Godot** (la escena `EntrenamientoUmbra.tscn` debe estar abierta) mientras Python lanza `stable_baselines3_example.py`:
+El entrenamiento se hace **desde el editor de Godot** (la escena `EntrenamientoUmbra.tscn` debe estar abierta) mientras Python lanza `stable_baselines3_example.py`. Es importante que no exista ningún modelo onnx en la carpeta Juego/:
 
 ```powershell
 .venv\Scripts\python.exe stable_baselines3_example.py `
