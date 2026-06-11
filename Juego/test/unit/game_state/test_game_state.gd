@@ -196,5 +196,6 @@ func test_boss_crystal_collection() -> void:
 	assert_bool(duplicate).is_false()
 
 
-func test_is_valid_onnx_output_rejects_empty() -> void:
-	assert_bool(_game_state._is_valid_onnx_output("")).is_false()
+func test_make_boss_room_key_format() -> void:
+	var key = _game_state.make_boss_room_key("res://scenes/CamposDeZafiro.tscn", "/root/Entorno/ZonaJefe")
+	assert_str(key).is_equal("res://scenes/CamposDeZafiro.tscn::/root/Entorno/ZonaJefe")

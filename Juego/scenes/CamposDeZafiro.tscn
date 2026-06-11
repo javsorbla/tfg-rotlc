@@ -545,7 +545,7 @@ size = Vector2(302, 38)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ctank"]
 size = Vector2(1993.5, 30)
 
-[sub_resource type="NavigationPolygon" id="NavigationPolygon_s6wo8"]
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_aio4f"]
 vertices = PackedVector2Array(889.828, 1.96875, 34, 0.0234375, 34, -167, 887.156, -167)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
 outlines = Array[PackedVector2Array]([PackedVector2Array(24, 10, 900, 12, 897, -177, 24, -177)])
@@ -861,7 +861,7 @@ position = Vector2(0.5, 2.5)
 position = Vector2(6850, -731)
 
 [node name="NavigationRegion2D" parent="UmbraNavigation" index="0"]
-navigation_polygon = SubResource("NavigationPolygon_s6wo8")
+navigation_polygon = SubResource("NavigationPolygon_aio4f")
 
 [node name="OrbeDeLuz" parent="." instance=ExtResource("14_g5mn7")]
 position = Vector2(4865, -285)
