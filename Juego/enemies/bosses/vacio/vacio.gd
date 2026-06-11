@@ -580,6 +580,7 @@ func _start_ending_sequence() -> void:
 	_enter_state(State.DEAD)
 
 func _mostrar_texto_final() -> void:
+	NakamaManager.complete_run(true)
 	var message_manager_scene = load("res://scenes/tutorial_message_manager.tscn")
 	if message_manager_scene == null:
 		get_tree().call_deferred("change_scene_to_file", "res://ui/menus/main_menu/main_menu.tscn")
