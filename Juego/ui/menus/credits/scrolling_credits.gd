@@ -4,6 +4,8 @@ extends Control
 signal end_reached
 signal request_close
 
+const CREDITS_MUSIC := preload("res://music/menus/credits.mp3")
+
 @export var auto_scroll_speed: float = 60.0
 @export var input_scroll_speed : float = 400.0
 @export var scroll_restart_delay : float = 1.5
@@ -104,9 +106,9 @@ func _get_main_menu_scene_path() -> String:
 
 
 func _trigger_close_request() -> void:
-	if ProjectMusicController.has_method("stop"):
-		ProjectMusicController.stop()
 	if get_signal_connection_list("request_close").is_empty():
+		if ProjectMusicController.has_method("stop"):
+			ProjectMusicController.stop()
 		var menu_path := _get_main_menu_scene_path()
 		if not menu_path.is_empty():
 			SceneLoader.load_scene(menu_path)
@@ -141,6 +143,22 @@ func _ready() -> void:
 	scroll_paused = false
 	_update_exit_hint_text()
 	_hide_scrollbar()
+	_start_credits_music_if_standalone()
+
+
+func _start_credits_music_if_standalone() -> void:
+	if not ProjectMusicController.has_method("play_stream") and not ProjectMusicController.has_method("stop"):
+		return
+	var p = get_parent()
+	while p:
+		if p is MainMenu:
+			return
+		p = p.get_parent()
+	ProjectMusicController.fade_out_duration = 1.0
+	ProjectMusicController.fade_in_duration = 3.0
+	ProjectMusicController.play_stream(CREDITS_MUSIC)
+	ProjectMusicController.fade_out_duration = 0.0
+	ProjectMusicController.fade_in_duration = 0.0
 
 
 func _on_end_reached() -> void:

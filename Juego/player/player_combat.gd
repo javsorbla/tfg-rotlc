@@ -4,10 +4,12 @@ const ATTACK_DURATION = 0.3
 const HITBOX_OFFSET_X = 14
 const HITBOX_OFFSET_Y = 22
 const HITSTOP_DURATION = 0.05
+const PUNCH_SOUND := preload("res://music/player/punch.mp3")
 
 var is_attacking = false
 var attack_timer = 0.0
 var hitstop_timer = 0.0
+var _punch_player: AudioStreamPlayer
 
 @onready var player = get_parent()
 @onready var hitbox = get_parent().get_node("AttackHitbox")
@@ -15,6 +17,11 @@ var hitstop_timer = 0.0
 @onready var hit_particles_scene = preload("res://scenes/effects/HitParticles.tscn")
 
 func _ready():
+	_punch_player = AudioStreamPlayer.new()
+	_punch_player.stream = PUNCH_SOUND
+	_punch_player.bus = &"EFX"
+	_punch_player.volume_db = -6.0
+	add_child(_punch_player)
 	hitbox.monitoring = false
 	hitbox.monitorable = false
 	hitbox.visible = false
@@ -40,6 +47,7 @@ func _handle_attack(delta):
 		hitbox.monitoring = true
 		hitbox.monitorable = true
 		hitbox.visible = true
+		_punch_player.play()
 		if Input.is_action_pressed("aim_up"):
 			hitbox.position = Vector2(0, -HITBOX_OFFSET_Y)
 		elif Input.is_action_pressed("aim_down"):

@@ -1,6 +1,9 @@
 extends Node
 
 const DARKNESS_ZONE_SCRIPT := preload("res://enemies/bosses/umbra/darkness_zone.gd")
+const DARK_IMPACT_SOUND := preload("res://music/enemies/bosses/umbra/dark_magic_impact.mp3")
+const SWORD_SLASH_1 := preload("res://music/enemies/bosses/umbra/sword_sound_slash1.mp3")
+const SWORD_SLASH_2 := preload("res://music/enemies/bosses/umbra/sword_sound_slash2.mp3")
 
 @onready var umbra = get_parent()
 @onready var attack_hitbox: Area2D = umbra.get_node("AttackHitbox")
@@ -65,6 +68,12 @@ func process(delta: float) -> void:
 		attack_hitbox.monitoring = true
 		attack_hitbox.monitorable = true
 		attack_hitbox.position = Vector2(14 * umbra.last_direction, 0)
+		var slash_sfx := AudioStreamPlayer.new()
+		slash_sfx.stream = SWORD_SLASH_1 if randi() % 2 == 0 else SWORD_SLASH_2
+		slash_sfx.bus = &"EFX"
+		slash_sfx.finished.connect(slash_sfx.queue_free)
+		umbra.add_child(slash_sfx)
+		slash_sfx.play()
 		if umbra.debug_combat_logs:
 			print("Umbra ATTACK start | ai=", umbra.ai_should_attack, " auto=", auto_attack, " dir=", umbra.last_direction)
 
@@ -118,6 +127,12 @@ func _try_cast_darkness_zone() -> void:
 
 
 func _spawn_darkness_zone(spawn_pos: Vector2) -> void:
+	var sfx := AudioStreamPlayer.new()
+	sfx.stream = DARK_IMPACT_SOUND
+	sfx.bus = &"EFX"
+	sfx.finished.connect(sfx.queue_free)
+	umbra.add_child(sfx)
+	sfx.play()
 	var player: Node2D = umbra.get_tree().get_first_node_in_group("player") as Node2D
 	var spawn_parent: Node = null
 	if player != null and player.get_parent() != null:

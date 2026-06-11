@@ -5,6 +5,8 @@ signal died(owner: Node)
 const BASE_MAX_HEALTH = 3
 const INVINCIBILITY_DURATION = 1.0
 const FLASH_DURATION = 0.1
+const HURT_SOUND := preload("res://music/player/hurt.mp3")
+const HEALING_SOUND := preload("res://music/player/healing.mp3")
 
 var MAX_HEALTH = BASE_MAX_HEALTH
 var current_health = MAX_HEALTH
@@ -13,6 +15,8 @@ var invincibility_timer = 0.0
 var flash_timer = 0.0
 var death_callback: Callable
 var _is_dead := false
+var _hurt_player: AudioStreamPlayer
+var _heal_player: AudioStreamPlayer
 @export var auto_reset: bool = true
 
 @onready var player = get_parent()
@@ -23,6 +27,14 @@ var _is_dead := false
 
 
 func _ready():
+	_hurt_player = AudioStreamPlayer.new()
+	_hurt_player.stream = HURT_SOUND
+	_hurt_player.bus = &"EFX"
+	add_child(_hurt_player)
+	_heal_player = AudioStreamPlayer.new()
+	_heal_player.stream = HEALING_SOUND
+	_heal_player.bus = &"EFX"
+	add_child(_heal_player)
 	hurtbox.monitorable = true
 	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
@@ -44,6 +56,7 @@ func process(delta):
 func take_damage(amount: int, bypass_shield: bool = false):
 	if _is_dead or (player.is_shielding and not bypass_shield) or is_invincible:
 		return
+	_hurt_player.play()
 	current_health -= amount
 	NakamaManager.add_damage_taken(amount)
 	Hud.update_hearts(current_health, MAX_HEALTH)
@@ -136,6 +149,7 @@ func _on_hurtbox_body_entered(body: Node2D) -> void:
 		take_damage(1)
 		
 func heal(amount: int):
+	_heal_player.play()
 	current_health = min(current_health + amount, MAX_HEALTH)
 	Hud.update_hearts(current_health, MAX_HEALTH)
 	if heal_particles:
@@ -143,6 +157,7 @@ func heal(amount: int):
 
 
 func heal_to_full() -> void:
+	_heal_player.play()
 	current_health = MAX_HEALTH
 	Hud.update_hearts(current_health, MAX_HEALTH)
 	if heal_particles:
