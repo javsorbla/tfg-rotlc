@@ -89,7 +89,21 @@ El modelo se guarda como `.zip` en `logs/sb3/` y los checkpoints en `logs/sb3/*_
   --export_only --onnx_export_path=Juego/umbra.onnx
 ```
 
-Después de exportar, situar `umbra.onnx` en `Juego/umbra.onnx` (Sync node → `onnx_model_path`).
+Después de exportar, situar `umbra.onnx` (y `umbra.onnx.data` si se genera) en `Juego/umbra.onnx` (Sync node → `onnx_model_path`).
+
+### Hacer el ONNX autocontenido (antes de exportar)
+
+El modelo ONNX se guarda con **datos externos** (`umbra.onnx.data`). Esto falla al exportar porque ONNX Runtime busca el `.data` en el sistema de archivos real, no dentro del `.pck`.
+
+Para evitarlo, fusiona el `.data` dentro del `.onnx` con el script `merge_onnx.py`:
+
+```powershell
+.venv\Scripts\python.exe merge_onnx.py
+```
+
+Esto sobreescribe `Juego/umbra.onnx` como un solo archivo autocontenido y elimina `Juego/umbra.onnx.data`.
+
+> **Ejecútalo cada vez que exportes un ONNX nuevo**, justo antes de exportar el juego.
 
 ---
 
@@ -131,6 +145,11 @@ Para cambiarla, editar `Juego/leaderboard/NakamaManager.gd` o crear `user://netw
   "port": 7350
 }
 ```
+
+> **Importante**: Antes de levantar el contenedor, cambiar las contraseñas por defecto en:
+> - `nakama-server/.env` → `POSTGRES_PASSWORD`
+> - `nakama-server/data/local.yml` → `database.address`
+
 ---
 
 ## Tests

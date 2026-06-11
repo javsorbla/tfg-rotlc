@@ -3,3 +3,4 @@ logs/
 backup/
 .cookie
 nakama-server/db_data/
+nakama-server/.env

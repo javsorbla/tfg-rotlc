@@ -12,11 +12,12 @@ config_version=5
 
 config/name="Rise Of The Lost Colors"
 run/main_scene="res://ui/menus/main_menu/main_menu.tscn"
+config/use_custom_user_dir=true
 config/features=PackedStringArray("4.3", "C#", "Forward Plus")
 boot_splash/bg_color=Color(0.194317, 0.182859, 0.196797, 1)
 boot_splash/image="res://themes/icon.png"
 boot_splash/fullsize=false
-config/icon="res://icon.svg"
+config/icon="res://themes/icon.png"
 boot_splash/minimum_display_time=4000
 
 [autoload]
