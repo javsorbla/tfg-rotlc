@@ -130,7 +130,7 @@ visible = false
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 text = "¿Volver al menú principal?"
-title = "Confirmar Salida"
+title = "Volver al Menu Principal"
 
 [node name="ExitConfirmation" parent="." instance=ExtResource("4_e5wrg")]
 unique_name_in_owner = true

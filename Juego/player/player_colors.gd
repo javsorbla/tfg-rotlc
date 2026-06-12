@@ -126,14 +126,17 @@ func change_state(new_state):
 		active_power = "cyan"
 		power_timer = POWER_DURATIONS["cyan"]
 		power_active = true
+		NakamaManager.add_skill_used("cyan")
 	elif new_state == red_state:
 		active_power = "red"
 		power_timer = POWER_DURATIONS["red"]
 		power_active = true
+		NakamaManager.add_skill_used("red")
 	elif new_state == yellow_state:
 		active_power = "yellow"
 		power_timer = POWER_DURATIONS["yellow"]
 		power_active = true
+		NakamaManager.add_skill_used("yellow")
 	else:
 		active_power = ""
 		power_active = false
@@ -164,7 +167,20 @@ func change_state(new_state):
 	
 	
 func unlock_power(color: String):
+	if GameState.has_method("unlock_power"):
+		GameState.unlock_power(color)
+		apply_unlocked_powers(GameState.get_unlocked_powers())
+		return
 	unlocked[color] = true
+	Hud.update_powers(active_power, unlocked)
+
+
+func apply_unlocked_powers(saved_unlocked: Dictionary) -> void:
+	if typeof(saved_unlocked) != TYPE_DICTIONARY:
+		return
+	for key in unlocked.keys():
+		if saved_unlocked.has(key):
+			unlocked[key] = bool(saved_unlocked[key])
 	Hud.update_powers(active_power, unlocked)
 
 

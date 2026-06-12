@@ -2,10 +2,10 @@
 extends ConfirmationOverlaidWindow
 ## Scene to confirm a new input for an action name.
 
-const LISTENING_TEXT : String = "Listening for input..."
-const FOCUS_HERE_TEXT : String = "Focus here to assign inputs."
-const CONFIRM_INPUT_TEXT : String = "Press again to confirm..."
-const NO_INPUT_TEXT : String = "None"
+const LISTENING_TEXT : String = "Escuchando entrada..."
+const FOCUS_HERE_TEXT : String = "Enfócate aquí para asignar entradas."
+const CONFIRM_INPUT_TEXT : String = "Pulsa otra vez para confirmar..."
+const NO_INPUT_TEXT : String = "Ninguna"
 
 enum InputConfirmation {
 	SINGLE,
@@ -106,7 +106,7 @@ func _on_visibility_changed() -> void:
 	super._on_visibility_changed()
 	if visible:
 		if not text.strip_edges().is_empty():
-			%InputLabel.text = text
+			%InputLabel.text = "Tecla actual: %s\nPulsa una tecla/botón para cambiarla" % text
 		else:
-			%InputLabel.text = NO_INPUT_TEXT
+			%InputLabel.text = "Pulsa una tecla/botón para asignar"
 		%InputTextEdit.grab_focus()

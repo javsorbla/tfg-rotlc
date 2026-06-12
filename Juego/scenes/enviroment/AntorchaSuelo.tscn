@@ -1,0 +1,64 @@
+[gd_scene load_steps=10 format=3 uid="uid://cnv0hj3pr1r4p"]
+
+[ext_resource type="Script" path="res://scenes/enviroment/Antorcha.gd" id="1_a8bll"]
+[ext_resource type="Texture2D" uid="uid://fjl0j3lfp36g" path="res://assets/environment/antorcha_suelo_sheet.png" id="2_2pxqx"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8ygjo"]
+atlas = ExtResource("2_2pxqx")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q442l"]
+atlas = ExtResource("2_2pxqx")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5nb3h"]
+atlas = ExtResource("2_2pxqx")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7bsqq"]
+atlas = ExtResource("2_2pxqx")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_wcjdp"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8ygjo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q442l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5nb3h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7bsqq")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="Gradient" id="Gradient_1sy6n"]
+offsets = PackedFloat32Array(0, 0.448052)
+colors = PackedColorArray(0.719434, 0.49495, 0.259124, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_y64nb"]
+gradient = SubResource("Gradient_1sy6n")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.495413, 0.477064)
+
+[node name="AntorchaSuelo" type="StaticBody2D"]
+script = ExtResource("1_a8bll")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_wcjdp")
+animation = &"idle"
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.568627, 0.309804, 0.862745, 1)
+energy = 2.0
+texture = SubResource("GradientTexture2D_y64nb")
+texture_scale = 0.5

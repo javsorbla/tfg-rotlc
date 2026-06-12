@@ -3,8 +3,8 @@ extends Node2D
 enum State { PATROL, PAUSE, DIVE, STUNNED, WEAK }
 enum Phase { ONE, TWO }
 
-const MAX_HEALTH = 50
-const PHASE_TWO_THRESHOLD = 20
+const MAX_HEALTH = 60
+const PHASE_TWO_THRESHOLD = 30
 
 const BOSS_HALF_WIDTH = 40.0
 const FLOAT_AMPLITUDE = 100.0
@@ -23,13 +23,13 @@ const DIVE_SLIDE_SPEED = 200.0
 const DIVE_COOLDOWN = 10.0
 const RETURN_SPEED = 250.0
 
-const WING_MAX_HEALTH: int = 10
+const WING_MAX_HEALTH: int = 14
 const WING_REGEN_DELAY: float = 1.0
-const WEAK_DURATION = 3.0
+const WEAK_DURATION = 2.75
 const WEAK_WALK_SPEED: float = 120.0
-const WEAK_MAX_DAMAGE: int = 10
+const WEAK_MAX_DAMAGE: int = 8
 
-const STUN_DURATION: float = 1.5
+const STUN_DURATION: float = 1.0
 const STUN_FALL_SPEED: float = 220.0
 
 const RAY_COOLDOWN = 15.0
@@ -46,6 +46,12 @@ const STORM_COUNT: int = 5
 const STORM_INTERVAL: float = 0.5
 
 const HIT_COOLDOWN: float = 0.1
+
+const BASE_LIGHT_ENERGY: float = 3.0
+const HIGH_LIGHT_ENERGY: float = 6.0
+const WEAK_LIGHT_ENERGY: float = 1.0
+const LIGHT_FLICKER_AMPLITUDE: float = 0.25
+const LIGHT_FLICKER_SPEED: float = 0.02
 
 var current_health = MAX_HEALTH
 var current_phase = Phase.ONE
@@ -105,12 +111,17 @@ var room_right_limit = 0.0
 var room_top_limit = 0.0
 var room_bottom_limit = 0.0
 
+var is_dying: bool = false
+var dying_anim_done: bool = false
+
 var player = null
 var shapes = []
 var original_pos_x = []
 var original_rot = []
 
 var hit_cooldown: float = 0.0
+var sfx_aleteo: AudioStreamPlayer
+var sfx_rugido: AudioStreamPlayer
 
 @onready var sprite = $AnimatedSprite2D
 @onready var wing_hurtbox_1 = $WingHurtbox1
@@ -130,6 +141,35 @@ var hit_cooldown: float = 0.0
 @onready var ray_scene = preload("res://enemies/bosses/tempestad_dorada/Rayo.tscn")
 @onready var hurricane_scene = preload("res://enemies/bosses/tempestad_dorada/Huracan.tscn")
 @onready var storm_scene = preload("res://enemies/bosses/tempestad_dorada/Tormenta.tscn")
+
+var luz: PointLight2D
+
+const CRYSTAL_SCENE: PackedScene = preload("res://objects/Cristal.tscn")
+
+func _spawn_final_boss_crystal(variant_idx: int = 2, offset := Vector2(0, -34)) -> void:
+	if CRYSTAL_SCENE == null:
+		return
+	# no spawnear si ya se recogio en este nivel
+	if GameState.has_boss_crystal(GameState.current_level, variant_idx):
+		return
+	# evitar en modo sync/control remoto
+	var sync_node = get_tree().get_first_node_in_group("sync_node")
+	if sync_node != null and int(sync_node.control_mode) == 1:
+		return
+	# evitar duplicados en escena
+	if get_tree().get_nodes_in_group("boss_crystal").size() > 0:
+		return
+
+	var scene_root = get_tree().root.get_child(0)
+	if scene_root == null:
+		return
+
+	var crystal = CRYSTAL_SCENE.instantiate()
+	crystal.global_position = global_position + offset
+	crystal.visual_variant = variant_idx
+	crystal.level_id = GameState.current_level
+	crystal.add_to_group("boss_crystal")
+	scene_root.call_deferred("add_child", crystal)
 
 func _set_dive_shapes(diving: bool):
 	body_patrol.set_deferred("disabled", diving)
@@ -165,6 +205,96 @@ func _ready():
 	wing_hurtbox_2.area_entered.connect(_on_wing2_area_entered)
 	
 	_set_dive_shapes(false)
+	sprite.animation_finished.connect(_on_sprite_animation_finished)
+
+	sfx_aleteo = AudioStreamPlayer.new()
+	sfx_aleteo.name = "AleteoSfx"
+	sfx_aleteo.stream = load("res://music/enemies/bosses/tempestad_dorada/aleteo.ogg")
+	sfx_aleteo.bus = &"EFX"
+	sfx_aleteo.volume_db = 8.0
+	add_child(sfx_aleteo)
+
+	sfx_rugido = AudioStreamPlayer.new()
+	sfx_rugido.name = "RugidoSfx"
+	sfx_rugido.stream = load("res://music/enemies/bosses/tempestad_dorada/rugido_tempestad.ogg")
+	sfx_rugido.bus = &"EFX"
+	add_child(sfx_rugido)
+
+	luz = PointLight2D.new()
+	add_child(luz)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+	luz.color = Color(0.0, 0.6, 1.0)
+	luz.z_index = 100
+	
+	var imagen = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx = (x - 32.0) / 32.0
+			var dy = (y - 32.0) / 32.0
+			var dist = sqrt(dx*dx + dy*dy)
+			var alpha = clamp(dist, 0.0, 1.0)
+			alpha = lerp(0.3, 0.7, alpha)
+			if dist > 0.9:
+				alpha *= clamp(1.0 - (dist - 0.9) / 0.1, 0.0, 1.0)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.energy = _get_light_energy()
+	_actualizar_luz()
+
+func _actualizar_luz():
+
+	match current_state:
+		State.PATROL, State.PAUSE:
+			if ray_winding_up or sprite.animation in ["charging", "charging_idle"]:
+				luz.texture_scale = 2.5 
+			else:
+				luz.texture_scale = 2.0 
+
+	if luz:
+		luz.energy = _get_light_energy()
+
+
+func _get_light_energy() -> float:
+	if is_dying or sprite.animation in ["dead", "dead_attack"]:
+		return 0.0
+	if current_state == State.WEAK or sprite.animation == "weak":
+		return WEAK_LIGHT_ENERGY
+	if current_state == State.DIVE or sprite.animation in ["charging", "charging_idle"]:
+		return HIGH_LIGHT_ENERGY
+	return BASE_LIGHT_ENERGY
+
+func _process(_delta):
+	if is_dying:
+		luz.energy = move_toward(luz.energy, 0.0, 0.05)
+		return
+	
+	if sfx_aleteo:
+		var anim = sprite.animation
+		if is_active and anim == "fly":
+			sfx_aleteo.pitch_scale = sprite.speed_scale
+			if not sfx_aleteo.playing:
+				sfx_aleteo.play()
+		elif sfx_aleteo.playing:
+			sfx_aleteo.stop()
+		
+	_actualizar_luz()
+	if luz:
+		var flicker = sin(Time.get_ticks_msec() * LIGHT_FLICKER_SPEED) * LIGHT_FLICKER_AMPLITUDE
+		luz.energy = maxf(0.0, _get_light_energy() + flicker)
+
+func _on_sprite_animation_finished():
+	match sprite.animation:
+		"attack":
+			if current_state == State.DIVE:
+				sprite.play("attack_idle")
+		"charging":
+			if ray_winding_up:
+				sprite.play("charging_idle")
+		"stun":
+			if current_state == State.STUNNED:
+				sprite.play("stun_idle")
+		"dead", "dead_attack":
+			dying_anim_done = true
 
 
 func _get_closest_boss_room() -> Node:
@@ -185,6 +315,14 @@ func _get_closest_boss_room() -> Node:
 	return closest_room
 
 func _physics_process(delta):
+	if is_dying:
+		position.y += STUN_FALL_SPEED * delta
+		if position.y >= room_bottom_limit - 40.0:
+			position.y = room_bottom_limit - 40.0
+			if dying_anim_done:
+				queue_free()
+		return
+	
 	if not is_active:
 		return
 
@@ -300,11 +438,10 @@ func _pause_state(delta):
 
 	if ray_instance:
 		ray_duration_timer -= delta
-		_update_ray()
 		if ray_duration_timer <= 0.0:
 			ray_instance.queue_free()
 			ray_instance = null
-			sprite.play("idle")
+			sprite.play("fly")
 			current_state = State.PATROL
 		return
 		
@@ -315,7 +452,8 @@ func _pause_state(delta):
 		position.y = clamp(position.y, room_top_limit, room_bottom_limit)
 		if hurricane_duration_timer <= 0.0:
 			hurricane_active = false
-			sprite.play("idle")
+			sprite.speed_scale = 1.0
+			sprite.play("fly")
 			current_state = State.PATROL
 		return
 
@@ -329,6 +467,8 @@ func _pause_state(delta):
 			hurricane_duration_timer = HURRICANE_DURATION
 			hurricane_timer = HURRICANE_COOLDOWN
 			_start_hurricane()
+			sprite.speed_scale = 1.5
+			sprite.play("fly")
 		elif ray_cooldown_timer <= 0.0:
 			ray_end = player.global_position
 			ray_winding_up = true
@@ -337,6 +477,7 @@ func _pause_state(delta):
 			sprite.play("charging")
 		else:
 			current_state = State.PATROL
+
 
 func _dive_state(delta):
 	if dive_winding_up:
@@ -366,7 +507,7 @@ func _dive_state(delta):
 			body_hitbox.monitorable = true
 			DAMAGE = 1
 			returning = true
-			sprite.play("idle")
+			sprite.play("fly")
 			_set_dive_shapes(false)
 			current_state = State.PATROL
 		return
@@ -396,6 +537,9 @@ func _can_dive() -> bool:
 	return true
 
 func _start_dive():
+	if sfx_rugido:
+		sfx_rugido.volume_db = 0.0
+		sfx_rugido.play()
 
 	current_state = State.DIVE
 	dive_winding_up = true
@@ -408,6 +552,13 @@ func _start_dive():
 func _shoot_ray():
 	if not player:
 		return
+	var sfx = AudioStreamPlayer.new()
+	sfx.stream = load("res://music/enemies/bosses/tempestad_dorada/rayo_tempestad.ogg")
+	sfx.bus = &"Master"
+	sfx.volume_db = 0.0
+	sfx.finished.connect(sfx.queue_free)
+	player.add_child(sfx)
+	sfx.play()
 	ray_instance = ray_scene.instantiate()
 	ray_instance.active = true
 	get_parent().add_child(ray_instance)
@@ -417,14 +568,16 @@ func _shoot_ray():
 	if inicio:
 		inicio.visible = false
 		if inicio.sprite_frames:
-			var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+			var tex = inicio.sprite_frames.get_frame_texture("rayo", 0)
 			if tex:
 				inicio.offset.x = tex.get_width() / 2.0
 
 	ray_duration_timer = RAY_DURATION
-	_update_ray()
+	_build_ray_tiles()
+	if ray_instance.has_method("update_hitbox"):
+		ray_instance.update_hitbox(ray_spawn.global_position, ray_end)
 
-func _update_ray():
+func _build_ray_tiles():
 	if not ray_instance or not player:
 		return
 
@@ -436,18 +589,14 @@ func _update_ray():
 	ray_instance.global_position = Vector2.ZERO
 	ray_instance.rotation = 0.0
 
-	for child in ray_instance.get_children():
-		if child.name.begins_with("RayTile"):
-			child.free()
-
 	var inicio = ray_instance.get_node_or_null("Inicio")
+	var fin = ray_instance.get_node_or_null("Fin")
 	if not inicio or not inicio.sprite_frames:
 		return
-	var tex = inicio.sprite_frames.get_frame_texture("default", 0)
+	var tex = inicio.sprite_frames.get_frame_texture("rayo", 0)
 	if not tex:
 		return
 	var tile_width = float(tex.get_width())
-
 	var distance = diff.length()
 	var num_tiles = int(ceil(distance / tile_width)) + 7
 
@@ -455,16 +604,14 @@ func _update_ray():
 		var tile = AnimatedSprite2D.new()
 		tile.name = "RayTile" + str(i)
 		tile.sprite_frames = inicio.sprite_frames
-		tile.animation = "default"
-		tile.play("default")
+		tile.animation = "rayo"
+		tile.play("rayo")
 		tile.offset = inicio.offset
 		tile.scale = Vector2(1.0, 0.8)
 		tile.global_position = start + diff.normalized() * (tile_width * i + tile_width * 0.2)
 		tile.rotation = angle
+		tile.flip_h = diff.x < 0
 		ray_instance.add_child(tile)
-	
-	if ray_instance.has_method("update_hitbox"):
-		ray_instance.update_hitbox(ray_spawn.global_position, ray_end)
 
 func _start_hurricane():
 	var p = get_tree().get_first_node_in_group("player")
@@ -496,7 +643,7 @@ func _stunned_state(delta):
 		is_stunned = false
 		returning = true
 		DAMAGE = 1
-		sprite.play("idle")
+		sprite.play("fly")
 		
 		body_hitbox.set_deferred("monitoring", true)
 		body_hitbox.set_deferred("monitorable", true)
@@ -556,6 +703,10 @@ func _enter_weak():
 	is_weak = true
 	weak_timer = WEAK_DURATION
 	
+	if sfx_rugido:
+		sfx_rugido.volume_db = 4.0
+		sfx_rugido.play()
+	
 	# Cancelar estados activos
 	is_stunned = false
 	stun_falling = false
@@ -577,7 +728,7 @@ func _enter_weak():
 	
 	body_hitbox.monitoring = false
 	_set_dive_shapes(false)
-	sprite.play("idle")
+	sprite.play("weak")
 
 func _exit_weak():
 	is_weak = false
@@ -585,7 +736,7 @@ func _exit_weak():
 	wing_health = WING_MAX_HEALTH
 	returning = true
 	current_state = State.PATROL
-	sprite.play("idle")
+	sprite.play("fly")
 
 func _update_flip(flipped: bool):
 	sprite.flip_h = flipped
@@ -598,6 +749,9 @@ func _update_flip(flipped: bool):
 		
 func activate():
 	_reset_for_encounter(true)
+	if sfx_rugido:
+		sfx_rugido.volume_db = 0.0
+		sfx_rugido.play()
 
 func _on_level_reset() -> void:
 	_reset_for_encounter(false)
@@ -654,7 +808,7 @@ func _reset_for_encounter(make_active: bool) -> void:
 	_update_flip(false)
 	sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	if sprite:
-		sprite.play("idle")
+		sprite.play("fly")
 	is_active = make_active
 	
 	
@@ -688,6 +842,9 @@ func _handle_wing_hit(area: Area2D):
 	if wing_health <= 0:
 		wing_health = 0
 		_enter_weak()
+		return
+
+	if is_dying:
 		return
 
 	if current_state == State.DIVE and not dive_winding_up and not is_stunned:
@@ -724,6 +881,10 @@ func take_damage(amount: int):
 
 	if current_health <= 0:
 		die()
+		return
+	
+	if is_dying:
+		return
 
 func _play_damage_flash():
 	if not sprite:
@@ -738,8 +899,32 @@ func is_hurting() -> bool:
 	return false
 
 func die():
-	current_state = State.PATROL
+	NakamaManager.add_enemy_kill()
+	var died_in_dive = (current_state == State.DIVE)
+	is_dying = true
+	is_active = false
+	if luz:
+		luz.energy = 0.0
+
+	if sfx_rugido:
+		sfx_rugido.pitch_scale = 0.5
+		sfx_rugido.volume_db = 8.0
+		sfx_rugido.play()
+		var fade_tween = create_tween()
+		fade_tween.tween_property(sfx_rugido, "volume_db", -60.0, 8.0)
+
+	if ray_instance:
+		ray_instance.queue_free()
+		ray_instance = null
+	for node in get_tree().get_nodes_in_group("hurricane"):
+		node.queue_free()
+
+	if current_state == State.DIVE:
+		sprite.play("dead_attack")
+	else:
+		sprite.play("dead")
+
+	_spawn_final_boss_crystal(2)
 	var boss_room = _get_closest_boss_room()
 	if boss_room:
 		boss_room.on_boss_defeated()
-	queue_free()

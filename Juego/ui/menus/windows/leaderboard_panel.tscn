@@ -1,0 +1,172 @@
+[gd_scene load_steps=2 format=3 uid="uid://br1oddh1tkhw3"]
+
+[ext_resource type="Script" path="res://ui/menus/windows/leaderboard_panel.gd" id="1_3675s"]
+
+[node name="LeaderboardPanel" type="PanelContainer"]
+process_mode = 3
+custom_minimum_size = Vector2(900, 600)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -450.0
+offset_top = -300.0
+offset_right = 450.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_3675s")
+exclusive_background_color = Color(0, 0, 0, 0.6)
+close_button_text = "Cerrar"
+
+[node name="ContentContainer" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="MainVBox" type="VBoxContainer" parent="ContentContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TitleMargin" type="MarginContainer" parent="ContentContainer/MainVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="BoxContainer" type="BoxContainer" parent="ContentContainer/MainVBox/TitleMargin"]
+layout_mode = 2
+theme_override_constants/separation = 0
+vertical = true
+
+[node name="TitleLabel" type="Label" parent="ContentContainer/MainVBox/TitleMargin/BoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.99, 1)
+theme_override_font_sizes/font_size = 22
+text = "Clasificación"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="ContentContainer/MainVBox/TitleMargin/BoxContainer"]
+layout_mode = 2
+
+[node name="OfflineBanner" type="Label" parent="ContentContainer/MainVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "Sin conexión. Mostrando datos locales"
+horizontal_alignment = 1
+
+[node name="TabScrollContainer" type="ScrollContainer" parent="ContentContainer/MainVBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+vertical_scroll_mode = 0
+
+[node name="TabButtons" type="HBoxContainer" parent="ContentContainer/MainVBox/TabScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HSeparator2" type="HSeparator" parent="ContentContainer/MainVBox"]
+layout_mode = 2
+
+[node name="BodyHBox" type="HBoxContainer" parent="ContentContainer/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="MetricSidebar" type="VBoxContainer" parent="ContentContainer/MainVBox/BodyHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+
+[node name="VSeparator" type="VSeparator" parent="ContentContainer/MainVBox/BodyHBox"]
+layout_mode = 2
+
+[node name="ContentVBox" type="VBoxContainer" parent="ContentContainer/MainVBox/BodyHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="BodyMargin" type="MarginContainer" parent="ContentContainer/MainVBox/BodyHBox/ContentVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ContentContainer/MainVBox/BodyHBox/ContentVBox/BodyMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RecordsList" type="VBoxContainer" parent="ContentContainer/MainVBox/BodyHBox/ContentVBox/BodyMargin/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LoadingLabel" type="Label" parent="ContentContainer/MainVBox/BodyHBox/ContentVBox/BodyMargin/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
+text = "Cargando clasificación..."
+horizontal_alignment = 1
+
+[node name="ErrorLabel" type="Label" parent="ContentContainer/MainVBox/BodyHBox/ContentVBox/BodyMargin"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlayerPositionLabel" type="Label" parent="ContentContainer/MainVBox/BodyHBox/ContentVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.96, 0.3, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+
+[node name="HSeparatorBottom" type="HSeparator" parent="ContentContainer/MainVBox"]
+layout_mode = 2
+
+[node name="MenuButtonsMargin" type="MarginContainer" parent="ContentContainer/MainVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_top = 4
+
+[node name="MenuButtons" type="BoxContainer" parent="ContentContainer/MainVBox/MenuButtonsMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="CloseButton" type="Button" parent="ContentContainer/MainVBox/MenuButtonsMargin/MenuButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cerrar"
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="ContentContainer/MainVBox/BodyHBox/ContentVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="ContentContainer/MainVBox/TitleMargin/BoxContainer"]
+visible = false
+
+[connection signal="pressed" from="ContentContainer/MainVBox/MenuButtonsMargin/MenuButtons/CloseButton" to="." method="_on_close_button_pressed"]

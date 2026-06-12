@@ -24,19 +24,30 @@ text = "[center][font_size=58][b]RISE OF THE LOST COLORS[/b][/font_size][/center
 [center][font_size=24]Tutor: Juan Manuel Cordero Valle[/font_size][/center]
 
 [center][color=#ffd84d][font_size=38][b]Roles y Responsabilidades[/b][/font_size][/color][/center]
-[center][font_size=26]Programador[/font_size][/center]
-[center][font_size=26]Disenador[/font_size][/center]
-[center][font_size=26]Artista[/font_size][/center]
-[center][font_size=26]Animador[/font_size][/center]
+[center][font_size=26]Desarrollador[/font_size][/center]
+[center][font_size=26]Diseñador[/font_size][/center]
+[center][font_size=26]Tester[/font_size][/center]
 [center][font_size=26]Jefe de Equipo[/font_size][/center]
 [center][font_size=26]Director de Proyecto[/font_size][/center]
 
 [center][color=#63d8ff][font_size=38][b]Herramientas de Terceros[/b][/font_size][/color][/center]
 [center][font_size=26]Godot[/font_size][/center]
-[center][font_size=26]Freesprite[/font_size][/center]
+[center][font_size=26]Libresprite[/font_size][/center]
 [center][font_size=26]Audacity[/font_size][/center]
 [center][font_size=26]Maaack's Template Menus[/font_size][/center]
 [center][font_size=26]Godot RL Agents[/font_size][/center]
+[center][font_size=26]GDUnit4[/font_size][/center]
+[center][font_size=26]Nakama[/font_size][/center]
+
+[center][color=#ff5959][font_size=38][b]Arte y Sonido de Terceros[/b][/font_size][/color][/center]
+[center][font_size=26]Pixabay[/font_size][/center]
+[center][font_size=26]Kenney[/font_size][/center]
+[center][font_size=26]OpenGameArt[/font_size][/center]
+[center][font_size=26]Fondo Montaña Nevada: CraftPix[/font_size][/center]
+[center][font_size=26]Fondo Playa: DavidPanda[/font_size][/center]
+[center][font_size=26]Tileset Decoración Tutorial: mostbestgames[/font_size][/center]
+[center][font_size=26]Tileset Fondo de Montañas Ceniza: SciGho[/font_size][/center]
+[center][font_size=26]Tileset Fondo de Torre del Vacío: SciGho[/font_size][/center]
 
 [center][color=#63d8ff][font_size=34][b]Gracias[/b] [color=#ff5959][font_size=34][b]por[/b] [color=#ffd84d][font_size=34][b]jugar[/b][/font_size][/color]"
 fit_content = true

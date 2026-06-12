@@ -36,4 +36,5 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 
 	health.apply_prism_core_upgrade()
+	NakamaManager.add_prism_core()
 	queue_free()

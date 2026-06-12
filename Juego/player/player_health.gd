@@ -5,6 +5,8 @@ signal died(owner: Node)
 const BASE_MAX_HEALTH = 3
 const INVINCIBILITY_DURATION = 1.0
 const FLASH_DURATION = 0.1
+const HURT_SOUND := preload("res://music/player/hurt.mp3")
+const HEALING_SOUND := preload("res://music/player/healing.mp3")
 
 var MAX_HEALTH = BASE_MAX_HEALTH
 var current_health = MAX_HEALTH
@@ -12,16 +14,27 @@ var is_invincible = false
 var invincibility_timer = 0.0
 var flash_timer = 0.0
 var death_callback: Callable
+var _is_dead := false
+var _hurt_player: AudioStreamPlayer
+var _heal_player: AudioStreamPlayer
 @export var auto_reset: bool = true
 
 @onready var player = get_parent()
 @onready var hurtbox = get_parent().get_node("Hurtbox")
 @onready var sprite = get_parent().get_node("AnimatedSprite2D")
 @onready var camera = get_tree().get_first_node_in_group("camera")
-@onready var heal_particles = get_parent().get_node("HealParticles")
+@onready var heal_particles = get_parent().get_node_or_null("HealParticles")
 
 
 func _ready():
+	_hurt_player = AudioStreamPlayer.new()
+	_hurt_player.stream = HURT_SOUND
+	_hurt_player.bus = &"EFX"
+	add_child(_hurt_player)
+	_heal_player = AudioStreamPlayer.new()
+	_heal_player.stream = HEALING_SOUND
+	_heal_player.bus = &"EFX"
+	add_child(_heal_player)
 	hurtbox.monitorable = true
 	hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 	hurtbox.area_entered.connect(_on_hurtbox_area_entered)
@@ -30,6 +43,7 @@ func _ready():
 
 func _init_hud():
 	_sync_max_health_from_progress()
+	_is_dead = false
 	current_health = MAX_HEALTH
 	Hud.update_hearts(current_health, MAX_HEALTH)
 
@@ -40,9 +54,11 @@ func process(delta):
 
 
 func take_damage(amount: int, bypass_shield: bool = false):
-	if (player.is_shielding and not bypass_shield) or is_invincible:
+	if _is_dead or (player.is_shielding and not bypass_shield) or is_invincible:
 		return
+	_hurt_player.play()
 	current_health -= amount
+	NakamaManager.add_damage_taken(amount)
 	Hud.update_hearts(current_health, MAX_HEALTH)
 	is_invincible = true
 	invincibility_timer = INVINCIBILITY_DURATION
@@ -58,7 +74,12 @@ func set_death_callback(callback: Callable) -> void:
 	death_callback = callback
 
 func die():
+	if _is_dead:
+		return
+	_is_dead = true
+	hurtbox.set_deferred("monitorable", false)
 	emit_signal("died", get_parent())
+	NakamaManager.notify_death()
 	_invoke_death_callback()
 	if auto_reset:
 		_reset_player()
@@ -69,6 +90,7 @@ func respawn() -> void:
 func _reset_player():
 	_sync_max_health_from_progress()
 	current_health = MAX_HEALTH
+	_is_dead = false
 	is_invincible = true
 	invincibility_timer = 0.6
 	flash_timer = 0.0
@@ -127,10 +149,20 @@ func _on_hurtbox_body_entered(body: Node2D) -> void:
 		take_damage(1)
 		
 func heal(amount: int):
+	_heal_player.play()
 	current_health = min(current_health + amount, MAX_HEALTH)
 	Hud.update_hearts(current_health, MAX_HEALTH)
 	if heal_particles:
 		heal_particles.restart()
+
+
+func heal_to_full() -> void:
+	_heal_player.play()
+	current_health = MAX_HEALTH
+	Hud.update_hearts(current_health, MAX_HEALTH)
+	if heal_particles:
+		heal_particles.restart()
+
 
 
 func apply_prism_core_upgrade() -> bool:
@@ -140,6 +172,10 @@ func apply_prism_core_upgrade() -> bool:
 	Hud.update_hearts(current_health, MAX_HEALTH)
 	if heal_particles:
 		heal_particles.restart()
+	# Play obtain animation only when collecting the prism core and not while shielding
+	if was_collected and player and player.has_method("play_obtain_animation"):
+		if not player.is_shielding:
+			player.play_obtain_animation()
 	return was_collected
 
 

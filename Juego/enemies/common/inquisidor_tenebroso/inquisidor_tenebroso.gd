@@ -1,5 +1,9 @@
 extends CharacterBody2D
 
+const ATAQUE_INQUISIDOR = preload("res://music/enemies/common/inquisidor_tenebroso/ataque_inquisidor.ogg")
+const TELEPORT_INQUISIDOR = preload("res://music/enemies/common/inquisidor_tenebroso/teleport_inquisidor.ogg")
+const MUERTE_INQUISIDOR = preload("res://music/enemies/common/inquisidor_tenebroso/muerte_inquisidor.ogg")
+
 const MAX_HEALTH: int = 3
 const DAMAGE: int = 1
 
@@ -8,7 +12,7 @@ const IDLE_DISTANCE: float = 250.0
 const LOSE_DISTANCE: float = 275.0
 const GRAVITY: float = 700.0
 
-const TELEPORT_DISTANCE: float = 70.0      # Distancia mínima con el jugador
+const TELEPORT_DISTANCE: float = 120.0      # Distancia mínima con el jugador
 const TELEPORT_MIN_DIST: float = 200.0      # Distancia mínima tras teletransporte
 const TELEPORT_MAX_DIST: float = 250.0      # Distancia máxima tras teletransporte
 const TELEPORT_ATTEMPTS: int = 20           # Intentos para encontrar posición válida
@@ -24,10 +28,16 @@ var player: Node2D = null
 var stun_timer: float = 0.0
 var shoot_timer: float = 0.0
 var death_timer: float = -1.0
+
+var teleporting: bool = false
+var teleport_target: Vector2 = Vector2.ZERO
+var attack_fired: bool = false
+
 var spawn_position = Vector2.ZERO
 var _combat_reset_state: Dictionary = {}
 
 @onready var attack_scene = preload("res://enemies/common/inquisidor_tenebroso/AtaqueInquisidor.tscn")
+@onready var luz: PointLight2D = $PointLight2D
 
 
 func _ready() -> void:
@@ -42,7 +52,26 @@ func _ready() -> void:
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
+	_setup_light()
 	_enter_state(State.IDLE)
+
+
+func _setup_light() -> void:
+	var imagen: Image = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx: float = (x - 32.0) / 32.0
+			var dy: float = (y - 32.0) / 32.0
+			var dist: float = sqrt(dx * dx + dy * dy)
+			var alpha: float = clampf(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.5)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+	luz.color = Color(0.4, 0.0, 0.8)
+	luz.texture_scale = 1.2
+	luz.energy = 3.5
+	luz.enabled = true
 
 
 func _physics_process(delta: float) -> void:
@@ -100,6 +129,12 @@ func _enter_state(new_state: State) -> void:
 			$AnimatedSprite2D.play("stunned")
 
 		State.DEAD:
+			if $AnimatedSprite2D.animation_finished.is_connected(_on_attack_finished):
+				$AnimatedSprite2D.animation_finished.disconnect(_on_attack_finished)
+			_play_sfx(MUERTE_INQUISIDOR, 3.0)
+			if luz and luz.enabled:
+				var tween: Tween = create_tween()
+				tween.tween_property(luz, "energy", 0.0, 1.5)
 			$AnimatedSprite2D.play("dead")
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)
@@ -123,6 +158,9 @@ func _state_idle() -> void:
 
 
 func _state_attack() -> void:
+	if teleporting:
+		return
+		
 	velocity.x = 0
 	
 	if not player:
@@ -149,11 +187,29 @@ func _state_attack() -> void:
 
 
 func _shoot() -> void:
-	var attack = attack_scene.instantiate()
-	attack.source_enemy = self
-	get_tree().current_scene.add_child(attack)
-	attack.global_position = global_position
-	attack.direction = global_position.direction_to(player.global_position)
+	attack_fired = false
+	$AnimatedSprite2D.play("attack")
+	if not $AnimatedSprite2D.frame_changed.is_connected(_on_attack_frame_changed):
+		$AnimatedSprite2D.frame_changed.connect(_on_attack_frame_changed)
+	$AnimatedSprite2D.animation_finished.connect(_on_attack_finished, CONNECT_ONE_SHOT)
+
+
+func _on_attack_frame_changed() -> void:
+	if $AnimatedSprite2D.frame == 4 and not attack_fired:
+		attack_fired = true
+		if not player:
+			return
+		var attack = attack_scene.instantiate()
+		attack.source_enemy = self
+		get_tree().current_scene.add_child(attack)
+		attack.global_position = global_position
+		attack.direction = global_position.direction_to(player.global_position)
+		_play_sfx(ATAQUE_INQUISIDOR, 3.0)
+
+
+func _on_attack_finished() -> void:
+	$AnimatedSprite2D.frame_changed.disconnect(_on_attack_frame_changed)
+	$AnimatedSprite2D.play("idle")
 
 
 func _should_teleport() -> bool:
@@ -180,7 +236,18 @@ func _raycast(space_state: PhysicsDirectSpaceState2D, from: Vector2, to: Vector2
 	return space_state.intersect_ray(ray)
 
 
+func _play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	var player = AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = "EFX"
+	player.volume_db = volume_db
+	add_child(player)
+	player.finished.connect(player.queue_free, CONNECT_ONE_SHOT)
+	player.play()
+
+
 func _teleport_away() -> void:
+	_play_sfx(TELEPORT_INQUISIDOR, 6.0)
 	var space_state = get_world_2d().direct_space_state
 
 	for i in TELEPORT_ATTEMPTS:
@@ -231,10 +298,23 @@ func _teleport_away() -> void:
 		if landing_pos.distance_to(player.global_position) < TELEPORT_MIN_DIST:
 			continue
 
-		global_position = landing_pos
+		teleport_target = landing_pos
 		velocity = Vector2.ZERO
+		teleporting = true
+		$AnimatedSprite2D.speed_scale = 1.5
+		$AnimatedSprite2D.play("teleport")
+		$AnimatedSprite2D.animation_finished.connect(_on_teleport_disappear, CONNECT_ONE_SHOT)
 		return
 
+func _on_teleport_disappear() -> void:
+	global_position = teleport_target
+	$AnimatedSprite2D.play("teleport")
+	$AnimatedSprite2D.animation_finished.connect(_on_teleport_finished, CONNECT_ONE_SHOT)
+
+func _on_teleport_finished() -> void:
+	teleporting = false
+	$AnimatedSprite2D.speed_scale = 1.0
+	$AnimatedSprite2D.play("idle")
 
 func _state_stunned(delta):
 	stun_timer -= delta
@@ -262,6 +342,7 @@ func take_damage(amount: int) -> void:
 
 	current_health -= amount
 	if current_health <= 0:
+		NakamaManager.add_enemy_kill()
 		_enter_state(State.DEAD)
 		return
 

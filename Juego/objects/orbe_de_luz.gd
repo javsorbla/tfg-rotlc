@@ -2,6 +2,9 @@ extends Area2D
 
 @export var is_spawned := false
 
+@onready var animated_sprite: AnimatedSprite2D = $Sprite2D
+@onready var light: PointLight2D = $PointLight2D
+
 var spawn_position := Vector2.ZERO
 var is_consumed := false
 var _initial_collision_layer := 0
@@ -17,6 +20,18 @@ func _ready():
 	if not GameState.level_reset.is_connected(_on_level_reset):
 		GameState.level_reset.connect(_on_level_reset)
 	body_entered.connect(_on_body_entered)
+	if animated_sprite and animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("default"):
+		animated_sprite.play("default")
+		animated_sprite.frame_changed.connect(_on_orb_frame_changed)
+		_on_orb_frame_changed()
+
+func _on_orb_frame_changed() -> void:
+	if light == null:
+		return
+	var pulse = [0.85, 0.65, 0.4, 0.35, 0.55, 0.75]
+	var idx = animated_sprite.frame % pulse.size()
+	light.energy = pulse[idx]
+
 
 func _on_body_entered(body: Node2D) -> void:
 	if is_consumed:

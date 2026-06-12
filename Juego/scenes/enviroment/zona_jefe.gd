@@ -4,10 +4,18 @@ extends Node2D
 @onready var pared_izquierda_collision: CollisionShape2D = $ParedIzquierda/CollisionShape2D
 @onready var pared_derecha_collision: CollisionShape2D = $ParedDerecha/CollisionShape2D
 
+@export var boss_music: AudioStream
+@export var level_music: AudioStream
+@export var skip_music_on_defeat: bool = false
+
 var _room_key: String = ""
 var _active_boss: Node
+var _music_was_changed: bool = false
+var _boss_defeated: bool = false
 var _pending_rearm_after_reset: bool = false
 var _camera_zoom_tween: Tween
+var _previous_camera_zoom: Vector2 = Vector2(2.25, 2.25)
+var _has_previous_camera_zoom: bool = false
 
 func _ready():
 	add_to_group("boss_room")
@@ -59,6 +67,9 @@ func _on_trigger_entered(body):
 			# Desactivar seguimiento del jugador
 			camera.boss_room_mode = true
 			camera.boss_room_target = $Centro.global_position
+			# Guardar zoom actual para restaurarlo después
+			_previous_camera_zoom = camera.zoom
+			_has_previous_camera_zoom = true
 			_tween_camera_zoom(camera, Vector2(1.25, 1.25), 2.5)
 		
 		# Activar el boss asociado a esta sala (no el primer boss global de la escena).
@@ -70,6 +81,14 @@ func _on_trigger_entered(body):
 				boss.connect("defeated", defeated_callable)
 		if boss != null and boss.has_method("activate"):
 			boss.activate()
+		
+		if boss_music != null:
+			ProjectMusicController.fade_out_duration = 1.5
+			ProjectMusicController.fade_in_duration = 1.5
+			ProjectMusicController.play_stream(boss_music)
+			ProjectMusicController.fade_out_duration = 0.0
+			ProjectMusicController.fade_in_duration = 0.0
+			_music_was_changed = true
 
 func _get_nearest_boss_to_room_center() -> Node:
 	var center_pos: Vector2 = $Centro.global_position
@@ -88,6 +107,10 @@ func _get_nearest_boss_to_room_center() -> Node:
 	return nearest_boss
 			
 func on_boss_defeated():
+	if _boss_defeated:
+		return
+	_boss_defeated = true
+
 	trigger.set_deferred("monitoring", false)
 	trigger.set_deferred("monitorable", false)
 	for child in trigger.get_children():
@@ -98,9 +121,23 @@ func on_boss_defeated():
 	var camera = get_tree().get_first_node_in_group("camera")
 	if camera:
 		camera.boss_room_mode = false
-		_tween_camera_zoom(camera, Vector2(1.0, 1.0), 0.5)
+		var target_zoom = _previous_camera_zoom if _has_previous_camera_zoom else Vector2(2.25, 2.25)
+		_tween_camera_zoom(camera, target_zoom, 0.5)
+		_has_previous_camera_zoom = false
 
 	GameState.mark_boss_room_cleared(_room_key)
+
+	if _music_was_changed and not skip_music_on_defeat:
+		if level_music != null:
+			ProjectMusicController.fade_out_duration = 1.5
+			ProjectMusicController.fade_in_duration = 1.5
+			ProjectMusicController.play_stream(level_music)
+			ProjectMusicController.fade_out_duration = 0.0
+			ProjectMusicController.fade_in_duration = 0.0
+		elif is_instance_valid(ProjectMusicController.music_stream_player):
+			var tween := create_tween()
+			tween.tween_property(ProjectMusicController.music_stream_player, "volume_db", -80.0, 1.5)
+		_music_was_changed = false
 
 func _on_boss_defeated_signal(umbra_won: bool) -> void:
 	if umbra_won:
@@ -133,6 +170,8 @@ func _on_level_reset() -> void:
 	if GameState.is_boss_room_cleared(_room_key):
 		return
 
+	_boss_defeated = false
+
 	# Keep the trigger disabled until the player leaves the area again.
 	pared_izquierda_collision.set_deferred("disabled", true)
 	pared_derecha_collision.set_deferred("disabled", true)
@@ -146,7 +185,10 @@ func _on_level_reset() -> void:
 	if camera:
 		camera.boss_room_mode = false
 		camera.boss_room_target = Vector2.ZERO
-		_tween_camera_zoom(camera, Vector2(1.0, 1.0), 0.25)
+		# Restaurar el zoom previo si existe, o usar 2.25 como fallback
+		var reset_zoom = _previous_camera_zoom if _has_previous_camera_zoom else Vector2(2.25, 2.25)
+		_tween_camera_zoom(camera, reset_zoom, 0.25)
+		_has_previous_camera_zoom = false
 
 	_active_boss = null
 

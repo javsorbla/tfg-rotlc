@@ -1,17 +1,70 @@
-[gd_scene load_steps=5 format=3 uid="uid://vmx0u2etren7"]
+[gd_scene load_steps=13 format=3 uid="uid://vmx0u2etren7"]
 
 [ext_resource type="Script" path="res://enemies/bosses/tempestad_dorada/rayo.gd" id="1_chxs3"]
-[ext_resource type="Texture2D" uid="uid://c77ylqdn2pjfm" path="res://assets/enemies/bosses/tempestad_dorada/rayo_inicio.png" id="1_q6gjw"]
+[ext_resource type="Texture2D" uid="uid://dp3l83qnetr0q" path="res://assets/enemies/bosses/tempestad_dorada/rayo_sheet.png" id="2_oxhb1"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3el4x"]
+atlas = ExtResource("2_oxhb1")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ypcst"]
+atlas = ExtResource("2_oxhb1")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l3v1y"]
+atlas = ExtResource("2_oxhb1")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b6mho"]
+atlas = ExtResource("2_oxhb1")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_05isc"]
+atlas = ExtResource("2_oxhb1")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aje1g"]
+atlas = ExtResource("2_oxhb1")
+region = Rect2(640, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3rbkg"]
+atlas = ExtResource("2_oxhb1")
+region = Rect2(768, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xjto1"]
+atlas = ExtResource("2_oxhb1")
+region = Rect2(896, 0, 128, 128)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_2d7xf"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_q6gjw")
+"texture": SubResource("AtlasTexture_3el4x")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ypcst")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l3v1y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b6mho")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_05isc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aje1g")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3rbkg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xjto1")
 }],
 "loop": true,
-"name": &"default",
-"speed": 5.0
+"name": &"rayo",
+"speed": 15.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_a0rgo"]
@@ -22,6 +75,7 @@ script = ExtResource("1_chxs3")
 
 [node name="Inicio" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_2d7xf")
+animation = &"rayo"
 
 [node name="RayoHitbox" type="Area2D" parent="."]
 collision_layer = 16

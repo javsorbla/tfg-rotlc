@@ -1,8 +1,23 @@
 extends Area2D
 
+
 @export var rain_speed = 600.0
 @export var rain_angle_degrees = -20.0
 @export var rain_density = 1.0 
+
+@onready var canvas_modulate = get_tree().get_root().find_child("CanvasModulate", true, false)
+
+const ZONAS_EXCLUIDAS = [
+	{"min": Vector2(2050, -830), "max": Vector2(3014, 199)},
+	{"min": Vector2(5009, 209), "max": Vector2(6699, 1181)}
+]
+const TRUENO_SOUND := preload("res://music/scenes/costa_ambar/trueno.ogg")
+const TRUENO_CAVE_DB: float = -8.0
+
+var color_base: Color
+var thunder_player: AudioStreamPlayer
+static var destello_activo: bool = false
+static var destello_iniciado: bool = false
 
 func _ready():
 	var shape_size = $CollisionShape2D.shape.size
@@ -49,3 +64,61 @@ func _ready():
 		shape_size.x,
 		shape_size.y
 	)
+	
+	if not destello_iniciado:
+		destello_iniciado = true
+		var cm = get_tree().current_scene.get_node("CanvasModulate")
+		if cm:
+			_setup_thunder_player()
+			_programar_destello(cm)
+
+func _programar_destello(cm):
+	var espera = randf_range(10.0, 12.0)
+	await get_tree().create_timer(espera).timeout
+	_hacer_destello(cm)
+
+func _jugador_en_zona_excluida() -> bool:
+	var player = get_tree().get_first_node_in_group("player")
+	if not player:
+		return false
+	var px = player.global_position.x
+	var py = player.global_position.y
+	for zona in ZONAS_EXCLUIDAS:
+		if px >= zona.min.x and px <= zona.max.x and py >= zona.min.y and py <= zona.max.y:
+			return true
+	return false
+
+func _setup_thunder_player() -> void:
+	thunder_player = AudioStreamPlayer.new()
+	thunder_player.name = "ThunderPlayer"
+	thunder_player.stream = TRUENO_SOUND
+	thunder_player.bus = &"EFX"
+	add_child(thunder_player)
+
+func _play_thunder(en_zona_excluida: bool) -> void:
+	if not is_instance_valid(thunder_player):
+		return
+	thunder_player.volume_db = TRUENO_CAVE_DB if en_zona_excluida else 4.0
+	thunder_player.play()
+
+func _hacer_destello(cm):
+	if destello_activo:
+		_programar_destello(cm)
+		return
+	destello_activo = true
+	
+	var en_zona_excluida = _jugador_en_zona_excluida()
+	_play_thunder(en_zona_excluida)
+	
+	var color_base = cm.color
+	if not en_zona_excluida:
+		var flashes = [0.25, 0.15, 0.3]
+		for duracion in flashes:
+			var tween = create_tween()
+			tween.tween_property(cm, "color", Color(1.0, 1.0, 1.0), 0.02)
+			tween.tween_property(cm, "color", color_base, duracion)
+			await tween.finished
+			await get_tree().create_timer(randf_range(0.08, 0.15)).timeout
+	
+	destello_activo = false
+	_programar_destello(cm)

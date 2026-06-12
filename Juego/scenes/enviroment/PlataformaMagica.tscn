@@ -1,0 +1,32 @@
+[gd_scene load_steps=5 format=3 uid="uid://ba7a36qorhbxj"]
+
+[ext_resource type="Script" path="res://scenes/enviroment/plataforma_magica.gd" id="1_6lm4t"]
+[ext_resource type="Texture2D" uid="uid://cl57p0rtvoexl" path="res://assets/traps/plataforma_rompible_vacioV2.png" id="2_vdmta"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3cibq"]
+size = Vector2(23, 8)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2tor8"]
+size = Vector2(23, 6)
+
+[node name="PlataformaMagica" type="StaticBody2D"]
+script = ExtResource("1_6lm4t")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(3.5, 3)
+scale = Vector2(0.455357, 0.625)
+texture = ExtResource("2_vdmta")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(3.5, 2)
+shape = SubResource("RectangleShape2D_3cibq")
+
+[node name="Trigger" type="Area2D" parent="."]
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Trigger"]
+position = Vector2(3.5, 0)
+shape = SubResource("RectangleShape2D_2tor8")
+debug_color = Color(0.980148, 0, 0.382122, 0.42)
+
+[connection signal="body_entered" from="Trigger" to="." method="_on_trigger_body_entered"]

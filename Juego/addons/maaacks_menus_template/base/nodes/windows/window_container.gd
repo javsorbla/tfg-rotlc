@@ -15,7 +15,7 @@ signal opened
 		if update_content and is_inside_tree():
 			description_label.text = text
 
-@export var close_button_text : String = "Close" :
+@export var close_button_text : String = "Cerrar" :
 	set(value):
 		close_button_text = value
 		if update_content and is_inside_tree():
@@ -61,6 +61,8 @@ func close() -> void:
 	closed.emit()
 
 func _handle_cancel_input() -> void:
+	if has_node("/root/ProjectUISoundController") and ProjectUISoundController.has_method("play_back"):
+		ProjectUISoundController.play_back()
 	close()
 
 func _unhandled_input(event : InputEvent) -> void:

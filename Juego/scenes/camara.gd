@@ -6,6 +6,13 @@ var base_offset = Vector2(30, -10)
 var boss_room_mode = false
 var boss_room_target = Vector2.ZERO
 
+var is_fixed = false
+var fixed_target_pos = Vector2.ZERO
+var target_zoom = Vector2(2.25, 2.25)
+const DEFAULT_ZOOM = Vector2(2.25, 2.25)
+const ZOOM_SPEED = 0.05
+const FIXED_FOLLOW_SPEED = 0.05
+
 const SHAKE_DURATION = 0.2
 const SHAKE_INTENSITY = 3.0
 
@@ -23,11 +30,18 @@ func shake():
 func _ready():
 	position_smoothing_enabled = true
 	position_smoothing_speed = 8.0
-	zoom = Vector2(2.25, 2.25)
+	zoom = DEFAULT_ZOOM
+	target_zoom = DEFAULT_ZOOM
 
 func _process(delta):
 	if boss_room_mode:
 		global_position = lerp(global_position, boss_room_target, 0.02)
+		return
+		
+	if is_fixed:
+		# Interpolación de zoom
+		zoom = lerp(zoom, target_zoom, ZOOM_SPEED)
+		global_position = lerp(global_position, fixed_target_pos, FIXED_FOLLOW_SPEED)
 		return
 	
 	if player:

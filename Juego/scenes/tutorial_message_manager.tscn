@@ -1,0 +1,143 @@
+[gd_scene load_steps=15 format=3 uid="uid://br25vh2hmmm1h"]
+
+[ext_resource type="Script" path="res://scenes/tutorial_message_manager.gd" id="1_3mfyy"]
+[ext_resource type="FontFile" uid="uid://bf7avxherdbol" path="res://fonts/Press_Start_2P/PressStart2P-Regular.ttf" id="2_5xw2w"]
+[ext_resource type="Shader" path="res://scenes/tutorial_message_text.gdshader" id="3_lp08d"]
+[ext_resource type="Shader" path="res://ui/shaders/pulse.gdshader" id="3_pulse_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pulse"]
+shader = ExtResource("3_pulse_shader")
+shader_parameter/ring_radius = 0.0
+shader_parameter/ring_width = 0.05
+shader_parameter/pulse_color = Color(1, 1, 1, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1qra5"]
+shader = ExtResource("3_lp08d")
+shader_parameter/speed = 1.0
+shader_parameter/base_color = Color(1, 0.82, 0.27, 1)
+shader_parameter/shimmer_color = Color(1, 1, 0.85, 1)
+shader_parameter/shimmer_width = 0.141
+shader_parameter/sparkle_count = 20
+shader_parameter/sparkle_size = 0.05
+shader_parameter/sparkle_speed = 4.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_message"]
+font = ExtResource("2_5xw2w")
+font_size = 18
+
+[sub_resource type="Animation" id="Animation_rks4c"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TutorialMessageLayer/MessageLabel:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [1.0]
+}
+
+[sub_resource type="Animation" id="Animation_fade_in"]
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TutorialMessageLayer/MessageLabel:modulate:a")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+
+[sub_resource type="Animation" id="Animation_fade_out"]
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TutorialMessageLayer/MessageLabel:modulate:a")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [1.0, 0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_mpokp"]
+_data = {
+"RESET": SubResource("Animation_rks4c"),
+"fade_in": SubResource("Animation_fade_in"),
+"fade_out": SubResource("Animation_fade_out")
+}
+
+[sub_resource type="Gradient" id="Gradient_wqiwa"]
+colors = PackedColorArray(1, 0.82, 0.27, 1, 1, 0.9, 0.5, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_vojmy"]
+gradient = SubResource("Gradient_wqiwa")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_qj8pw"]
+particle_flag_disable_z = true
+direction = Vector3(0, -1, 0)
+initial_velocity_min = 3.0
+initial_velocity_max = 8.0
+gravity = Vector3(0, -5, 0)
+scale_max = 2.0
+color_ramp = SubResource("GradientTexture1D_vojmy")
+
+[node name="TutorialMessageManager" type="Node"]
+script = ExtResource("1_3mfyy")
+
+[node name="TutorialMessageLayer" type="CanvasLayer" parent="."]
+layer = 30
+
+[node name="Backdrop" type="ColorRect" parent="TutorialMessageLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.75)
+
+[node name="Pulse" type="ColorRect" parent="TutorialMessageLayer"]
+material = SubResource("ShaderMaterial_pulse")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="MessageLabel" type="Label" parent="TutorialMessageLayer"]
+modulate = Color(0, 0, 0, 1)
+material = SubResource("ShaderMaterial_1qra5")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -90.0
+offset_right = 420.0
+offset_bottom = 90.0
+label_settings = SubResource("LabelSettings_message")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="MessageAnim" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_mpokp")
+}
+
+[node name="Particles" type="GPUParticles2D" parent="."]
+visible = false
+emitting = false
+amount = 20
+process_material = SubResource("ParticleProcessMaterial_qj8pw")
+lifetime = 3.0
+speed_scale = 0.5
+visibility_rect = Rect2(-300, -60, 600, 120)
+local_coords = true

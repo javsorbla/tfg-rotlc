@@ -3,17 +3,35 @@ extends Node2D
 const MONTANAS_SCENE := "res://scenes/MontañasDeCeniza.tscn"
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
+const CAMPOS_ZAFIRO_MUSIC := preload("res://music/scenes/campos_zafiro/campos_zafiro.ogg")
+const VIENTO_SOUND := preload("res://music/scenes/campos_zafiro/viento.ogg")
+
+const WIND_ZONE_X_MIN: float = 9700
+const WIND_ZONE_X_MAX: float = 12800.0
+const WIND_AMBIENT_VOLUME: float = -12.0
+
+var wind_player: AudioStreamPlayer
+var _wind_tween: Tween
 
 
 # Called when the node enters the scene tree for the first time.
-func _ready() -> void:
+func _enter_tree() -> void:
 	GameState.current_level = 1
 	GameState.current_level_path = "res://scenes/CamposDeZafiro.tscn"
+
+func _ready() -> void:
+
+	if GameState.has_method("auto_unlock_power_for_level"):
+		GameState.auto_unlock_power_for_level()
+	
+	NakamaManager.start_run(GameState.current_level)
+	
 	_ensure_pause_menu_layer()
 	_ensure_death_screen()
-	Hud.show_hud()
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
+	call_deferred("_start_level_music")
+	_setup_wind_player()
 
 func _ensure_pause_menu_layer() -> void:
 	if get_node_or_null("PauseMenuLayer") != null:
@@ -70,9 +88,40 @@ func _mover_player() -> void:
 func _on_final_body_entered(body) -> void:
 	if body is CharacterBody2D:
 		GameState.coming_from_transition = true
+		ProjectMusicController.stop()
 		get_tree().call_deferred("change_scene_to_file", MONTANAS_SCENE)
 
 func _on_player_died(_owner: Node) -> void:
 	var death_screen = get_node_or_null("DeathScreenLayer/DeathScreen")
 	if death_screen != null and death_screen.has_method("show"):
 		death_screen.call_deferred("show")
+
+func _start_level_music() -> void:
+	ProjectMusicController.play_stream(CAMPOS_ZAFIRO_MUSIC)
+
+func _process(_delta: float) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
+		return
+	var in_zone := player.global_position.x >= WIND_ZONE_X_MIN and player.global_position.x <= WIND_ZONE_X_MAX
+	if in_zone:
+		_fade_wind_to(4.0)
+	else:
+		_fade_wind_to(WIND_AMBIENT_VOLUME)
+
+func _setup_wind_player() -> void:
+	wind_player = AudioStreamPlayer.new()
+	wind_player.name = "WindPlayer"
+	wind_player.stream = VIENTO_SOUND
+	wind_player.bus = &"EFX"
+	wind_player.volume_db = WIND_AMBIENT_VOLUME
+	add_child(wind_player)
+	wind_player.play()
+
+func _fade_wind_to(target_db: float) -> void:
+	if _wind_tween and _wind_tween.is_valid():
+		_wind_tween.kill()
+	if absf(wind_player.volume_db - target_db) < 0.5:
+		return
+	_wind_tween = create_tween()
+	_wind_tween.tween_property(wind_player, "volume_db", target_db, 1.5)

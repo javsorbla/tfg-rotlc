@@ -51,6 +51,9 @@ func _show_window(window : Control) -> void:
 	open_window = null
 	_enable_focus.call_deferred()
 
+func is_popup_open() -> bool:
+	return open_window != null
+
 func close() -> void:
 	if open_window != null:
 		close_window()
@@ -70,6 +73,8 @@ func _handle_cancel_input() -> void:
 	if _ignore_first_cancel:
 		_ignore_first_cancel = false
 		return
+	if has_node("/root/ProjectUISoundController") and ProjectUISoundController.has_method("play_back"):
+		ProjectUISoundController.play_back()
 	if open_window != null:
 		close_window()
 	else:

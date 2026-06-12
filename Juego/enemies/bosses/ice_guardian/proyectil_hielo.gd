@@ -2,6 +2,7 @@ extends ProyectilBase
 
 const REFLECT_SPEED_MULT: float = 1.2
 const REFLECT_DAMAGE: int = 1
+const PROYECTIL_ROTO: AudioStreamOggVorbis = preload("res://music/enemies/bosses/guardian_hielo/proyectil_roto.ogg")
 var current_speed: float = get_speed()
 var is_reflected: bool = false
 
@@ -34,13 +35,16 @@ func _on_body_entered(body: Node) -> void:
 		var health = body.get_node("Health")
 		if health:
 			health.take_damage(get_damage())
+		_play_break_sound()
 		queue_free()
 		return
+	_play_break_sound()
 	queue_free()
 
 func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player_hitbox"):
 		if is_reflected:
+			_play_break_sound()
 			queue_free()
 			return
 		_reflect_towards_boss()
@@ -50,7 +54,18 @@ func _on_area_entered(area: Area2D) -> void:
 		var boss = area.get_parent()
 		if boss and boss.is_in_group("boss") and boss.has_method("take_damage"):
 			boss.take_damage(REFLECT_DAMAGE)
+		_play_break_sound()
 		queue_free()
+
+func _play_break_sound() -> void:
+	var player := AudioStreamPlayer.new()
+	player.stream = PROYECTIL_ROTO
+	player.bus = "EFX"
+	player.volume_db = -8.0
+	get_tree().root.add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
 
 func _reflect_towards_boss() -> void:
 	is_reflected = true

@@ -1,0 +1,40 @@
+[gd_scene load_steps=2 format=3 uid="uid://ctebqcmaodhwj"]
+
+[sub_resource type="GDScript" id="GDScript_r8yv8"]
+script/source = "extends Node
+
+var canvas_modulate: CanvasModulate
+var color_base: Color
+var destello_activo: bool = false
+
+func inicializar(cm: CanvasModulate):
+	if canvas_modulate:
+		return  # ya inicializado por otra zona
+	canvas_modulate = cm
+	color_base = cm.color
+	_programar_destello()
+
+func _programar_destello():
+	var espera = randf_range(20.0, 30.0)
+	await get_tree().create_timer(espera).timeout
+	_hacer_destello()
+
+func _hacer_destello():
+	if destello_activo:
+		return
+	destello_activo = true
+	
+	var flashes = [0.06, 0.04, 0.08, 0.03]
+	for duracion in flashes:
+		var tween = create_tween()
+		tween.tween_property(canvas_modulate, \"color\", Color(0.55, 0.65, 0.75), 0.01)
+		tween.tween_property(canvas_modulate, \"color\", color_base, duracion)
+		await tween.finished
+		await get_tree().create_timer(randf_range(0.02, 0.06)).timeout
+	
+	destello_activo = false
+	_programar_destello()
+"
+
+[node name="Tormenta" type="Node2D"]
+script = SubResource("GDScript_r8yv8")

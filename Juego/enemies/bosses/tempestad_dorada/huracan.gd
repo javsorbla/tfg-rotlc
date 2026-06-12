@@ -13,9 +13,11 @@ const PULL_RISE_SPEED: float = 30.0
 const LAUNCH_SPEED: float = 400.0
 const LAUNCH_DURATION: float = 0.5
 const MAX_PULL_TIME: float = 2.0
+const HURACAN_SOUND := preload("res://music/enemies/bosses/tempestad_dorada/huracan.ogg")
 
 @onready var sprite = $AnimatedSprite2D
 @onready var collision = $CollisionPolygon2D
+@onready var sprite_glow = $AnimatedSprite2DGlow
 
 var active: bool = false
 var player = null
@@ -35,6 +37,9 @@ var room_bottom_limit: float = 10000.0
 var room_left_limit: float = -10000.0
 var room_right_limit: float = 10000.0
 
+var luz: PointLight2D
+var sfx_player: AudioStreamPlayer
+
 func _ready():
 	add_to_group("hurricane")
 	sprite.play("inicio")
@@ -45,18 +50,63 @@ func _ready():
 	
 	active = false
 	player = get_tree().get_first_node_in_group("player")
+	sprite.animation_finished.connect(_on_sprite_animation_finished)
+	
+	sfx_player = AudioStreamPlayer.new()
+	sfx_player.name = "HuracanSfx"
+	sfx_player.stream = HURACAN_SOUND
+	sfx_player.bus = &"EFX"
+	sfx_player.volume_db = 0.0
+	add_child(sfx_player)
+	
 	_start_attack_sequence()
+	
+	luz = PointLight2D.new()
+	add_child(luz)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+	luz.color = Color(0.3, 0.6, 1.0)
+	luz.energy = 0.0
+	
+	var imagen = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx = (x - 32.0) / 32.0
+			var dy = (y - 32.0) / 32.0
+			var dist = sqrt(dx*dx + dy*dy)
+			var alpha = clamp(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.2)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.position = Vector2(0, -120)
+	luz.texture_scale = 5.0
 
+func _on_sprite_animation_finished():
+	if sprite.animation == "huracan":
+		sprite.play("huracan_idle")
 
 func _start_attack_sequence():
 	await get_tree().create_timer(WARNING_TIME).timeout
 	active = true
 	sprite.play("huracan")
+	sfx_player.play()
+	
+	var tween = create_tween()
+	tween.tween_property(luz, "energy", 1.5, 0.3).set_trans(Tween.TRANS_SINE)
+	await tween.finished
+	
+	var tween_loop = create_tween().set_loops()
+	tween_loop.tween_property(luz, "energy", 2.0, 0.4).set_trans(Tween.TRANS_SINE)
+	tween_loop.tween_property(luz, "energy", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
 
 	await get_tree().create_timer(LIFETIME - WARNING_TIME).timeout
 	if pulling and not launched:
 		_launch_player()
 	queue_free()
+
+func _process(_delta):
+	sprite_glow.animation = sprite.animation
+	sprite_glow.frame = sprite.frame
+	sprite_glow.speed_scale = sprite.speed_scale
 
 func _physics_process(delta):
 	if not active or not player:
@@ -65,6 +115,7 @@ func _physics_process(delta):
 	active_time += delta
 	var active_duration = LIFETIME - WARNING_TIME
 	move_speed = lerp(MOVE_SPEED_START, MOVE_SPEED_MAX, active_time / active_duration)
+	sprite.speed_scale = lerp(1.0, 1.5, active_time / active_duration)
 
 	var to_player_x = player.global_position.x - global_position.x
 	var dist_x = abs(to_player_x)

@@ -8,8 +8,27 @@ const CHASE_SPEED: float = 60.0
 const DETECTION_DISTANCE: float = 220.0 
 const PATROL_X_RANGE: float = 48.0
 const STUN_DURATION: float = 0.5
-const HIT_PAUSE_DURATION: float = 1.1
+const HIT_PAUSE_DURATION: float = 0.7
 const DEAD_VISIBLE_TIME: float = 1.1
+
+const WALK_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/walk_sheet_3.png")
+const STUN_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/stun_sheet_3.png")
+const DEAD_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/dead_sheet_3.png")
+const IDLE_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/idle_sheet_3.png")
+const PUNCH_SHEET_3 := preload("res://assets/enemies/common/caminante_helado/punch_sheet_3.png")
+const WALK_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/walk_sheet_4.png")
+const STUN_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/stun_sheet_4.png")
+const DEAD_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/dead_sheet_4.png")
+const IDLE_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/idle_sheet_4.png")
+const PUNCH_SHEET_4 := preload("res://assets/enemies/common/caminante_helado/punch_sheet_4.png")
+
+const PUÑO_CAMINANTE := preload("res://music/enemies/common/caminante_helado/puño_caminante.ogg")
+const STUN_CAMINANTE := preload("res://music/enemies/common/caminante_helado/stun_caminante.ogg")
+const MUERTE_CAMINANTE := preload("res://music/enemies/common/caminante_helado/muerte_caminante.ogg")
+const RUGIDO_CAMINANTE := preload("res://music/enemies/common/caminante_helado/rugido_caminante.ogg")
+
+const SFX_MAX_DISTANCE: float = 280.0
+
 
 # --- ESTADOS ---
 enum State { IDLE, PATROL, CHASE, STUNNED, DEAD, ATTACK_PAUSE }
@@ -27,6 +46,11 @@ var idle_timer: float = 0.0
 var patrol_timer: float = 0.0
 var flip_cooldown: float = 0.0 
 var death_token: int = 0
+var rugido_timer: float = 0.0
+
+var _base_sprite_frames: SpriteFrames = null
+var _level3_sprite_frames: SpriteFrames = null
+var _level4_sprite_frames: SpriteFrames = null
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var vision: RayCast2D = $Vision
@@ -44,12 +68,16 @@ func _ready() -> void:
 	if not GameState.level_reset.is_connected(_on_level_reset):
 		GameState.level_reset.connect(_on_level_reset)
 	
+	_base_sprite_frames = sprite.sprite_frames
+	call_deferred("_apply_level_visuals")
+	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 
 	vision.target_position = Vector2(20 * facing_dir, 40) 
+	rugido_timer = randf_range(7.0, 10.0)
 	_enter_state(State.IDLE)
 
 func _physics_process(delta: float) -> void:
@@ -75,6 +103,23 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_update_animations()
+	
+	if current_state != State.DEAD:
+		rugido_timer -= delta
+		if rugido_timer <= 0.0:
+			_play_sfx(RUGIDO_CAMINANTE, 8.0)
+			rugido_timer = randf_range(7.0, 10.0)
+
+func _play_sfx(stream: AudioStream, vol: float = 0.0) -> void:
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	player.max_distance = SFX_MAX_DISTANCE
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
 
 func _on_level_reset():
 	death_token += 1
@@ -96,10 +141,73 @@ func _on_level_reset():
 	$EnemyHurtbox.set_deferred("collision_layer", 16)
 	$EnemyHurtbox.set_deferred("collision_mask", 4)
 	sprite.modulate.a = 1.0
+	call_deferred("_apply_level_visuals")
 	sprite.play("idle")
 	vision.enabled = true
 
 # --- LÓGICA DE ANIMACIÓN ---
+func _apply_level_visuals() -> void:
+	if sprite == null or _base_sprite_frames == null:
+		return
+
+	var target_frames: SpriteFrames = _base_sprite_frames
+	if GameState.current_level == 3:
+		target_frames = _get_level3_sprite_frames()
+	elif GameState.current_level == 4:
+		target_frames = _get_level4_sprite_frames()
+
+	if sprite.sprite_frames != target_frames:
+		sprite.sprite_frames = target_frames
+
+	var current_animation := sprite.animation
+	if current_animation != "" and sprite.sprite_frames.has_animation(current_animation):
+		sprite.play(current_animation)
+
+func _get_level3_sprite_frames() -> SpriteFrames:
+	if _level3_sprite_frames != null:
+		return _level3_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "walk", WALK_SHEET_3)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_3)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_3)
+	_replace_animation_frames(frames, "idle", IDLE_SHEET_3)
+	_replace_animation_frames(frames, "punch", PUNCH_SHEET_3)
+
+	_level3_sprite_frames = frames
+	return _level3_sprite_frames
+	
+func _get_level4_sprite_frames() -> SpriteFrames:
+	if _level4_sprite_frames != null:
+		return _level4_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "walk", WALK_SHEET_4)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_4)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_4)
+	_replace_animation_frames(frames, "idle", IDLE_SHEET_4)
+	_replace_animation_frames(frames, "punch", PUNCH_SHEET_4)
+
+	_level4_sprite_frames = frames
+	return _level4_sprite_frames
+
+func _replace_animation_frames(frames: SpriteFrames, animation_name: StringName, source_texture: Texture2D) -> void:
+	if frames == null or source_texture == null or not frames.has_animation(animation_name):
+		return
+
+	var frame_count := frames.get_frame_count(animation_name)
+	for frame_index in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = source_texture
+		atlas.region = Rect2(frame_index * 64, 0, 64, 64)
+		var frame_duration := _base_sprite_frames.get_frame_duration(animation_name, frame_index)
+		frames.set_frame(animation_name, frame_index, atlas, frame_duration)
 
 func _update_animations() -> void:
 	if current_state in [State.STUNNED, State.DEAD, State.ATTACK_PAUSE]:
@@ -109,11 +217,11 @@ func _update_animations() -> void:
 		sprite.play("idle")
 		sprite.flip_h = (facing_dir > 0)
 	elif current_state in [State.PATROL, State.CHASE]:
-		sprite.flip_h = false 
-		if facing_dir < 0:
-			sprite.play("walk_left")
+		sprite.flip_h = (facing_dir > 0)
+		if abs(velocity.x) > 0.1:
+			sprite.play("walk")
 		else:
-			sprite.play("walk_right")
+			sprite.play("idle")
 
 
 # --- MANEJO DE ESTADOS ---
@@ -125,7 +233,7 @@ func _enter_state(new_state: State) -> void:
 	match new_state:
 		State.IDLE:
 			velocity.x = 0
-			idle_timer = randf_range(1.0, 2.5) 
+			idle_timer = randf_range(1.0, 2.5)
 			
 		State.PATROL:
 			patrol_timer = randf_range(2.0, 4.0) 
@@ -134,18 +242,21 @@ func _enter_state(new_state: State) -> void:
 			pass 
 			
 		State.ATTACK_PAUSE:
-			sprite.play("idle") 
+			sprite.play("punch") 
 			sprite.flip_h = (facing_dir > 0)
 			velocity.x = 0
+			_play_sfx(PUÑO_CAMINANTE, 6.0)
 			
 		State.STUNNED:
 			sprite.play("dazed") 
 			sprite.flip_h = (facing_dir > 0) 
-			velocity.x = 0 
+			velocity.x = 0
+			_play_sfx(STUN_CAMINANTE, 6.0)
 			
 		State.DEAD:
 			sprite.play("dead") 
-			sprite.flip_h = (facing_dir > 0) 
+			sprite.flip_h = (facing_dir > 0)
+			_play_sfx(MUERTE_CAMINANTE, 8.0)
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)
 				$EnemyHitbox.set_deferred("monitorable", false)
@@ -327,6 +438,7 @@ func take_damage(amount: int) -> void:
 	_enter_state(State.STUNNED)
 
 func die() -> void:
+	NakamaManager.add_enemy_kill()
 	_enter_state(State.DEAD)
 	set_physics_process(false)
 	set_process(false)

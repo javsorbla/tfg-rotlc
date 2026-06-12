@@ -5,6 +5,17 @@ const DAMAGE: int = 10
 const ATTACK_SPEED: float = 320.0
 const SLEEP_DISTANCE: float = 250.0
 
+const ESTATICO_KAMIKAZE := preload("res://music/enemies/common/kamikaze_electrico/estatico_kamikaze.ogg")
+const GRITO_KAMIKAZE := preload("res://music/enemies/common/kamikaze_electrico/grito_kamikaze.ogg")
+const CARGA_KAMIKAZE := preload("res://music/enemies/common/kamikaze_electrico/carga_kamikaze.ogg")
+const EXPLOSION_KAMIKAZE := preload("res://music/enemies/common/kamikaze_electrico/explosion_kamikaze.ogg")
+
+const CHARGED_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/charged_sheet_4.png")
+const DEAD_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/dead_sheet_4.png")
+const DEAD_EXPLODE_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/dead_explode_sheet_4.png")
+const EXPLODE_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/explode_sheet_4.png")
+const SLEEP_SHEET_4 := preload("res://assets/enemies/common/kamikaze_electrico/sleep_sheet_4.png")
+
 enum State { SLEEP, ATTACK, EXPLODE, DEAD }
 
 var current_state: State = State.SLEEP
@@ -15,7 +26,19 @@ var explode_timer: float = 0.0
 var explode_from_death: bool = false
 var dead_timer: float = 0.0
 var spawn_position = Vector2.ZERO
+var previous_state: State = State.SLEEP
 var _combat_reset_state: Dictionary = {}
+
+var _estatico_player: AudioStreamPlayer2D = null
+var _carga_player: AudioStreamPlayer2D = null
+
+const SFX_MAX_DISTANCE: float = 350.0
+
+var _base_sprite_frames: SpriteFrames = null
+var _level4_sprite_frames: SpriteFrames = null
+
+@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var luz = $PointLight2D
 
 func _ready() -> void:
 	current_health = MAX_HEALTH
@@ -23,14 +46,78 @@ func _ready() -> void:
 	spawn_position = global_position
 	GameState.level_reset.connect(_on_level_reset)
 	
+	_base_sprite_frames = sprite.sprite_frames
+	call_deferred("_apply_level_visuals")
+	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
 		$EnemyHurtbox.area_entered.connect(_on_enemy_hurtbox_area_entered)
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
+	_setup_audio_players()
 	_enter_state(State.SLEEP)
+	
+	var imagen = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx = (x - 32.0) / 32.0
+			var dy = (y - 32.0) / 32.0
+			var dist = sqrt(dx*dx + dy*dy)
+			var alpha = clamp(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.5)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+	
+	_actualizar_luz()
 
+func _setup_audio_players() -> void:
+	_estatico_player = AudioStreamPlayer2D.new()
+	_estatico_player.stream = ESTATICO_KAMIKAZE
+	_estatico_player.bus = &"EFX"
+	_estatico_player.volume_db = 0.0
+	_estatico_player.max_distance = SFX_MAX_DISTANCE
+	add_child(_estatico_player)
+
+	_carga_player = AudioStreamPlayer2D.new()
+	_carga_player.stream = CARGA_KAMIKAZE
+	_carga_player.bus = &"EFX"
+	_carga_player.volume_db = 10.0
+	_carga_player.max_distance = SFX_MAX_DISTANCE
+	add_child(_carga_player)
+
+
+func _play_sfx(stream: AudioStream, vol: float = 0.0, max_dist: float = SFX_MAX_DISTANCE) -> void:
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	player.max_distance = max_dist
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
+
+func _actualizar_luz():
+	var base_color := Color(0.0, 0.6, 1.0) if GameState.current_level != 4 else Color(0.4, 0.0, 0.8)
+	match current_state:
+		State.SLEEP:
+			luz.color = base_color
+			luz.texture_scale = 0.8
+			luz.energy = 1.0
+		State.ATTACK:
+			luz.color = Color(base_color.r, base_color.g, base_color.b, 0.5)
+			luz.texture_scale = 1.5
+			luz.energy = 5.0
+		State.EXPLODE:
+			luz.color = Color(base_color.r, base_color.g, base_color.b, 0.5)
+			luz.texture_scale = 2.0
+			luz.energy = 6.0
+		State.DEAD:
+			luz.color = Color(base_color.r, base_color.g, base_color.b, 0.2)
+			luz.texture_scale = 1.5
+			luz.energy = 3.0
 
 func _physics_process(delta: float) -> void:
 	match current_state:
@@ -56,7 +143,52 @@ func _on_level_reset():
 	explode_from_death = false
 	dead_timer = 0.0
 	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	call_deferred("_apply_level_visuals")
 	_enter_state(State.SLEEP)
+
+func _apply_level_visuals() -> void:
+	if sprite == null or _base_sprite_frames == null:
+		return
+
+	var target_frames: SpriteFrames = _base_sprite_frames
+	if GameState.current_level == 4:
+		target_frames = _get_level4_sprite_frames()
+
+	if sprite.sprite_frames != target_frames:
+		sprite.sprite_frames = target_frames
+
+	var current_animation := sprite.animation
+	if current_animation != "" and sprite.sprite_frames.has_animation(current_animation):
+		sprite.play(current_animation)
+	
+func _get_level4_sprite_frames() -> SpriteFrames:
+	if _level4_sprite_frames != null:
+		return _level4_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "charged", CHARGED_SHEET_4)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_4)
+	_replace_animation_frames(frames, "dead_explode", DEAD_EXPLODE_SHEET_4)
+	_replace_animation_frames(frames, "explode", EXPLODE_SHEET_4)
+	_replace_animation_frames(frames, "sleep", SLEEP_SHEET_4)
+
+	_level4_sprite_frames = frames
+	return _level4_sprite_frames
+
+func _replace_animation_frames(frames: SpriteFrames, animation_name: StringName, source_texture: Texture2D) -> void:
+	if frames == null or source_texture == null or not frames.has_animation(animation_name):
+		return
+
+	var frame_count := frames.get_frame_count(animation_name)
+	for frame_index in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = source_texture
+		atlas.region = Rect2(frame_index * 64, 0, 64, 64)
+		var frame_duration := _base_sprite_frames.get_frame_duration(animation_name, frame_index)
+		frames.set_frame(animation_name, frame_index, atlas, frame_duration)
 
 
 func _despawn_dead_instance() -> void:
@@ -64,13 +196,24 @@ func _despawn_dead_instance() -> void:
 	EnemyResetUtils.despawn(self)
 
 func _enter_state(new_state: State) -> void:
+	previous_state = current_state
 	current_state = new_state
 
 	match new_state:
 		State.SLEEP:
 			velocity = Vector2.ZERO
+			if _carga_player and _carga_player.playing:
+				_carga_player.stop()
+			if _estatico_player and not _estatico_player.playing:
+				_estatico_player.play()
 
 		State.ATTACK:
+			if _estatico_player and _estatico_player.playing:
+				_estatico_player.stop()
+			_play_sfx(GRITO_KAMIKAZE, 4.0)
+			if _carga_player and not _carga_player.playing:
+				_carga_player.play()
+				_carga_player.volume_db = 10.0
 			$AnimatedSprite2D.play("charged")
 			if player:
 				var head_pos = player.global_position + Vector2(0, 10)
@@ -79,7 +222,13 @@ func _enter_state(new_state: State) -> void:
 				
 		State.EXPLODE:
 			velocity = Vector2.ZERO
-			$AnimatedSprite2D.play("explode")
+			if _carga_player and _carga_player.playing:
+				_carga_player.stop()
+			_play_sfx(EXPLOSION_KAMIKAZE, 12.0, 600.0)
+			if previous_state == State.DEAD:
+				$AnimatedSprite2D.play("dead_explode")
+			else:
+				$AnimatedSprite2D.play("explode")
 			if $EnemyHitbox:
 				$EnemyHitbox.monitoring = false
 				$EnemyHitbox.monitorable = false
@@ -97,6 +246,11 @@ func _enter_state(new_state: State) -> void:
 	
 		State.DEAD:
 			explode_from_death = false
+			if _estatico_player and _estatico_player.playing:
+				_estatico_player.stop()
+			if _carga_player and not _carga_player.playing:
+				_carga_player.play()
+			_carga_player.volume_db = -8.0
 			$AnimatedSprite2D.play("dead")
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)
@@ -110,7 +264,8 @@ func _enter_state(new_state: State) -> void:
 				$EnemyHurtbox.set_deferred("collision_layer", 0)
 				$EnemyHurtbox.set_deferred("collision_mask", 0)
 			velocity = Vector2(0, 0)
-
+	
+	_actualizar_luz()
 
 func _state_sleep() -> void:
 	velocity = Vector2.ZERO
@@ -171,4 +326,5 @@ func take_damage(amount: int) -> void:
 
 
 func die() -> void:
+	NakamaManager.add_enemy_kill()
 	_enter_state(State.DEAD)

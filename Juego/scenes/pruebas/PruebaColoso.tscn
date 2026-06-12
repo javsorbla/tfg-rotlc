@@ -1,12 +1,8 @@
-[gd_scene load_steps=17 format=4 uid="uid://shyldwrlc5so"]
+[gd_scene load_steps=12 format=4 uid="uid://shyldwrlc5so"]
 
 [ext_resource type="Texture2D" uid="uid://bcp8hn3glstjl" path="res://assets/tilesets/montañas_ceniza/FireSet.png" id="1_njwen"]
-[ext_resource type="PackedScene" uid="uid://b4xv5brfpegl" path="res://scenes/enviroment/PlataformaRompible.tscn" id="2_ideqb"]
+[ext_resource type="PackedScene" uid="uid://k7r8l2h9y1nqv" path="res://scenes/enviroment/PlataformaRompiblePorNivel.tscn" id="2_ideqb"]
 [ext_resource type="PackedScene" uid="uid://j3iq0wr4lk5y" path="res://enemies/bosses/coloso_ceniza/ColosoCeniza.tscn" id="3_etxhj"]
-[ext_resource type="Texture2D" uid="uid://pykyxvncyfos" path="res://assets/enemies/bosses/coloso_ceniza/coloso_herido.png" id="4_h5dbu"]
-[ext_resource type="Texture2D" uid="uid://gqny0mm1jot1" path="res://assets/enemies/bosses/coloso_ceniza/coloso.png" id="5_gms8t"]
-[ext_resource type="Texture2D" uid="uid://bp73nfu16pj8n" path="res://assets/enemies/bosses/coloso_ceniza/puñetazo.png" id="6_35w2w"]
-[ext_resource type="Texture2D" uid="uid://xks3jx3sfl8r" path="res://assets/enemies/bosses/coloso_ceniza/grito.png" id="7_g3a7t"]
 [ext_resource type="PackedScene" uid="uid://dtj3ad4yanwgl" path="res://scenes/Camara.tscn" id="8_p7ef8"]
 [ext_resource type="PackedScene" uid="uid://msgn8vkyft75" path="res://player/Player.tscn" id="9_kmxla"]
 [ext_resource type="PackedScene" uid="uid://bsukqcw5xjnu8" path="res://scenes/enviroment/ZonaJefe.tscn" id="10_fjvfo"]
@@ -43,50 +39,6 @@ texture = ExtResource("1_njwen")
 [sub_resource type="TileSet" id="TileSet_34jmr"]
 physics_layer_0/collision_layer = 1
 sources/1 = SubResource("TileSetAtlasSource_w1apf")
-
-[sub_resource type="SpriteFrames" id="SpriteFrames_esgw8"]
-resource_local_to_scene = true
-animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("4_h5dbu")
-}],
-"loop": true,
-"name": &"hurt",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("5_gms8t")
-}],
-"loop": true,
-"name": &"idle",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("6_35w2w")
-}],
-"loop": true,
-"name": &"punch",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("5_gms8t")
-}],
-"loop": true,
-"name": &"rage",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("7_g3a7t")
-}],
-"loop": true,
-"name": &"wave",
-"speed": 5.0
-}]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lxlvl"]
 size = Vector2(45, 279)
@@ -146,10 +98,6 @@ position = Vector2(681, -88)
 [node name="ColosoCeniza" parent="." instance=ExtResource("3_etxhj")]
 position = Vector2(690, -17)
 
-[node name="AnimatedSprite2D" parent="ColosoCeniza" index="0"]
-sprite_frames = SubResource("SpriteFrames_esgw8")
-animation = &"rage"
-
 [node name="Camera2D" parent="." instance=ExtResource("8_p7ef8")]
 
 [node name="Player" parent="." instance=ExtResource("9_kmxla")]
@@ -185,5 +133,4 @@ position = Vector2(389, -106)
 [node name="LimiteAbajo" parent="ZonaJefe" index="7"]
 position = Vector2(397, 173)
 
-[editable path="ColosoCeniza"]
 [editable path="ZonaJefe"]

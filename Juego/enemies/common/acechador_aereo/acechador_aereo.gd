@@ -15,6 +15,21 @@ const RETURN_ARC_HEIGHT: float = 40.0
 const KNOCKBACK_FORCE: float = 10.0
 const DIVE_MAX_DISTANCE: float = 300.0  # distancia máxima antes de volver
 
+const ALETEO_ACECHADOR: AudioStreamOggVorbis = preload("res://music/enemies/common/acechador_aereo/aleteo_acechador.ogg")
+const ATAQUE_ACECHADOR: AudioStreamOggVorbis = preload("res://music/enemies/common/acechador_aereo/ataque_acechador.ogg")
+const STUN_ACECHADOR: AudioStreamOggVorbis = preload("res://music/enemies/common/acechador_aereo/stun_acechador.ogg")
+const MUERTE_ACECHADOR: AudioStreamOggVorbis = preload("res://music/enemies/common/acechador_aereo/muerte_acechador.ogg")
+
+const MOVE_SHEET_2 := preload("res://assets/enemies/common/acechador_aereo/move_sheet_2.png")
+const STUN_SHEET_2 := preload("res://assets/enemies/common/acechador_aereo/stun_sheet_2.png")
+const DEAD_SHEET_2 := preload("res://assets/enemies/common/acechador_aereo/dead_sheet_2.png")
+const MOVE_SHEET_3 := preload("res://assets/enemies/common/acechador_aereo/move_sheet_3.png")
+const STUN_SHEET_3 := preload("res://assets/enemies/common/acechador_aereo/stun_sheet_3.png")
+const DEAD_SHEET_3 := preload("res://assets/enemies/common/acechador_aereo/dead_sheet_3.png")
+const MOVE_SHEET_4 := preload("res://assets/enemies/common/acechador_aereo/move_sheet_4.png")
+const STUN_SHEET_4 := preload("res://assets/enemies/common/acechador_aereo/stun_sheet_4.png")
+const DEAD_SHEET_4 := preload("res://assets/enemies/common/acechador_aereo/dead_sheet_4.png")
+
 enum State { IDLE, DIVING, RETURNING, STUNNED, DEAD }
 
 var current_state: State = State.IDLE
@@ -40,6 +55,15 @@ var death_grounded_timer: float = -1.0
 var has_landed: bool = false
 var _combat_reset_state: Dictionary = {}
 
+var _base_sprite_frames: SpriteFrames = null
+var _level2_sprite_frames: SpriteFrames = null
+var _level3_sprite_frames: SpriteFrames = null
+var _level4_sprite_frames: SpriteFrames = null
+var _aleteo_player: AudioStreamPlayer2D = null
+
+@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var luz: PointLight2D = $PointLight2D
+
 
 func _ready() -> void:
 	current_health = MAX_HEALTH
@@ -47,6 +71,8 @@ func _ready() -> void:
 	
 	spawn_position = global_position
 	GameState.level_reset.connect(_on_level_reset)
+	_base_sprite_frames = sprite.sprite_frames
+	call_deferred("_apply_level_visuals")
 	
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
@@ -55,7 +81,56 @@ func _ready() -> void:
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	patrol_origin = global_position
+	_setup_aleteo()
+	_setup_light()
 	_enter_state(State.IDLE)
+
+
+func _setup_aleteo() -> void:
+	_aleteo_player = AudioStreamPlayer2D.new()
+	_aleteo_player.stream = ALETEO_ACECHADOR
+	_aleteo_player.bus = &"EFX"
+	_aleteo_player.volume_db = 4.0
+	_aleteo_player.max_distance = 450.0
+	_aleteo_player.pitch_scale = 1.35
+	add_child(_aleteo_player)
+
+
+func _setup_light() -> void:
+	if GameState.current_level == 1 or GameState.current_level == 4:
+		luz.enabled = false
+		return
+
+	luz.enabled = true
+	var imagen: Image = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx: float = (x - 32.0) / 32.0
+			var dy: float = (y - 32.0) / 32.0
+			var dist: float = sqrt(dx * dx + dy * dy)
+			var alpha: float = clamp(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.5)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+
+	if GameState.current_level == 2:
+		luz.color = Color(1.0, 0.5, 0.0)
+		luz.energy = 2.0
+	elif GameState.current_level == 3:
+		luz.color = Color(1.0, 0.8, 0.0)
+		luz.energy = 3.0
+	luz.texture_scale = 1.0
+
+
+func _play_sfx(stream: AudioStream, vol: float = -8.0) -> void:
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
 
 
 func _physics_process(delta: float) -> void:
@@ -90,7 +165,86 @@ func _on_level_reset():
 	has_landed = false
 	death_grounded_timer = -1.0
 	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	call_deferred("_apply_level_visuals")
+	_setup_light()
 	_enter_state(State.IDLE)
+
+
+func _apply_level_visuals() -> void:
+	if sprite == null or _base_sprite_frames == null:
+		return
+
+	var target_frames: SpriteFrames = _base_sprite_frames
+	if GameState.current_level == 2:
+		target_frames = _get_level2_sprite_frames()
+	elif GameState.current_level == 3:
+		target_frames = _get_level3_sprite_frames()
+	elif GameState.current_level == 4:
+		target_frames = _get_level4_sprite_frames()
+
+	if sprite.sprite_frames != target_frames:
+		sprite.sprite_frames = target_frames
+
+	var current_animation := sprite.animation
+	if current_animation != "" and sprite.sprite_frames.has_animation(current_animation):
+		sprite.play(current_animation)
+
+func _get_level2_sprite_frames() -> SpriteFrames:
+	if _level2_sprite_frames != null:
+		return _level2_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "move", MOVE_SHEET_2)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_2)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_2)
+
+	_level2_sprite_frames = frames
+	return _level2_sprite_frames
+
+func _get_level3_sprite_frames() -> SpriteFrames:
+	if _level3_sprite_frames != null:
+		return _level3_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "move", MOVE_SHEET_3)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_3)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_3)
+
+	_level3_sprite_frames = frames
+	return _level3_sprite_frames
+	
+func _get_level4_sprite_frames() -> SpriteFrames:
+	if _level4_sprite_frames != null:
+		return _level4_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "move", MOVE_SHEET_4)
+	_replace_animation_frames(frames, "dazed", STUN_SHEET_4)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_4)
+
+	_level4_sprite_frames = frames
+	return _level4_sprite_frames
+
+func _replace_animation_frames(frames: SpriteFrames, animation_name: StringName, source_texture: Texture2D) -> void:
+	if frames == null or source_texture == null or not frames.has_animation(animation_name):
+		return
+
+	var frame_count := frames.get_frame_count(animation_name)
+	for frame_index in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = source_texture
+		atlas.region = Rect2(frame_index * 64, 0, 64, 64)
+		var frame_duration := _base_sprite_frames.get_frame_duration(animation_name, frame_index)
+		frames.set_frame(animation_name, frame_index, atlas, frame_duration)
 
 
 func _despawn_dead_instance() -> void:
@@ -105,6 +259,10 @@ func _enter_state(new_state: State) -> void:
 		State.IDLE:
 			velocity = Vector2.ZERO
 			has_hit_player = false
+			$AnimatedSprite2D.flip_h = patrol_dir > 0
+			$AnimatedSprite2D.play("move")
+			if _aleteo_player and not _aleteo_player.playing:
+				_aleteo_player.play()
 
 		State.DIVING:
 			if player:
@@ -113,13 +271,33 @@ func _enter_state(new_state: State) -> void:
 				velocity = dive_direction * DIVE_SPEED
 				has_hit_player = false
 				dive_started_pos = global_position
+			_play_sfx(ATAQUE_ACECHADOR, 4.0)
+
+		State.STUNNED:
+			if _aleteo_player and _aleteo_player.playing:
+				_aleteo_player.stop()
+			_play_sfx(STUN_ACECHADOR, 4.0)
 
 		State.RETURNING:
 			velocity = Vector2.ZERO
 			return_start_pos = global_position
 			return_progress = 0.0
+			if _aleteo_player and not _aleteo_player.playing:
+				_aleteo_player.play()
 
 		State.DEAD:
+			if _aleteo_player:
+				_aleteo_player.stop()
+			if luz and luz.enabled:
+				var tween: Tween = create_tween()
+				tween.tween_property(luz, "energy", 0.0, 0.8)
+			var death_sfx := AudioStreamPlayer.new()
+			death_sfx.stream = MUERTE_ACECHADOR
+			death_sfx.bus = &"EFX"
+			death_sfx.volume_db = 6.0
+			get_tree().root.add_child(death_sfx)
+			death_sfx.play()
+			death_sfx.finished.connect(death_sfx.queue_free)
 			$AnimatedSprite2D.play("dead")
 
 			if $EnemyHitbox:
@@ -161,17 +339,16 @@ func _state_idle() -> void:
 	elif global_position.x <= patrol_origin.x - PATROL_X_RANGE:
 		patrol_dir = 1.0
 
-	if patrol_dir > 0:
-		$AnimatedSprite2D.play("walk_right")
-	else:
-		$AnimatedSprite2D.play("walk_left")
+	$AnimatedSprite2D.flip_h = patrol_dir > 0
+	$AnimatedSprite2D.play("move")
 
 
 func _state_diving() -> void:
 	if not player:
 		return
 
-	$AnimatedSprite2D.play("dive")
+	$AnimatedSprite2D.flip_h = dive_direction.x > 0
+	$AnimatedSprite2D.play("move")
 	velocity = dive_direction * DIVE_SPEED
 
 	# Si choca con un muro, cancela el ataque
@@ -199,10 +376,8 @@ func _state_returning() -> void:
 	new_pos.y -= sin(t * PI) * RETURN_ARC_HEIGHT
 	global_position = new_pos
 
-	if total_dir.x < 0:
-		$AnimatedSprite2D.play("walk_left")
-	else:
-		$AnimatedSprite2D.play("walk_right")
+	$AnimatedSprite2D.flip_h = total_dir.x > 0
+	$AnimatedSprite2D.play("move")
 
 	if t >= 1.0:
 		global_position = patrol_origin
@@ -257,4 +432,5 @@ func take_damage(amount: int) -> void:
 
 
 func die() -> void:
+	NakamaManager.add_enemy_kill()
 	_enter_state(State.DEAD)

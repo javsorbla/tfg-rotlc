@@ -3,6 +3,8 @@ extends Node2D
 const COSTA_SCENE := "res://scenes/CostaAmbar.tscn"
 const PAUSE_MENU_LAYER_SCENE := preload("res://ui/menus/windows/pause_menu_layer.tscn")
 const DEATH_SCREEN_SCENE := preload("res://ui/menus/windows/death_screen.tscn")
+const MONTANAS_CENIZA_MUSIC := preload("res://music/scenes/montanas_ceniza/montanas_ceniza.ogg")
+const EMBOSCADA_MUSIC := preload("res://music/scenes/montanas_ceniza/emboscada.ogg")
 
 @onready var tilemap = $Nivel 
 @onready var enemigos_emboscada = [
@@ -25,14 +27,20 @@ var id_tileset = 1
 var coordenadas_imagen = Vector2i(2, 1) 
 
 
-func _ready() -> void:
+func _enter_tree() -> void:
 	GameState.current_level = 2
 	GameState.current_level_path = "res://scenes/MontañasDeCeniza.tscn"
+
+func _ready() -> void:
+	
+	if GameState.has_method("auto_unlock_power_for_level"):
+		GameState.auto_unlock_power_for_level()
+	NakamaManager.start_run(GameState.current_level)
 	_ensure_pause_menu_layer()
 	_ensure_death_screen()
-	Hud.show_hud()
 	call_deferred("_wire_player_death")
 	call_deferred("_mover_player")
+	call_deferred("_start_level_music")
 	GameState.level_reset.connect(reiniciar_trampa)
 	reiniciar_trampa()
 
@@ -104,16 +112,30 @@ func _on_trigger_supervivencia_body_entered(body):
 		for enemigo in enemigos_emboscada:
 			enemigo.visible = true
 			enemigo.process_mode = Node.PROCESS_MODE_INHERIT
-			
 
 		$TriggerSupervivencia.set_deferred("monitoring", false)
+
+		ProjectMusicController.fade_out_duration = 1.5
+		ProjectMusicController.fade_in_duration = 1.5
+		ProjectMusicController.play_stream(EMBOSCADA_MUSIC)
+		ProjectMusicController.fade_out_duration = 0.0
+		ProjectMusicController.fade_in_duration = 0.0
 
 
 func _on_timer_timeout():
 	for posicion in bloques_a_destruir:
 		tilemap.erase_cell(posicion)
+
+	ProjectMusicController.fade_out_duration = 1.5
+	ProjectMusicController.fade_in_duration = 1.5
+	ProjectMusicController.play_stream(MONTANAS_CENIZA_MUSIC)
+	ProjectMusicController.fade_out_duration = 0.0
+	ProjectMusicController.fade_in_duration = 0.0
 		
 	
+func _start_level_music() -> void:
+	ProjectMusicController.play_stream(MONTANAS_CENIZA_MUSIC)
+
 func _mover_player() -> void:
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
@@ -132,6 +154,7 @@ func _mover_player() -> void:
 func _on_final_body_entered(body) -> void:
 	if body is CharacterBody2D:
 		GameState.coming_from_transition = true
+		ProjectMusicController.stop()
 		get_tree().call_deferred("change_scene_to_file", COSTA_SCENE)
 
 func _on_player_died(_owner: Node) -> void:

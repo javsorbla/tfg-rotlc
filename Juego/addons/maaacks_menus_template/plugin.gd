@@ -346,15 +346,15 @@ func _add_audio_bus(bus_name : String) -> void:
 		AudioServer.add_bus()
 		var new_bus_idx := AudioServer.bus_count - 1
 		AudioServer.set_bus_name(new_bus_idx, bus_name)
-		AudioServer.set_bus_send(new_bus_idx, &"Master")
+		AudioServer.set_bus_send(new_bus_idx, &"Maestro")
 	ProjectSettings.save()
 
 func _install_audio_busses() -> void:
 	if ProjectSettings.has_setting(PROJECT_SETTINGS_PATH + "disable_install_audio_busses"):
 		if ProjectSettings.get_setting(PROJECT_SETTINGS_PATH + "disable_install_audio_busses") :
 			return
-	_add_audio_bus("Music")
-	_add_audio_bus("SFX")
+	_add_audio_bus("Música")
+	_add_audio_bus("EFX")
 	ProjectSettings.set_setting(PROJECT_SETTINGS_PATH + "disable_install_audio_busses", true)
 	ProjectSettings.save()
 

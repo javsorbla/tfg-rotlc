@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://addons/maaacks_menus_template/base/nodes/windows/overlaid_window_scene_container.tscn" id="1_6b1bf"]
 [ext_resource type="Script" path="res://ui/menus/windows/main_menu_credits_window.gd" id="2_6b1bf"]
-[ext_resource type="PackedScene" path="res://ui/menus/credits/scrollable_credits.tscn" id="3_kmo1t"]
+[ext_resource type="PackedScene" path="res://ui/menus/credits/scrolling_credits.tscn" id="3_kmo1t"]
 
 [node name="MainMenuCreditsOverlaidWindow" unique_id=1453761674 instance=ExtResource("1_6b1bf")]
 anchors_preset = 15
@@ -21,5 +21,6 @@ packed_scene = ExtResource("3_kmo1t")
 visible = false
 
 [node name="CloseButton" parent="ContentContainer/BoxContainer/MenuButtonsMargin/MenuButtons" parent_id_path=PackedInt32Array(1371114575) index="0" unique_id=314526102]
+visible = false
 size_flags_horizontal = 0
 text = "Volver"

@@ -1,0 +1,155 @@
+[gd_scene load_steps=8 format=3 uid="uid://cwd0yovdqda7w"]
+
+[ext_resource type="Script" path="res://ui/menus/options_menu/input/input_controls_split.gd" id="1_62af2"]
+[ext_resource type="Script" path="res://ui/menus/options_menu/input/filtered_input_actions_list.gd" id="2_mqvje"]
+[ext_resource type="PackedScene" uid="uid://bxp45814v6ydv" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/input/input_actions_list.tscn" id="3_2yx25"]
+[ext_resource type="PackedScene" uid="uid://bcp6f6yysejjk" path="res://ui/menus/options_menu/input/input_icon_mapper.tscn" id="4_e4q4f"]
+[ext_resource type="PackedScene" uid="uid://dgravx3vt5g3i" path="res://addons/maaacks_menus_template/base/nodes/menus/options_menu/input/key_assignment_window.tscn" id="5_k15l1"]
+[ext_resource type="PackedScene" uid="uid://cwt4p3bufkke5" path="res://addons/maaacks_menus_template/base/nodes/windows/confirmation_overlaid_window.tscn" id="6_3f5uo"]
+[ext_resource type="PackedScene" uid="uid://6gdbfi0172ji" path="res://addons/maaacks_menus_template/base/nodes/windows/overlaid_window.tscn" id="7_caxpa"]
+
+[node name="ControlsSplit" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 8
+script = ExtResource("1_62af2")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="IntroLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Configura controles por dispositivo"
+horizontal_alignment = 1
+
+[node name="DeviceTabs" type="TabContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="Teclado" type="MarginContainer" parent="VBoxContainer/DeviceTabs"]
+layout_mode = 2
+size_flags_vertical = 3
+metadata/_tab_index = 0
+
+[node name="KeyboardActionsList" parent="VBoxContainer/DeviceTabs/Teclado" instance=ExtResource("3_2yx25")]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_mqvje")
+device_filter = 0
+action_label_minimum_width = 280.0
+action_groups = 1
+action_group_names = Array[String](["Tecla"])
+input_action_names = Array[StringName]([&"move_left", &"move_right", &"jump", &"dash", &"attack", &"power_cyan", &"power_red", &"power_yellow", &"pause"])
+readable_action_names = Array[String](["Mover a la izquierda", "Mover a la derecha", "Saltar", "Esquivar", "Atacar", "Poder Cian", "Poder Rojo", "Poder Amarillo", "Pausa"])
+capitalize_action_names = false
+show_all_actions = false
+button_minimum_size = Vector2(260, 42)
+action_name_map = {
+"attack": "Atacar",
+"dash": "Esquivar",
+"jump": "Saltar",
+"move_left": "Mover a la izquierda",
+"move_right": "Mover a la derecha",
+"pause": "Pausa",
+"power_cyan": "Poder Cian",
+"power_red": "Poder Rojo",
+"power_yellow": "Poder Amarillo"
+}
+
+[node name="Mando" type="MarginContainer" parent="VBoxContainer/DeviceTabs"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+metadata/_tab_index = 1
+
+[node name="GamepadActionsList" parent="VBoxContainer/DeviceTabs/Mando" instance=ExtResource("3_2yx25")]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_mqvje")
+device_filter = 1
+action_label_minimum_width = 280.0
+action_groups = 1
+action_group_names = Array[String](["Boton"])
+input_action_names = Array[StringName]([&"move_left", &"move_right", &"jump", &"dash", &"attack", &"power_cyan", &"power_red", &"power_yellow", &"pause"])
+readable_action_names = Array[String](["Mover a la izquierda", "Mover a la derecha", "Saltar", "Esquivar", "Atacar", "Poder Cian", "Poder Rojo", "Poder Amarillo", "Pausa"])
+capitalize_action_names = false
+show_all_actions = false
+button_minimum_size = Vector2(260, 42)
+action_name_map = {
+"attack": "Atacar",
+"dash": "Esquivar",
+"jump": "Saltar",
+"move_left": "Mover a la izquierda",
+"move_right": "Mover a la derecha",
+"pause": "Pausa",
+"power_cyan": "Poder Cian",
+"power_red": "Poder Rojo",
+"power_yellow": "Poder Amarillo"
+}
+
+[node name="ResetRow" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="ResetButton" type="Button" parent="VBoxContainer/ResetRow"]
+layout_mode = 2
+text = "Restaurar controles"
+
+[node name="InputIconMapper" parent="." instance=ExtResource("4_e4q4f")]
+
+[node name="KeyAssignmentWindow" parent="." instance=ExtResource("5_k15l1")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+confirm_button_text = "Confirmar"
+
+[node name="KeyDeletionConfirmation" parent="." instance=ExtResource("6_3f5uo")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(420, 200)
+layout_mode = 2
+confirm_button_text = "Eliminar"
+title = ""
+
+[node name="ResetConfirmation" parent="." instance=ExtResource("6_3f5uo")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(420, 200)
+layout_mode = 2
+confirm_button_text = "Restaurar"
+text = "Se restablecerán los controles de teclado y mando."
+title = "Restaurar controles"
+
+[node name="OneInputMinimumMessage" parent="." instance=ExtResource("7_caxpa")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(420, 200)
+layout_mode = 2
+update_content = true
+title = "Controles"
+
+[node name="AlreadyAssignedMessage" parent="." instance=ExtResource("7_caxpa")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(420, 200)
+layout_mode = 2
+update_content = true
+title = "Entrada ya asignada"
+
+[connection signal="tab_changed" from="VBoxContainer/DeviceTabs" to="." method="_on_device_tabs_tab_changed"]
+[connection signal="pressed" from="VBoxContainer/ResetRow/ResetButton" to="." method="_on_reset_button_pressed"]
+[connection signal="confirmed" from="KeyAssignmentWindow" to="." method="_on_key_assignment_window_confirmed"]
+[connection signal="confirmed" from="KeyDeletionConfirmation" to="." method="_on_key_deletion_confirmation_confirmed"]
+[connection signal="confirmed" from="ResetConfirmation" to="." method="_on_reset_confirmation_confirmed"]

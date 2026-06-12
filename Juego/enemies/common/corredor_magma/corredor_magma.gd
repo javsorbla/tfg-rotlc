@@ -12,6 +12,26 @@ const STUN_DURATION: float = 0.4
 const DASH_SPEED: float = 300.0
 const DASH_RANGE: float = 150.0 
 
+const RUGIDO_CORREDOR := preload("res://music/enemies/common/corredor_magma/rugido_corredor.ogg")
+const ATAQUE_CORREDOR := preload("res://music/enemies/common/corredor_magma/ataque_corredor.ogg")
+const STUN_CORREDOR := preload("res://music/enemies/common/corredor_magma/stun_corredor.ogg")
+const MUERTE_CORREDOR := preload("res://music/enemies/common/corredor_magma/muerte_corredor.ogg")
+
+const SFX_MAX_DISTANCE: float = 350.0
+
+const WALK_SHEET_3 := preload("res://assets/enemies/common/corredor_magma/walk_sheet_3.png")
+const STUN_SHEET_3 := preload("res://assets/enemies/common/corredor_magma/stun_sheet_3.png")
+const DEAD_SHEET_3 := preload("res://assets/enemies/common/corredor_magma/dead_sheet_3.png")
+const IDLE_SHEET_3 := preload("res://assets/enemies/common/corredor_magma/idle_sheet_3.png")
+const RUN_SHEET_3 := preload("res://assets/enemies/common/corredor_magma/run_sheet_3.png")
+const JUMP_SHEET_3 := preload("res://assets/enemies/common/corredor_magma/jump_sheet_3.png")
+const WALK_SHEET_4 := preload("res://assets/enemies/common/corredor_magma/walk_sheet_4.png")
+const STUN_SHEET_4 := preload("res://assets/enemies/common/corredor_magma/stun_sheet_4.png")
+const DEAD_SHEET_4 := preload("res://assets/enemies/common/corredor_magma/dead_sheet_4.png")
+const IDLE_SHEET_4 := preload("res://assets/enemies/common/corredor_magma/idle_sheet_4.png")
+const RUN_SHEET_4 := preload("res://assets/enemies/common/corredor_magma/run_sheet_4.png")
+const JUMP_SHEET_4 := preload("res://assets/enemies/common/corredor_magma/jump_sheet_4.png")
+
 # --- ESTADOS ---
 enum State { IDLE, PATROL, CHASE, STUNNED, DEAD, PREPARE_DASH, DASH }
 
@@ -33,9 +53,18 @@ var dash_cooldown: float = 0.0
 var dash_timer: float = 0.0
 var _combat_reset_state: Dictionary = {}
 
+var rugido_timer: float = 0.0
+var _ataque_player: AudioStreamPlayer2D = null
+var _muerte_player: AudioStreamPlayer2D = null
+
+var _base_sprite_frames: SpriteFrames = null
+var _level3_sprite_frames: SpriteFrames = null
+var _level4_sprite_frames: SpriteFrames = null
+
 # --- NODOS ---
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var vision: RayCast2D = $Vision
+@onready var luz: PointLight2D = $PointLight2D
 
 
 # --- CICLO PRINCIPAL ---
@@ -47,6 +76,9 @@ func _ready() -> void:
 	spawn_position = global_position
 	GameState.level_reset.connect(_on_level_reset)
 
+	_base_sprite_frames = sprite.sprite_frames
+	call_deferred("_apply_level_visuals")
+
 	if not $EnemyHitbox.area_entered.is_connected(_on_enemy_hitbox_area_entered):
 		$EnemyHitbox.area_entered.connect(_on_enemy_hitbox_area_entered)
 	if not $EnemyHurtbox.area_entered.is_connected(_on_enemy_hurtbox_area_entered):
@@ -54,6 +86,8 @@ func _ready() -> void:
 	_combat_reset_state = EnemyResetUtils.capture_collider_state($EnemyHitbox, $EnemyHurtbox)
 
 	vision.target_position = Vector2(20, 40) 
+	rugido_timer = randf_range(7.0, 10.0)
+	_setup_light()
 	_enter_state(State.IDLE)
 
 
@@ -86,16 +120,63 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	# Rugido aleatorio
+	if current_state != State.DEAD:
+		rugido_timer -= delta
+		if rugido_timer <= 0.0:
+			if (_ataque_player == null or not _ataque_player.playing) and (_muerte_player == null or not _muerte_player.playing):
+				_play_sfx(RUGIDO_CORREDOR, 10.0)
+			rugido_timer = randf_range(7.0, 10.0)
+
 	# Control global de animación de salto
 	if not is_on_floor():
 		if current_state not in [State.STUNNED, State.DEAD, State.DASH, State.PREPARE_DASH]:
-			sprite.play("jump")
+			sprite.play("run")
 	else:
-		if sprite.animation == "jump":
+		if sprite.animation == "run":
 			if current_state == State.IDLE:
-				sprite.play("iddle")
+				sprite.play("idle")
 			elif current_state in [State.PATROL, State.CHASE]:
 				sprite.play("run")
+
+func _setup_light() -> void:
+	if GameState.current_level == 1:
+		luz.enabled = false
+		return
+
+	luz.enabled = true
+	var imagen: Image = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for x in range(64):
+		for y in range(64):
+			var dx: float = (x - 32.0) / 32.0
+			var dy: float = (y - 32.0) / 32.0
+			var dist: float = sqrt(dx * dx + dy * dy)
+			var alpha: float = clamp(1.0 - dist, 0.0, 1.0)
+			alpha = pow(alpha, 1.5)
+			imagen.set_pixel(x, y, Color(1, 1, 1, alpha))
+	luz.texture = ImageTexture.create_from_image(imagen)
+	luz.blend_mode = Light2D.BLEND_MODE_ADD
+
+	if GameState.current_level == 2:
+		luz.color = Color(1.0, 0.5, 0.0)
+	elif GameState.current_level == 3:
+		luz.color = Color(0.0, 0.6, 1.0)
+	elif GameState.current_level == 4:
+		luz.color = Color(0.4, 0.0, 0.8)
+	luz.texture_scale = 1.25
+	luz.energy = 3.5
+
+
+func _play_sfx(stream: AudioStream, vol: float = 0.0) -> void:
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.bus = &"EFX"
+	player.volume_db = vol
+	player.max_distance = SFX_MAX_DISTANCE
+	add_child(player)
+	player.play()
+	player.finished.connect(player.queue_free)
+
 
 func _on_level_reset():
 	set_physics_process(true)
@@ -104,7 +185,75 @@ func _on_level_reset():
 	global_position = spawn_position
 	velocity = Vector2.ZERO
 	EnemyResetUtils.restore_collider_state($EnemyHitbox, $EnemyHurtbox, _combat_reset_state)
+	call_deferred("_apply_level_visuals")
+	_setup_light()
+	sprite.play("idle")
 	_enter_state(State.IDLE)
+
+func _apply_level_visuals() -> void:
+	if sprite == null or _base_sprite_frames == null:
+		return
+
+	var target_frames: SpriteFrames = _base_sprite_frames
+	if GameState.current_level == 3:
+		target_frames = _get_level3_sprite_frames()
+	elif GameState.current_level == 4:
+		target_frames = _get_level4_sprite_frames()
+
+	if sprite.sprite_frames != target_frames:
+		sprite.sprite_frames = target_frames
+
+	var current_animation := sprite.animation
+	if current_animation != "" and sprite.sprite_frames.has_animation(current_animation):
+		sprite.play(current_animation)
+
+func _get_level3_sprite_frames() -> SpriteFrames:
+	if _level3_sprite_frames != null:
+		return _level3_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "walk", WALK_SHEET_3)
+	_replace_animation_frames(frames, "stun", STUN_SHEET_3)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_3)
+	_replace_animation_frames(frames, "idle", IDLE_SHEET_3)
+	_replace_animation_frames(frames, "run", RUN_SHEET_3)
+	_replace_animation_frames(frames, "jump", JUMP_SHEET_3)
+
+	_level3_sprite_frames = frames
+	return _level3_sprite_frames
+	
+func _get_level4_sprite_frames() -> SpriteFrames:
+	if _level4_sprite_frames != null:
+		return _level4_sprite_frames
+
+	var frames := _base_sprite_frames.duplicate(true) as SpriteFrames
+	if frames == null:
+		return _base_sprite_frames
+
+	_replace_animation_frames(frames, "walk", WALK_SHEET_4)
+	_replace_animation_frames(frames, "stun", STUN_SHEET_4)
+	_replace_animation_frames(frames, "dead", DEAD_SHEET_4)
+	_replace_animation_frames(frames, "idle", IDLE_SHEET_4)
+	_replace_animation_frames(frames, "run", RUN_SHEET_4)
+	_replace_animation_frames(frames, "jump", JUMP_SHEET_4)
+
+	_level4_sprite_frames = frames
+	return _level4_sprite_frames
+
+func _replace_animation_frames(frames: SpriteFrames, animation_name: StringName, source_texture: Texture2D) -> void:
+	if frames == null or source_texture == null or not frames.has_animation(animation_name):
+		return
+
+	var frame_count := frames.get_frame_count(animation_name)
+	for frame_index in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = source_texture
+		atlas.region = Rect2(frame_index * 64, 0, 64, 64)
+		var frame_duration := _base_sprite_frames.get_frame_duration(animation_name, frame_index)
+		frames.set_frame(animation_name, frame_index, atlas, frame_duration)
 
 
 func _despawn_dead_instance() -> void:
@@ -123,7 +272,7 @@ func _enter_state(new_state: State) -> void:
 	match new_state:
 		State.IDLE:
 			velocity.x = 0
-			if is_on_floor(): sprite.play("iddle")
+			if is_on_floor(): sprite.play("idle")
 			idle_timer = randf_range(1.0, 2.5) 
 			
 		State.PATROL:
@@ -134,21 +283,52 @@ func _enter_state(new_state: State) -> void:
 			
 		State.PREPARE_DASH:
 			velocity.x = 0
-			sprite.play("iddle")
-			sprite.modulate = Color(1.0, 0.4, 0.4) # Feedback visual de carga
-			dash_timer = 0.5 
+			sprite.play("idle")
+			match GameState.current_level:
+				3:
+					sprite.modulate = Color(0.4, 0.6, 1.0)
+				4:
+					sprite.modulate = Color(0.7, 0.3, 1.0)
+				_:
+					sprite.modulate = Color(1.0, 0.4, 0.4)
+			dash_timer = 0.5
+			if _ataque_player == null:
+				_ataque_player = AudioStreamPlayer2D.new()
+				_ataque_player.bus = &"EFX"
+				_ataque_player.max_distance = SFX_MAX_DISTANCE
+				add_child(_ataque_player)
+			_ataque_player.stream = ATAQUE_CORREDOR
+			_ataque_player.volume_db = 10.0
+			_ataque_player.play()
 			
 		State.DASH:
 			sprite.play("run")
 			sprite.speed_scale = 2.0 
-			dash_timer = 0.4 
+			dash_timer = 0.4
 			
 		State.STUNNED:
+			for child in get_children():
+				if child is AudioStreamPlayer2D and child.playing:
+					child.stop()
+					if child != _ataque_player and child != _muerte_player:
+						child.queue_free()
 			sprite.play("stun") 
-			velocity.x = 0 
+			velocity.x = 0
+			_play_sfx(STUN_CORREDOR, 8.0)
 			
 		State.DEAD:
-			sprite.play("dead") 
+			sprite.play("dead")
+			if _muerte_player == null:
+				_muerte_player = AudioStreamPlayer2D.new()
+				_muerte_player.bus = &"EFX"
+				_muerte_player.max_distance = SFX_MAX_DISTANCE
+				add_child(_muerte_player)
+			_muerte_player.stream = MUERTE_CORREDOR
+			_muerte_player.volume_db = 12.0
+			_muerte_player.play()
+			if luz and luz.enabled:
+				var tween: Tween = create_tween()
+				tween.tween_property(luz, "energy", 0.0, 1.5)
 			if $EnemyHitbox:
 				$EnemyHitbox.set_deferred("monitoring", false)
 				$EnemyHitbox.set_deferred("monitorable", false)
@@ -156,7 +336,7 @@ func _enter_state(new_state: State) -> void:
 				$EnemyHitbox.set_deferred("collision_mask", 0)
 			velocity.x = 0
 			
-			await get_tree().create_timer(0.7).timeout
+			await get_tree().create_timer(0.9).timeout
 			_despawn_dead_instance()
 
 
@@ -201,7 +381,7 @@ func _state_patrol(delta: float) -> void:
 	if _check_for_player(): return
 
 	velocity.x = facing_dir * PATROL_SPEED
-	if is_on_floor() and sprite.animation != "run": sprite.play("run")
+	if is_on_floor() and sprite.animation != "walk": sprite.play("walk")
 
 	patrol_timer -= delta
 	if patrol_timer <= 0 and is_on_floor():
@@ -386,4 +566,5 @@ func take_damage(amount: int) -> void:
 
 
 func die() -> void:
+	NakamaManager.add_enemy_kill()
 	_enter_state(State.DEAD)
