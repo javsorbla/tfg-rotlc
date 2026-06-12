@@ -2,6 +2,12 @@
 
 Videojuego 2D desarrollado en **Godot 4.3 (.NET)** como TFG. Incluye combate contra jefes con un sistema de poderes (cian, rojo, amarillo) y entrenamiento de IA mediante *Reinforcement Learning* (PPO + ONNX).
 
+**IMPORTANTE**: Se puede acceder al ejecutable del juego en: https://uses0-my.sharepoint.com/:f:/g/personal/alereyper_alum_us_es/IgDvqXObAMpPQbC-zBIbt-gkAcTDHd32Jlxz_lBdl-ZQUUo?e=6jj9lB
+
+Hay instrucciones del ejecutable en el archivo **Juego/builds/ejecutable.md**
+
+Para instrucciones de compilación, mirar archivo **compila.txt**
+
 ---
 
 ## Requisitos
@@ -10,7 +16,7 @@ Videojuego 2D desarrollado en **Godot 4.3 (.NET)** como TFG. Incluye combate con
 |-------------|----------------|
 | Godot | 4.3 **.NET** (no la versión standard) |
 | .NET SDK | 8.0 |
-| Python | 3.10 |
+| Python | 3.12 |
 
 Los plugins de Godot se instalan desde la **AssetLib** integrada en el editor:
 
