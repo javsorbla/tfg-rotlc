@@ -105,7 +105,9 @@
 5. SERVIDOR NAKAMA (Docker local)
    Requiere Docker Desktop. Durante el desarrollo se ha ejecutado desde un WSL (descargar con wsl --install en una terminal de CMD),
    por lo que no podemos asegurar que pueda funcionar desde el Power Shell de Windows con Docker Desktop activado, pero podría funcionar.
-   
+
+   Se debe copiar el .env.example como .env en el mismo directorio en el que se encuentra (nakama-server/)
+
    cd nakama-server
    docker-compose up -d 
    (la primera vez recomendamos usar --build también)
