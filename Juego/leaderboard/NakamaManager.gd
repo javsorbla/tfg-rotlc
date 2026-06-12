@@ -277,7 +277,8 @@ func submit_campaign_leaderboards() -> void:
 
 	_campaign_stats["campaign_completed"] = true
 
-	var campaign_score_val: int = max(1, _campaign_stats["total_kills"] * 50 - _campaign_stats["total_deaths"] * 100 + _campaign_stats["total_prism_cores"] * 500)
+	var time_val := int(1000000.0 / max(_campaign_stats["total_time"], 1))
+	var campaign_score_val: int = max(1, time_val + _campaign_stats["total_kills"] * 50 - _campaign_stats["total_deaths"] * 50 + _campaign_stats["total_prism_cores"] * 500)
 
 	# Only submit if campaign score improved
 	var existing = get_local_best_for("campaign_score")
@@ -441,7 +442,7 @@ func compute_global_score(time_seconds: int) -> int:
 		score += int(10000.0 / time_seconds)
 
 	score += _current_run["enemies_killed"] * 50
-	score -= _current_run["deaths"] * 100
+	score -= _current_run["deaths"] * 50
 	score += _current_run["prism_cores"] * 500
 
 	return max(1, score)

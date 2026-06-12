@@ -46,6 +46,11 @@ var _metrics_by_tab: Dictionary = {}
 @onready var metric_sidebar: VBoxContainer = %MetricSidebar
 
 
+func _focus_first_button() -> void:
+	if tab_buttons.get_child_count() > 0:
+		tab_buttons.get_child(0).grab_focus()
+
+
 func _ready() -> void:
 	_build_metrics_dict()
 	_build_tab_row()
@@ -53,6 +58,7 @@ func _ready() -> void:
 	offline_banner.hide()
 	MenuProgressionHelper.apply_progress_to_node(self)
 	_refresh()
+	_focus_first_button()
 
 
 func _build_metrics_dict() -> void:
@@ -121,6 +127,7 @@ func _refresh() -> void:
 		_clear_records_list()
 		error_label.text = "Sin métricas disponibles"
 		error_label.show()
+		_focus_first_button()
 		return
 
 	if not NakamaManager.has_authenticated:
@@ -136,11 +143,13 @@ func _refresh() -> void:
 		error_label.text = "No hay datos de clasificación"
 		error_label.show()
 		_records_cache = []
+		_focus_first_button()
 		return
 
 	_records_cache = records
 	_populate_records(records)
 	_check_player_position()
+	_focus_first_button()
 
 
 func _format_value(metric_data: Dictionary, record) -> String:
@@ -285,11 +294,15 @@ func _on_tab_pressed(index: int) -> void:
 	var tab_id: String = SIDEBAR_TABS[index].id
 	_build_metric_sidebar(tab_id)
 	_refresh()
+	if tab_buttons.get_child_count() > index:
+		tab_buttons.get_child(index).grab_focus()
 
 
 func _on_metric_pressed(index: int) -> void:
 	_current_metric = index
 	_refresh()
+	if metric_sidebar.get_child_count() > index:
+		metric_sidebar.get_child(index).grab_focus()
 
 
 func _clear_records_list() -> void:
@@ -316,6 +329,7 @@ func _show_offline_records(metric_data: Dictionary) -> void:
 	if local.is_empty():
 		error_label.text = "Sin conexión y sin datos locales"
 		error_label.show()
+		_focus_first_button()
 		return
 
 	var row: HBoxContainer = HBoxContainer.new()
@@ -340,3 +354,4 @@ func _show_offline_records(metric_data: Dictionary) -> void:
 	row.add_child(name_label)
 	row.add_child(value_label)
 	records_list.add_child(row)
+	_focus_first_button()

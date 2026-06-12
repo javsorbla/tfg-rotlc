@@ -1,0 +1,145 @@
+1. REQUISITOS PREVIOS
+   - Godot Engine 4.3 .NET para Windows (No la versión estándar): https://godotengine.org/download/archive/4.3-stable/
+   - .NET SDK 8.0 o superior: 
+      - Enlace a 10.0 (versión utilizada por el equipo): https://dotnet.microsoft.com/es-es/download/dotnet/thank-you/sdk-10.0.201-windows-x64-installer
+      - Enlace a 8.0 (mínimo necesario): https://dotnet.microsoft.com/es-es/download/dotnet/8.0
+   - Python 3.12+ (solo necesario para entrenar la IA de Umbra): https://www.python.org/downloads/release/python-3129/
+   - Windows 10/11 (64 bits)
+
+2. COMPILACIÓN DEL JUEGO (Exportación a ejecutable)
+   a. Abrir Godot 4.3 .NET
+   b. Importar el proyecto: entrar a la carpeta Juego/ y seleccionar project.godot
+   c. Esperar a que Godot restaure los paquetes NuGet y compile los scripts C#
+      (ocurre automáticamente en segundo plano al abrir el proyecto). En cualquier caso, en la parte
+      superior hay un icono de un martillo para hacer build del proyecto si fuera necesario.
+      Es posible que al abrir el proyecto aparezcan errores derivados de los plugins utilizados o caché de assets, 
+      pero no afectan en nada ya que suelen ser de assets faltantes que no se usan en ningún momento en el juego o que se cargan automáticamente más tarde, en cualquier
+      caso dichos errores no persisten y solo ocurren en la primera carga.
+   d. Puede que salga un pop-up de actualización de GdUnit4 en algún momento. No se debe actualizar, versiones posteriores a la que tenemos dan problemas de compatibilidad.
+   e. Ir a Proyecto > Exportar
+   f. Seleccionar el preset "Windows Desktop". La primera vez pedirá descargar una plantilla de exportación, que se puede hacer pulsando en 
+      "Administrar plantillas de exportación". Una vez allí, seleccionar la opción de descargar desde el mejor mirror posible (Ocupa 1 GB)
+   g. Asegurar que las siguientes opciones están activadas si no vienen por defecto: 
+      Opciones:
+         - PCK Embebido
+         - Arquitectura x86_64
+         - Formato de textura S3TC BPT
+         - Modificar recursos (Para esta puede ser necesario descargar el .exe x64 de Rcedit en https://github.com/electron/rcedit/releases/tag/v2.0.0
+         y configurar la ruta donde se haya descargado en Editor > Configuración del Editor > Exportar > Windows > Rcedit): 
+            - Icono (res://themes/icon.png)
+            - Nombre del producto: Rise of The Lost Colors
+            - SDK de Agilidad D2D12 Multiarq
+         - Dotnet > Embed Build Outputs (para que aparezca la opción hay que activar las opciones avanzadas en la ventana de exportación)
+      Recursos:
+         - Modo de exportación: Exportar todos los recursos del proyecto
+         - Filtros para exportar archivos/carpetas que no son recursos: umbra.onnx,override.cfg
+   h. Click en "Exportar Proyecto"
+   i. Elegir carpeta de salida
+   j. Resultado:
+      - Rise Of The Lost Colors.exe (ejecutable principal)
+      - Rise Of The Lost Colors.console.exe (versión consola, opcional para ver logs)
+
+   Nota: El archivo umbra.onnx debe estar en Juego/ antes de exportar si se
+   quiere incluir el modelo de IA en la pelea contra Umbra (incluido en el filtro de exportación).
+
+3. ENTRENAMIENTO DE IA
+   
+   IMPORTANTE: Antes de entrenar con cualquiera de los comandos que se indican a continuación, eliminar umbra.onnx de la carpeta Juego/
+   si existe, o el entrenamiento fallará.
+
+   a. Crear un entorno virtual en Python 3.12:
+         python -m venv .venv
+         .venv\Scripts\activate
+         pip install -r requirements.txt
+
+   b. En Godot, abrir la escena de entrenamiento (EntrenamientoUmbra.tscn)
+      y ejecutar esa escena en concreto. Este paso deberá hacerse siempre que se ejecute alguno de los comandos de los pasos c, d y e.
+
+   c. Desde una terminal (con .venv activado y en la carpeta raíz), lanzar el entrenamiento:
+      # Entrenamiento directo
+      python stable_baselines3_example.py ^
+         --experiment_name=umbra_v6_allpowers ^
+         --timesteps=800000 ^
+         --save_checkpoint_frequency=10000 ^
+         --save_model_path=logs/sb3/umbra_v6_allpowers ^
+         --learning_rate=1e-4 --ent_coef=0.08 ^
+         --n_steps=1024 --batch_size=256 --n_epochs=10 ^
+         --gamma=0.995 --gae_lambda=0.95 --target_kl=0.015
+
+      # O con auto-gate (valida checkpoints durante el entrenamiento)
+      .\run_umbra_autogate.ps1 ^
+         -ExperimentName umbra_v6_allpowers ^
+         -TotalSteps 150000 -BlockSteps 5000 ^
+         -LearningRate 1e-4 -EntCoef 0.08 ^
+         -NSteps 1024 -BatchSize 256 -NEpochs 10 ^
+         -TargetKl 0.015 -GateMaxDominant 0.85 ^
+         -GateMinLrAcc 0.55 -GateLrDeadzone 0.07 ^
+         -CheckpointDir "logs/sb3/umbra_v6_allpowers_checkpoints" ^
+         -OnnxOut "Juego/umbra.onnx"
+
+   d. Para exportar ONNX desde un checkpoint existente:
+      python stable_baselines3_example.py ^
+         --resume_model_path=logs/sb3/umbra_v6_allpowers_checkpoints/umbra_v6_allpowers_200000_steps.zip ^
+         --export_only --onnx_export_path=Juego/umbra.onnx
+
+   e. O validar checkpoints y exportar el más sano:
+      python umbra_checkpoint_gate.py ^
+         --checkpoint_dir=logs/sb3/umbra_realign_checkpoints ^
+         --max-dominant=0.85 --min-lr-acc=0.55 --lr-deadzone=0.07 ^
+         --export-onnx=Juego/umbra.onnx
+   
+   Nota: Los directorios de los checkpoints de los comandos son ejemplos, deberán ser sustituidos por los nombres reales que se quieran
+   establecer.
+
+4. FUSIONAR MODELO ONNX (antes de exportar el juego)
+   El modelo ONNX se guarda con datos externos (umbra.onnx.data). ONNX Runtime
+   busca el .data en el sistema de archivos real, no dentro del .pck incluido en el .exe, por lo que la exportación fallaría.
+
+   Para evitarlo, fusionar el .data dentro del .onnx:
+   .venv\Scripts\python.exe merge_onnx.py
+
+   Esto sobreescribe Juego/umbra.onnx como un solo archivo autocontenido y
+   elimina Juego/umbra.onnx.data.
+   Ejecutar cada vez que se exporte un ONNX nuevo, justo antes de exportar el videojuego.
+
+5. SERVIDOR NAKAMA (Docker local)
+   Requiere Docker Desktop. Durante el desarrollo se ha ejecutado desde un WSL (descargar con wsl --install en una terminal de CMD),
+   por lo que no podemos asegurar que pueda funcionar desde el Power Shell de Windows con Docker Desktop activado, pero podría funcionar.
+
+   Se debe copiar el .env.example como .env en el mismo directorio en el que se encuentra (nakama-server/)
+
+   cd nakama-server
+   docker-compose up -d 
+   (la primera vez recomendamos usar --build también)
+
+   Nota: Cambiar las contraseñas por defecto:
+      - Cambiar POSTGRES_PASSWORD en nakama-server/.env
+      - Cambiar database.address en nakama-server/data/local.yml
+   
+   Para usar el servidor local levantado en docker, es necesario cambiar la IP dentro de NakamaManager.gd para usarlo en lugar del servidor en la nube:
+      var _network_config := {
+         "scheme": "http",
+         "host": "127.0.0.1",
+         "port": 7350,
+   }
+
+   Importante: El servidor usado va asociado a los datos de guardado del jugador, por lo que si ya se ha iniciado una partida asociada
+   al servidor en Digital Ocean (por defecto), será necesario borrar los archivos .json del directorio C:\Users\<nombre_usuario>\AppData\Roaming\Rise Of The Lost Colors
+   (Dependiendo de la configuración del editor podría encontrarse en C:\Users\<nombre_usuario>\AppData\Roaming\Godot\app_userdata\Rise Of The Lost Colors)
+
+6. EJECUTAR JUEGO DESDE EL EDITOR (Versión de desarrollo)
+   a. Abrir Godot 4.3 .NET
+   b. Importar Juego/project.godot si no se ha hecho
+   c. Pulsar F5 (Ejecutar proyecto) o la escena principal: ui/menus/main_menu/main_menu.tscn
+   d. Para reproducir cualquier escena en específico, abrirla en el editor y pulsar F6 o pulsar el icono de
+      "Ejecutar escena Actual"
+   
+   Nota: Se puede saltar la cinemática que sale al empezar nueva partida pulsando Escape 2 veces
+
+7. EJECUTAR TESTS
+   a. Abrir el proyecto en Godot
+   b. En la parte superior izquierda, junto a los paneles "Escena" e
+      "Importar", seleccionar el panel GdUnit4
+   c. Pulsar el botón "Run discover tests". Si el panel aparece deshabilitado, pulsar primero "Rerun unit tests"
+      (modo normal o debug) para habilitarlo
+   d. Click derecho sobre una carpeta de tests y pulsar la opción de ejecutar.

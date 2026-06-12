@@ -64,8 +64,7 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# Debug input is disabled - levels are set directly by scene load
-	pass
+	super._input(event)
 
 
 func _show_nickname_dialog() -> void:

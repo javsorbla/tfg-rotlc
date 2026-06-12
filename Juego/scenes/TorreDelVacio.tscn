@@ -331,7 +331,7 @@ position = Vector2(1967, -1515)
 position = Vector2(4386, -3371)
 
 [node name="Checkpoint3" parent="Checkpoints" instance=ExtResource("12_wryeu")]
-position = Vector2(68, -27)
+position = Vector2(32, -27)
 
 [node name="Entorno" type="Node2D" parent="."]
 
